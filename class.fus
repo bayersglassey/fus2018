@@ -1,0 +1,42 @@
+
+def int_methods: obj fun(+) =.add fun(-) =.sub
+def str_methods:
+    obj
+        fun(str_add) =.add
+        fun("Can't subtract strings" error) =.sub
+def point_methods:
+    obj
+        fun:
+            ='b ='a
+            ''a
+                ..x 'b .x &add =.x
+                ..y 'b .y &add =.y
+        =.add
+        fun:
+            ='b ='a
+            ''a
+                ..x 'b .x &sub =.x
+                ..y 'b .y &sub =.y
+        =.sub
+def int_new:
+    obj swap =.data &int_methods =.methods
+def str_new:
+    obj swap =.data &str_methods =.methods
+def point_new:
+    ='y ='x obj ''x =.x ''y =.y &point_methods =.methods
+def add:
+    ='y ='x
+    'x .methods .add ''x; ''y; @
+def sub:
+    ='y ='x
+    'x .methods .sub ''x; ''y; @
+
+1 &int_new 2 &int_new &add .data 3 == assert
+
+1 &int_new 2 &int_new &point_new
+3 &int_new 4 &int_new &point_new
+&add
+    ..x .data 4 == assert
+    ..y .data 6 == assert
+drop
+

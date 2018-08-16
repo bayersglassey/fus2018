@@ -1,0 +1,51 @@
+
+# vars
+
+    'x ''x ='x
+
+# control
+
+    if ifelse do continue break
+
+# debug
+
+    p stack vars assert error
+
+# null
+
+    null isnull
+
+# bool
+
+    y n not and or bool_eq
+
+# int
+
+    0 + - / * neg mod < > <= >= == !=
+    int_tostr
+
+# str
+
+    "abc"
+    ;;abc
+    str_eq str_add str_index str_len str_get str_set
+    str_tosym str_toint str_toarr
+
+# sym
+
+    `x typeof sym_eq
+    sym_tostr
+
+# obj
+
+    obj .x ..x =.x keys has
+
+# arr
+
+    arr , push pop lpush lpop len .$ ..$ =.$
+    quote(...)
+
+# fun
+
+    fun(...) ; =% @
+

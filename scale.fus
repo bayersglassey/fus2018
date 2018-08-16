@@ -1,0 +1,68 @@
+
+def range:
+    # (x0 x1 add -> xs)
+    ='add
+    arr ='a
+    do loop:
+        over over < while loop
+        swap  # (x1 x0)
+            dup ''a swap push ='a 'add +
+        swap
+        continue loop
+    ''a
+
+
+def get_scale:
+    # ( -> o)
+
+    import: range
+
+    def label_new:
+        # ( -> o)
+        obj "a" =.let 0 =.num
+
+    def label_next:
+        # (o -> o)
+        ='label
+        label .let "g" str_eq ifelse:
+            ''label "a" =.let ..num 1 + =.num ='label
+        :
+            ''label ..let 0 str_tocode 1 + str_fromcode =.let ='label
+        ''label
+
+    def label_tostr:
+        # (o -> s)
+        ='label
+        'label .let 'label .num int_tostr str_add
+
+    &label_new ='label
+    obj ='scale
+
+    0 (29 1 -1 &range)
+    do loop:
+        over over len < while loop
+        over over swap .$ ='i
+        ''scale
+            obj 500 =.len ='i =.y 6000 =.ummm -5 =.volinc
+            'label &label_tostr str_tosym obj_set
+        ='scale
+        ''label &label_next ='label
+
+    ''scale
+
+
+def obj_add_prefix:
+    # (o s -> o)
+    ='prefix ='o0
+    obj ='o1
+
+    'o0 obj_keys do loop:
+        dup len 0 > while loop
+        lpop ='key0
+        'key0 sym_tostr 'prefix swap str_add str_tosym ='key1
+        ''o1 'o0 'key0 obj_get 'key1 obj_set ='o1
+
+    ''o1
+
+&get_scale "s" &obj_add_prefix ='scale
+
