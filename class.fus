@@ -1,9 +1,10 @@
 
-def int_methods: obj fun(+) =.add fun(-) =.sub
+def int_methods: obj fun(+) =.add fun(-) =.sub fun(==) =.eq
 def str_methods:
     obj
         fun(str_add) =.add
         fun("Can't subtract strings" error) =.sub
+        fun(str_eq) =.eq
 def point_methods:
     obj
         fun:
@@ -18,25 +19,46 @@ def point_methods:
                 ..x 'b .x &sub =.x
                 ..y 'b .y &sub =.y
         =.sub
+        fun:
+            ='b ='a
+            'a .x 'b .x == if:
+                'a .y 'b .y ==
+            : n
+        =.eq
 def int_new:
-    obj swap =.data &int_methods =.methods
+    obj `int =.classname swap =.data &int_methods =.methods
 def str_new:
-    obj swap =.data &str_methods =.methods
+    obj `str =.classname swap =.data &str_methods =.methods
 def point_new:
-    ='y ='x obj ''x =.x ''y =.y &point_methods =.methods
-def add:
     ='y ='x
-    'x .methods .add arr ''x, ''y, @ pop nip
-def sub:
-    ='y ='x
-    'x .methods .sub arr ''x, ''y, @ pop nip
+    obj `point =.classname ''x =.x ''y =.y &point_methods =.methods
 
-1 &int_new 2 &int_new &add .data 3 == assert
+def method_call:
+    ='method_name ='y ='x
+    'x .classname 'y .classname sym_eq assert
+    'x .methods `method_name obj_get arr ''x, ''y, @ pop nip
+def add: `add &method_call
+def sub: `sub &method_call
+def eq: `eq &method_call
+def ne: &eq not
 
-1 &int_new 2 &int_new &point_new
-3 &int_new 4 &int_new &point_new
-&add
-    ..x .data 4 == assert
-    ..y .data 6 == assert
-drop
+
+        1 &int_new
+        2 &int_new
+    &add
+    3 &int_new
+&eq assert
+
+
+            1 &int_new
+            2 &int_new
+        &point_new
+            3 &int_new
+            4 &int_new
+        &point_new
+    &add
+        4 &int_new
+        6 &int_new
+    &point_new
+&eq assert
 
