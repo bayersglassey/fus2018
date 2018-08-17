@@ -1,10 +1,7 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
+#include "includes.h"
 
-#include "util.h"
+
 
 int int_min(int x, int y){
     return x < y? x: y;

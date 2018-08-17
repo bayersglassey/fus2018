@@ -26,10 +26,10 @@ def point_new:
     ='y ='x obj ''x =.x ''y =.y &point_methods =.methods
 def add:
     ='y ='x
-    'x .methods .add ''x; ''y; @
+    'x .methods .add arr ''x, ''y, @ pop nip
 def sub:
     ='y ='x
-    'x .methods .sub ''x; ''y; @
+    'x .methods .sub arr ''x, ''y, @ pop nip
 
 1 &int_new 2 &int_new &add .data 3 == assert
 

@@ -2,9 +2,6 @@
 #ifndef _FUS_UTIL_H_
 #define _FUS_UTIL_H_
 
-#include <stdlib.h>
-#include <stdbool.h>
-
 #define ERR_INFO() fprintf(stderr, "%s:%s:%i: ", \
     __FILE__, __func__, __LINE__)
 

@@ -1,9 +1,6 @@
 #ifndef _FUS_STACK_H_
 #define _FUS_STACK_H_
 
-#include "array.h"
-#include "value.h"
-
 
 
 typedef struct fus_stack {
@@ -12,7 +9,8 @@ typedef struct fus_stack {
     ARRAY_DECL(fus_value_t, tail) /* Rest of stack */
 } fus_stack_t;
 
-#define FUS_STACK_PUSH(s, v, x) { \
+
+#define FUS_STACK_PUSH(s, x) { \
     if(s.nos.type != FUS_TYPE_NULL){ \
         ARRAY_PUSH(fus_value_t, s.tail, s.nos) \
     } \
@@ -21,7 +19,7 @@ typedef struct fus_stack {
     fus_value_attach(x); \
 }
 
-#define FUS_STACK_POP(s, v, x) { \
+#define FUS_STACK_POP(s, x) { \
     x = s.tos; \
     s.tos = s.nos; \
     if(s.tail_len > 0){ \
@@ -32,6 +30,10 @@ typedef struct fus_stack {
         s.nos = fus_value_null(); \
     } \
 }
+
+
+void fus_stack_cleanup(fus_stack_t *stack);
+int fus_stack_init(fus_stack_t *stack);
 
 
 #endif

@@ -1,4 +1,8 @@
 
+# stack
+
+    dup drop swap nip over
+
 # vars
 
     'x ''x ='x
@@ -28,7 +32,7 @@
 
     "abc"
     ;;abc
-    str_eq str_add str_index str_len str_get str_set
+    str_eq str_add str_indexof str_len str_get str_set
     str_tosym str_toint str_toarr
 
 # sym
@@ -47,5 +51,5 @@
 
 # fun
 
-    fun(...) ; =% @
+    fun(...) @
 

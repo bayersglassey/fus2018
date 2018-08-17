@@ -1,30 +1,34 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include "includes.h"
 
-#include "stack.h"
-
-struct S {
-    char c;
-};
 
 int main(int n_args, char *args[]){
-    char c[3];
-    struct S s[3];
-    fus_value_t v[3];
-    fus_stack_t t[3];
+    int err;
 
-    printf("c: %li, %p %p %p\n", sizeof(*c), &c[0], &c[1], &c[2]);
-    printf("s: %li, %p %p %p\n", sizeof(*s), &s[0], &s[1], &s[2]);
-    printf("v: %li, %p %p %p\n", sizeof(*v), &v[0], &v[1], &v[2]);
-    printf("t: %li, %p %p %p\n", sizeof(*t), &t[0], &t[1], &t[2]);
+    char *buffer = load_file("./class.fus");
+    if(buffer == NULL)return 2;
 
-    printf("int: %li\n", sizeof(int));
-    printf("int*: %li\n", sizeof(int*));
-    printf("value*: %li\n", sizeof(fus_value_t*));
+    fus_lexer_t lexer;
+    err = fus_lexer_init(&lexer, buffer, __FILE__);
+    if(err)return err;
 
-    printf("OK\n");
+    while(1){
+        if(fus_lexer_done(&lexer))break;
+        printf("Lexed: ");
+        fus_lexer_show(&lexer, stdout);
+        printf("\n");
+        int err = fus_lexer_next(&lexer);
+        if(err)return err;
+    }
+
+    fus_symtable_t symtable;
+    err = fus_symtable_init(&symtable);
+    if(err)return err;
+
+    fus_state_t state;
+    err = fus_state_init(&state, &symtable);
+    if(err)return err;
+
     return 0;
 }
 

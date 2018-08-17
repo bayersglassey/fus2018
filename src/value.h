@@ -1,8 +1,5 @@
 #ifndef _FUS_VALUE_H_
-#define _FUS_VAULE_H_
-
-#include "array.h"
-
+#define _FUS_VALUE_H_
 
 enum {
     FUS_TYPE_NULL,
@@ -18,8 +15,10 @@ enum {
     FUS_TYPES
 };
 
+typedef unsigned char fus_type_t;
+
 typedef struct fus_value {
-    unsigned char type;
+    fus_type_t type;
     union {
         int i;
         bool b;
@@ -28,7 +27,7 @@ typedef struct fus_value {
         struct fus_str *s;
         struct fus_arr *a;
         struct fus_obj *o;
-        struct fus_fun *f;
+        struct fus_code *f;
         const char *msg;
     } data;
 } fus_value_t;
@@ -63,15 +62,6 @@ typedef struct fus_obj {
     ARRAY_DECL(fus_obj_entry_t, entries)
 } fus_obj_t;
 
-typedef struct fus_code {
-    int x;
-} fus_code_t;
-
-typedef struct fus_fun {
-    int refcount;
-    //fus_code_t code;
-} fus_fun_t;
-
 
 
 void fus_value_attach(fus_value_t value);
@@ -83,18 +73,22 @@ fus_value_t fus_value_bool(bool b);
 fus_value_t fus_value_int(int i);
 fus_str_t *fus_str(const char *ss);
 fus_value_t fus_value_str(const char *ss);
+void fus_sym_cleanup(fus_sym_t *sym);
+int fus_sym_init(fus_sym_t *sym, const char *token, int token_len);
 fus_value_t fus_value_sym(fus_sym_t *y);
 fus_value_t fus_value_arr();
 fus_value_t fus_value_obj();
-fus_value_t fus_value_fun();
+fus_value_t fus_value_fun(struct fus_code *code);
 fus_value_t fus_value_err(const char *msg);
 
 void fus_bigint_cleanup(fus_bigint_t *bi);
 void fus_str_cleanup(fus_str_t *s);
 void fus_arr_cleanup(fus_arr_t *a);
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry);
+int fus_obj_entry_init(fus_obj_entry_t *entry, fus_sym_t *key,
+    fus_value_t value);
 void fus_obj_cleanup(fus_obj_t *o);
-void fus_fun_cleanup(fus_fun_t *f);
+int fus_obj_init(fus_obj_t *o);
 
 
 #endif
