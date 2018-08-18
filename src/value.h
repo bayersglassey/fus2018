@@ -40,6 +40,7 @@ typedef struct fus_bigint {
 typedef struct fus_sym {
     int token_len;
     char *token;
+    int index;
 } fus_sym_t;
 
 typedef struct fus_str {
@@ -74,7 +75,8 @@ fus_value_t fus_value_int(int i);
 fus_str_t *fus_str(const char *ss);
 fus_value_t fus_value_str(const char *ss);
 void fus_sym_cleanup(fus_sym_t *sym);
-int fus_sym_init(fus_sym_t *sym, const char *token, int token_len);
+int fus_sym_init(fus_sym_t *sym, const char *token, int token_len,
+    int index);
 fus_value_t fus_value_sym(fus_sym_t *y);
 fus_value_t fus_value_arr();
 fus_value_t fus_value_obj();

@@ -19,6 +19,7 @@
 
 
 #include "state.h"
+#include "compiler.h"
 
 
 #include "util.h"
