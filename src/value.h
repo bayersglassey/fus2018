@@ -23,7 +23,6 @@ typedef struct fus_value {
         int i;
         bool b;
         struct fus_bigint *bi;
-        struct fus_sym *y;
         struct fus_str *s;
         struct fus_arr *a;
         struct fus_obj *o;
@@ -40,7 +39,6 @@ typedef struct fus_bigint {
 typedef struct fus_sym {
     int token_len;
     char *token;
-    int index;
 } fus_sym_t;
 
 typedef struct fus_str {
@@ -54,7 +52,7 @@ typedef struct fus_arr {
 } fus_arr_t;
 
 typedef struct fus_obj_entry {
-    fus_sym_t *key;
+    int sym_i;
     fus_value_t value;
 } fus_obj_entry_t;
 
@@ -75,9 +73,8 @@ fus_value_t fus_value_int(int i);
 fus_str_t *fus_str(const char *ss);
 fus_value_t fus_value_str(const char *ss);
 void fus_sym_cleanup(fus_sym_t *sym);
-int fus_sym_init(fus_sym_t *sym, const char *token, int token_len,
-    int index);
-fus_value_t fus_value_sym(fus_sym_t *y);
+int fus_sym_init(fus_sym_t *sym, const char *token, int token_len);
+fus_value_t fus_value_sym(int sym_i);
 fus_value_t fus_value_arr();
 fus_value_t fus_value_obj();
 fus_value_t fus_value_fun(struct fus_code *code);
@@ -87,7 +84,7 @@ void fus_bigint_cleanup(fus_bigint_t *bi);
 void fus_str_cleanup(fus_str_t *s);
 void fus_arr_cleanup(fus_arr_t *a);
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry);
-int fus_obj_entry_init(fus_obj_entry_t *entry, fus_sym_t *key,
+int fus_obj_entry_init(fus_obj_entry_t *entry, int sym_i,
     fus_value_t value);
 void fus_obj_cleanup(fus_obj_t *o);
 int fus_obj_init(fus_obj_t *o);

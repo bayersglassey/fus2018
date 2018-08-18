@@ -41,31 +41,31 @@ int fus_state_step(fus_state_t *state, fus_coderef_t *coderef){
         FUS_STACK_PUSH(state->stack, code->literals[literal_i])
         break;}
     case FUS_SYMCODE_TYPEOF: {
-        fus_sym_t *type_sym = NULL;
+        int sym_i = -1;
         fus_type_t type = state->stack.tos.type;
         if(type == FUS_TYPE_NULL){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_NULL];
+            sym_i = FUS_SYMCODE_NULL;
         }else if(type == FUS_TYPE_BOOL){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_BOOL];
+            sym_i = FUS_SYMCODE_BOOL;
         }else if(type == FUS_TYPE_INT || type == FUS_TYPE_BIGINT){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_INT];
+            sym_i = FUS_SYMCODE_INT;
         }else if(type == FUS_TYPE_STR){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_STR];
+            sym_i = FUS_SYMCODE_STR;
         }else if(type == FUS_TYPE_SYM){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_SYM];
+            sym_i = FUS_SYMCODE_SYM;
         }else if(type == FUS_TYPE_ARR){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_ARR];
+            sym_i = FUS_SYMCODE_ARR;
         }else if(type == FUS_TYPE_OBJ){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_OBJ];
+            sym_i = FUS_SYMCODE_OBJ;
         }else if(type == FUS_TYPE_FUN){
-            type_sym = &state->symtable->syms[FUS_SYMCODE_FUN];
+            sym_i = FUS_SYMCODE_FUN;
         }else{
             ERR_INFO();
             fprintf(stderr, "Unrecognized type: %i\n", type);
             return 2;
         }
         fus_value_detach(state->stack.tos);
-        state->stack.tos = fus_value_sym(type_sym);
+        state->stack.tos = fus_value_sym(sym_i);
         break;}
     case FUS_SYMCODE_STACK_DUP: {
         /* x -> x x */

@@ -119,20 +119,17 @@ void fus_sym_cleanup(fus_sym_t *sym){
     sym->token = NULL;
 }
 
-int fus_sym_init(fus_sym_t *sym, const char *token, int token_len,
-    int index
-){
+int fus_sym_init(fus_sym_t *sym, const char *token, int token_len){
     sym->token = strndup(token, token_len);
     if(sym->token == NULL)return 1;
     sym->token_len = token_len;
-    sym->index = index;
     return 0;
 }
 
-fus_value_t fus_value_sym(fus_sym_t *y){
+fus_value_t fus_value_sym(int sym_i){
     fus_value_t value;
     value.type = FUS_TYPE_SYM;
-    value.data.y = y;
+    value.data.i = sym_i;
     return value;
 }
 
@@ -189,10 +186,10 @@ void fus_obj_entry_cleanup(fus_obj_entry_t *entry){
     fus_value_detach(entry->value);
 }
 
-int fus_obj_entry_init(fus_obj_entry_t *entry, fus_sym_t *key,
+int fus_obj_entry_init(fus_obj_entry_t *entry, int sym_i,
     fus_value_t value
 ){
-    entry->key = key;
+    entry->sym_i = sym_i;
     entry->value = value;
     fus_value_attach(value);
     return 0;
