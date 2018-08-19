@@ -137,7 +137,12 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 int err = fus_lexer_next(lexer);
                 if(err)return err;
 
-                if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
+                if(!opcode_sym->autocompile){
+                    ERR_INFO();
+                    fprintf(stderr, "Opcode can't be used directly: %s\n",
+                        opcode_sym->token);
+                    return 2;
+                }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
                     ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
                         opcode_sym_i)
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){

@@ -10,7 +10,7 @@
 
 
 enum {
-    #define DEF_SYMCODE(code, token, argtype) FUS_SYMCODE_##code,
+    #define DEF_SYMCODE(code, token, argtype, autocompile) FUS_SYMCODE_##code,
     #include "symcodes.inc"
     #undef DEF_SYMCODE
     FUS_SYMCODES

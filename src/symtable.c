@@ -10,11 +10,12 @@ void fus_symtable_cleanup(fus_symtable_t *symtable){
 int fus_symtable_init(fus_symtable_t *symtable){
     int err;
     ARRAY_INIT(symtable->syms)
-    #define DEF_SYMCODE(m_code, m_token, m_argtype) { \
+    #define DEF_SYMCODE(m_code, m_token, m_argtype, m_autocompile) { \
         fus_sym_t sym; \
         err = fus_sym_init(&sym, m_token, strlen(m_token)); \
         if(err)return err; \
         sym.argtype = FUS_SYMCODE_ARGTYPE_##m_argtype; \
+        sym.autocompile = m_autocompile; \
         ARRAY_PUSH(fus_sym_t, symtable->syms, sym) \
     }
     #include "symcodes.inc"
@@ -61,6 +62,7 @@ int fus_symtable_find_or_add(fus_symtable_t *symtable,
     if(sym_i >= 0)return sym_i;
     int err = fus_symtable_add(symtable, token, token_len);
     if(err)return -1;
-    return symtable->syms_len - 1;
+    int new_sym_i = symtable->syms_len - 1;
+    return new_sym_i;
 }
 
