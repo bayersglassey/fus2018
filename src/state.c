@@ -32,12 +32,15 @@ int fus_state_init(fus_state_t *state, fus_symtable_t *symtable){
 
 
 int fus_state_step(fus_state_t *state, fus_coderef_t *coderef){
+    int err;
     fus_code_t *code = coderef->code;
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     switch(opcode){
     case FUS_SYMCODE_LITERAL: {
-        int literal_i = code->opcodes[coderef->opcode_i + 1];
-        coderef->opcode_i++;
+        int literal_i = -1;
+        err = fus_code_get_int(code, coderef->opcode_i, &literal_i);
+        if(err)return err;
+        coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
         FUS_STACK_PUSH(state->stack, code->literals[literal_i])
         break;}
     case FUS_SYMCODE_TYPEOF: {
@@ -92,6 +95,13 @@ int fus_state_step(fus_state_t *state, fus_coderef_t *coderef){
         break;}
     case FUS_SYMCODE_STACK_OVER: {
         /* x y -> x y x */
+        break;}
+    case FUS_SYMCODE_INT_LITERAL: {
+        int i = -1;
+        err = fus_code_get_int(code, coderef->opcode_i, &i);
+        if(err)return err;
+        coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
+        FUS_STACK_PUSH(state->stack, fus_value_int(i))
         break;}
     default: {
         ERR_INFO();

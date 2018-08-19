@@ -26,7 +26,7 @@ void fus_code_print_opcodes(fus_code_t *code, int indent){
 
 int fus_code_push_int(fus_code_t *code, int i){
     int err;
-    int n = sizeof(int) / sizeof(fus_opcode_t);
+    int n = FUS_CODE_OPCODES_PER_INT;
     for(int j = 0; j < n; j++){
         ARRAY_PUSH(fus_opcode_t, code->opcodes, 0)
     }
@@ -37,7 +37,6 @@ int fus_code_push_int(fus_code_t *code, int i){
 
 int fus_code_get_int(fus_code_t *code, int opcode_i, int *i_ptr){
     int err;
-    int n = sizeof(int) / sizeof(fus_opcode_t);
     *i_ptr = *(int*)&code->opcodes[opcode_i];
     return 0;
 }
@@ -72,8 +71,7 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
             if(err)return err;
             printf("OPCODE %i: %i (%s %i)\n", i, opcode,
                 opcode_sym->token, ii);
-            int n = sizeof(int) / sizeof(fus_opcode_t);
-            i += n;
+            i += FUS_CODE_OPCODES_PER_INT;
         }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
             int sym_i = 0;
             err = fus_code_get_int(code, i + 1, &sym_i);
@@ -88,8 +86,7 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
             }
             printf("OPCODE %i: %i (%s %s)\n", i, opcode,
                 opcode_sym->token, sym->token);
-            int n = sizeof(int) / sizeof(fus_opcode_t);
-            i += n;
+            i += FUS_CODE_OPCODES_PER_INT;
         }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
             printf("OPCODE %i: %i (%s)\n", i, opcode, opcode_sym->token);
         }else{

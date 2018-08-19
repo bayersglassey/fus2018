@@ -15,6 +15,9 @@ typedef struct fus_coderef {
 } fus_coderef_t;
 
 
+#define FUS_CODE_OPCODES_PER_INT (sizeof(int) / sizeof(fus_opcode_t))
+
+
 void fus_code_cleanup(fus_code_t *code);
 int fus_code_init(fus_code_t *code);
 void fus_code_print_opcodes(fus_code_t *code, int indent);
