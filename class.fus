@@ -42,6 +42,7 @@ def sub: `sub &method_call
 def eq: `eq &method_call
 def ne: &eq not
 
+#
 
         1 &int_new
         2 &int_new

@@ -123,6 +123,7 @@ int fus_sym_init(fus_sym_t *sym, const char *token, int token_len){
     sym->token = strndup(token, token_len);
     if(sym->token == NULL)return 1;
     sym->token_len = token_len;
+    sym->argtype = FUS_SYMCODE_ARGTYPE_NOT_OPCODE;
     return 0;
 }
 

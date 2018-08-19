@@ -12,7 +12,7 @@ typedef struct fus_compiler_frame {
 typedef struct fus_compiler {
     fus_symtable_t *symtable;
     fus_compiler_frame_t *cur_frame;
-    ARRAY_DECL(fus_compiler_frame_t, frames)
+    ARRAY_DECL(fus_compiler_frame_t*, frames)
 } fus_compiler_t;
 
 

@@ -9,7 +9,7 @@
 
 # control
 
-    if ifelse do continue break
+    if ifelse do continue break while
 
 # debug
 

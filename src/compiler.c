@@ -25,11 +25,12 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame,
 
 
 void fus_compiler_cleanup(fus_compiler_t *compiler){
-    ARRAY_FREE(fus_compiler_frame_t, compiler->frames,
+    ARRAY_FREE_PTRS(fus_compiler_frame_t*, compiler->frames,
         fus_compiler_frame_cleanup)
 }
 
 int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
+    compiler->symtable = symtable;
     compiler->cur_frame = NULL;
     ARRAY_INIT(compiler->frames)
     return 0;
@@ -41,6 +42,7 @@ int fus_compiler_push_frame(fus_compiler_t *compiler, const char *name){
     if(new_frame == NULL)return 1;
     err = fus_compiler_frame_init(new_frame, compiler->cur_frame, name);
     if(err)return err;
+    ARRAY_PUSH(fus_compiler_frame_t*, compiler->frames, new_frame)
     compiler->cur_frame = new_frame;
     return 0;
 }
@@ -63,8 +65,10 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     err = fus_compiler_push_frame(compiler, name);
     if(err)return err;
 
+    fus_compiler_frame_t *frame = compiler->cur_frame;
+
     for(int i = 0; i < depth; i++)printf("  ");
-    printf("Compiling frame: %s\n", compiler->cur_frame->name);
+    printf("Compiling frame: %s\n", frame->name);
 
     int block_depth = 0;
     while(1){
@@ -101,13 +105,88 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             printf("Block:\n");
             block_depth++;
             depth++;
-        }else{
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Lexed: ");
-            fus_lexer_show(lexer, stdout);
-            printf("\n");
-            int err = fus_lexer_next(lexer);
+        }else if(fus_lexer_got_int(lexer)){
+            int i;
+            err = fus_lexer_get_int(lexer, &i);
             if(err)return err;
+            printf("Int: %i\n", i);
+            ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                FUS_SYMCODE_INT_LITERAL)
+            int *i_ptr = (int*)&frame->code.opcodes[frame->code.opcodes_len];
+            int n = sizeof(int) / sizeof(fus_opcode_t);
+            for(int j = 0; j < n; j++){
+                ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
+            }
+            *i_ptr = i;
+        }else if(fus_lexer_got_str(lexer)){
+            char *s;
+            err = fus_lexer_get_str(lexer, &s);
+            if(err)return err;
+            for(int i = 0; i < depth; i++)printf("  ");
+            printf("Str: %s\n", s);
+            free(s);
+        }else{
+            int opcode_sym_i = fus_symtable_find(compiler->symtable,
+                lexer->token, lexer->token_len);
+            if(opcode_sym_i >= 0){
+                fus_sym_t *opcode_sym = fus_symtable_get(compiler->symtable,
+                    opcode_sym_i);
+                for(int i = 0; i < depth; i++)printf("  ");
+                printf("Lexed opcode: %i (%s)\n",
+                    opcode_sym_i, opcode_sym->token);
+                int err = fus_lexer_next(lexer);
+                if(err)return err;
+
+                if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
+                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                        opcode_sym_i)
+                }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
+                    int i = 0;
+                    int err = fus_lexer_get_int(lexer, &i);
+                    if(err)return err;
+                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                        opcode_sym_i)
+                    int *i_ptr = (int*)&frame->code.opcodes[
+                        frame->code.opcodes_len];
+                    int n = sizeof(int) / sizeof(fus_opcode_t);
+                    for(int j = 0; j < n; j++){
+                        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
+                    }
+                    *i_ptr = i;
+                }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
+                    int sym_i = fus_symtable_find_or_add(compiler->symtable,
+                        lexer->token, lexer->token_len);
+                    if(sym_i < 0){
+                        ERR_INFO();
+                        fprintf(stderr, "Couldn't add sym: %.*s\n",
+                            lexer->token_len, lexer->token);
+                        return 2;
+                    }
+                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                        opcode_sym_i)
+                    int *sym_i_ptr = (int*)&frame->code.opcodes[
+                        frame->code.opcodes_len];
+                    int n = sizeof(int) / sizeof(fus_opcode_t);
+                    for(int j = 0; j < n; j++){
+                        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
+                    }
+                    *sym_i_ptr = sym_i;
+                    int err = fus_lexer_next(lexer);
+                    if(err)return err;
+                }else{
+                    ERR_INFO();
+                    fprintf(stderr, "Not opcode: %s\n",
+                        opcode_sym->token);
+                    return 2;
+                }
+            }else{
+                for(int i = 0; i < depth; i++)printf("  ");
+                printf("Lexed: ");
+                fus_lexer_show(lexer, stdout);
+                printf("\n");
+                int err = fus_lexer_next(lexer);
+                if(err)return err;
+            }
         }
 
     }

@@ -39,6 +39,7 @@ typedef struct fus_bigint {
 typedef struct fus_sym {
     int token_len;
     char *token;
+    int argtype;
 } fus_sym_t;
 
 typedef struct fus_str {
