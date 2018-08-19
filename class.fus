@@ -1,46 +1,55 @@
 
-def int_methods: obj fun(+) =.add fun(-) =.sub fun(==) =.eq
-def str_methods:
+def int_methods(-> o):
     obj
-        fun(str_add) =.add
-        fun("Can't subtract strings" error) =.sub
-        fun(str_eq) =.eq
-def point_methods:
+        fun(x y -> x)(+) =.add
+        fun(x y -> x)(-) =.sub
+        fun(x y -> x)(==) =.eq
+def str_methods(-> o):
     obj
-        fun:
+        fun(x y -> x)(str_add) =.add
+        fun(x y -> x)(drop "Can't subtract strings" error) =.sub
+        fun(x y -> x)(str_eq) =.eq
+def point_methods(-> o):
+    obj
+        fun(a b -> a):
             ='b ='a
             ''a
                 ..x 'b .x &add =.x
                 ..y 'b .y &add =.y
         =.add
-        fun:
+        fun(a b -> a):
             ='b ='a
             ''a
                 ..x 'b .x &sub =.x
                 ..y 'b .y &sub =.y
         =.sub
-        fun:
+        fun(a b -> bool):
             ='b ='a
-            'a .x 'b .x == if:
+            'a .x 'b .x == ifelse:
                 'a .y 'b .y ==
             : n
         =.eq
-def int_new:
-    obj `int =.classname swap =.data &int_methods =.methods
-def str_new:
-    obj `str =.classname swap =.data &str_methods =.methods
-def point_new:
+def int_new(-> o):
+    obj
+        swap =.data `int =.classname &int_methods =.methods
+def str_new(-> o):
+    obj
+        swap =.data `str =.classname &str_methods =.methods
+def point_new(-> o):
     ='y ='x
-    obj `point =.classname ''x =.x ''y =.y &point_methods =.methods
+    obj
+        'x =.x 'y =.y
+        `point =.classname
+        &point_methods =.methods
 
-def method_call:
-    ='method_name ='y ='x
-    'x .classname 'y .classname sym_eq assert
-    'x .methods `method_name obj_get arr ''x, ''y, @ pop nip
-def add: `add &method_call
-def sub: `sub &method_call
-def eq: `eq &method_call
-def ne: &eq not
+def method_binop_call(a b sym -> *):
+    ='method_name ='b ='a
+    'a .classname 'b .classname sym_eq assert
+    'a .methods `method_name obj_get arr ''a, ''b, @ pop nip
+def add(a b -> a): `add &method_binop_call
+def sub(a b -> a): `sub &method_binop_call
+def eq(a b -> bool): `eq &method_binop_call
+def ne(a b -> bool): &eq not
 
 #
 
