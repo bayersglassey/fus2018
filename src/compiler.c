@@ -112,12 +112,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             printf("Int: %i\n", i);
             ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
                 FUS_SYMCODE_INT_LITERAL)
-            int *i_ptr = (int*)&frame->code.opcodes[frame->code.opcodes_len];
-            int n = sizeof(int) / sizeof(fus_opcode_t);
-            for(int j = 0; j < n; j++){
-                ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
-            }
-            *i_ptr = i;
+            err = fus_code_push_int(&frame->code, i);
+            if(err)return err;
         }else if(fus_lexer_got_str(lexer)){
             char *s;
             err = fus_lexer_get_str(lexer, &s);
@@ -151,13 +147,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     if(err)return err;
                     ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
                         opcode_sym_i)
-                    int *i_ptr = (int*)&frame->code.opcodes[
-                        frame->code.opcodes_len];
-                    int n = sizeof(int) / sizeof(fus_opcode_t);
-                    for(int j = 0; j < n; j++){
-                        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
-                    }
-                    *i_ptr = i;
+                    err = fus_code_push_int(&frame->code, i);
+                    if(err)return err;
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
                     int sym_i = fus_symtable_find_or_add(compiler->symtable,
                         lexer->token, lexer->token_len);
@@ -169,13 +160,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     }
                     ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
                         opcode_sym_i)
-                    int *sym_i_ptr = (int*)&frame->code.opcodes[
-                        frame->code.opcodes_len];
-                    int n = sizeof(int) / sizeof(fus_opcode_t);
-                    for(int j = 0; j < n; j++){
-                        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, 0)
-                    }
-                    *sym_i_ptr = sym_i;
+                    err = fus_code_push_int(&frame->code, sym_i);
+                    if(err)return err;
                     int err = fus_lexer_next(lexer);
                     if(err)return err;
                 }else{
