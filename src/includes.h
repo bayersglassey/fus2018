@@ -9,17 +9,17 @@
 #include "array.h"
 #include "lexer.h"
 
+#include "symcodes.h"
+#include "symtable.h"
 #include "value.h"
 #include "stack.h"
 
 
-#include "symcodes.h"
-#include "symtable.h"
 #include "code.h"
 
 
-#include "state.h"
 #include "compiler.h"
+#include "state.h"
 
 
 #include "util.h"

@@ -2,6 +2,22 @@
 #include "includes.h"
 
 
+void fus_sym_cleanup(fus_sym_t *sym){
+    free(sym->token);
+    sym->token = NULL;
+}
+
+int fus_sym_init(fus_sym_t *sym, const char *token, int token_len){
+    sym->token = strndup(token, token_len);
+    if(sym->token == NULL)return 1;
+    sym->token_len = token_len;
+    sym->argtype = FUS_SYMCODE_ARGTYPE_NOT_OPCODE;
+    sym->autocompile = false;
+    return 0;
+}
+
+
+
 
 void fus_symtable_cleanup(fus_symtable_t *symtable){
     ARRAY_FREE(fus_sym_t, symtable->syms, fus_sym_cleanup);
@@ -42,6 +58,12 @@ int fus_symtable_find(fus_symtable_t *symtable,
 fus_sym_t *fus_symtable_get(fus_symtable_t *symtable, int sym_i){
     if(sym_i < 0 || sym_i >= symtable->syms_len)return NULL;
     return &symtable->syms[sym_i];
+}
+
+const char *fus_symtable_get_token(fus_symtable_t *symtable, int sym_i){
+    fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
+    if(sym == NULL)return NULL;
+    return sym->token;
 }
 
 int fus_symtable_add(fus_symtable_t *symtable,

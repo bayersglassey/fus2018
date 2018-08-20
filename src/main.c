@@ -69,7 +69,7 @@ int main(int n_args, char *args[]){
 #endif
 
     fus_state_t state;
-    err = fus_state_init(&state, &symtable);
+    err = fus_state_init(&state, &compiler);
     if(err)return err;
 
 
