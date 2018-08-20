@@ -10,13 +10,13 @@ void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame){
 }
 
 int fus_compiler_frame_init(fus_compiler_frame_t *frame,
-    fus_compiler_frame_t *parent, const char *name,
+    fus_compiler_frame_t *parent, char *name,
     fus_signature_t *sig
 ){
     int err;
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
-    frame->name = strdup(name);
+    frame->name = name;
     if(frame->name == NULL)return 1;
     err = fus_code_init(&frame->code, sig);
     if(err)return err;
@@ -37,7 +37,7 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
     return 0;
 }
 
-int fus_compiler_push_frame(fus_compiler_t *compiler, const char *name,
+int fus_compiler_push_frame(fus_compiler_t *compiler, char *name,
     fus_signature_t *sig
 ){
     int err;
@@ -99,7 +99,7 @@ static int fus_lexer_get_sig(fus_lexer_t *lexer, fus_signature_t *sig){
 }
 
 static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
-    fus_lexer_t *lexer, const char *name, int depth,
+    fus_lexer_t *lexer, char *name, int depth,
     fus_signature_t *sig, fus_compiler_frame_t **new_frame
 ){
     int err;
@@ -146,7 +146,6 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             err = fus_lexer_get(lexer, ")");
             if(err)return err;
-            free(def_name);
         }else if(fus_lexer_got(lexer, "(")){
             int err = fus_lexer_next(lexer);
             if(err)return err;
@@ -250,7 +249,7 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
 ){
     int err;
     err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
-        lexer->filename, 0, NULL, NULL);
+        strdup(lexer->filename), 0, NULL, NULL);
     if(err)return err;
     return 0;
 }
