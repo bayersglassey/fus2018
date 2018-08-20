@@ -10,7 +10,7 @@ typedef struct fus_state_frame {
 typedef struct fus_state {
     fus_compiler_t *compiler;
     fus_stack_t stack;
-    ARRAY_DECL(fus_state_frame_t, frames)
+    ARRAY_DECL(fus_state_frame_t*, frames)
 } fus_state_t;
 
 
@@ -19,5 +19,10 @@ void fus_state_frame_cleanup(fus_state_frame_t *frame);
 int fus_state_frame_init(fus_state_frame_t *frame, fus_code_t *code);
 void fus_state_cleanup(fus_state_t *state);
 int fus_state_init(fus_state_t *state, fus_compiler_t *compiler);
+
+int fus_state_push_frame(fus_state_t *state, fus_code_t *code);
+int fus_state_run(fus_state_t *state);
+int fus_state_step(fus_state_t *state);
+int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame);
 
 #endif

@@ -2,11 +2,14 @@
 #define _FUS_SYMCODES_H_
 
 
-#define FUS_SYMCODE_ARGTYPE_NOT_OPCODE 0
-#define FUS_SYMCODE_ARGTYPE_NONE 1
-#define FUS_SYMCODE_ARGTYPE_INT 2
-#define FUS_SYMCODE_ARGTYPE_SYM 3
-#define FUS_SYMCODE_ARGTYPE_OTHER 4
+enum {
+    FUS_SYMCODE_ARGTYPE_NOT_OPCODE,
+    FUS_SYMCODE_ARGTYPE_NONE,
+    FUS_SYMCODE_ARGTYPE_INT,
+    FUS_SYMCODE_ARGTYPE_SYM,
+    FUS_SYMCODE_ARGTYPE_OTHER,
+    FUS_SYMCODE_ARGTYPES
+};
 
 
 enum {
@@ -15,6 +18,9 @@ enum {
     #undef DEF_SYMCODE
     FUS_SYMCODES
 };
+
+
+int fus_symcode_argtype_get_size(int argtype);
 
 
 #endif

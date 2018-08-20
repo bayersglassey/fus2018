@@ -2,6 +2,14 @@
 #include "includes.h"
 
 
+void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
+    FILE *f
+){
+    fus_sym_t *sym = fus_symtable_get(symtable, opcode);
+    if(sym == NULL)fprintf(f, "OPCODE_NOT_FOUND");
+    fprintf(f, "%s", sym->token);
+}
+
 
 void fus_code_cleanup(fus_code_t *code){
     ARRAY_FREE(fus_opcode_t, code->opcodes, (void))
@@ -14,6 +22,41 @@ int fus_code_init(fus_code_t *code){
     return 0;
 }
 
+
+void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
+    fus_symtable_t *symtable, FILE *f
+){
+    int err;
+    fus_opcode_t opcode = code->opcodes[opcode_i];
+    fus_sym_t *opcode_sym = fus_symtable_get(symtable, opcode);
+    if(opcode_sym == NULL){
+        fprintf(f, "OPCODE_NO_SYM");
+        return;
+    }
+    fprintf(f, "%s", opcode_sym->token);
+    if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
+        int ii = 0;
+        err = fus_code_get_int(code, opcode_i + 1, &ii);
+        if(err){
+            fprintf(f, " COULDNT_GET_INT");
+        }else{
+            fprintf(f, " %i", ii);
+        }
+    }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
+        int sym_i = 0;
+        err = fus_code_get_int(code, opcode_i + 1, &sym_i);
+        if(err){
+            fprintf(f, " COULDNT_GET_SYM_I");
+        }else{
+            fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
+            if(sym == NULL){
+                fprintf(f, " COULDNT_GET_SYM");
+            }else{
+                fprintf(f, " %s", sym->token);
+            }
+        }
+    }
+}
 
 void fus_code_print_opcodes(fus_code_t *code, int indent){
     for(int i = 0; i < indent; i++)printf(" ");
@@ -58,44 +101,28 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
     fus_symtable_t *symtable
 ){
     int err;
-    for(int i = 0; i < code->opcodes_len; i++){
+    for(int i = 0; i < code->opcodes_len;){
         fus_opcode_t opcode = code->opcodes[i];
         fus_sym_t *opcode_sym = fus_symtable_get(symtable, opcode);
         if(opcode_sym == NULL){
             ERR_INFO();
             fprintf(stderr, "Could not find sym for opcode %i\n", opcode);
             return 2;
-        }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
-            int ii = 0;
-            err = fus_code_get_int(code, i + 1, &ii);
-            if(err)return err;
-            printf("OPCODE %i: %i (%s %i)\n", i, opcode,
-                opcode_sym->token, ii);
-            i += FUS_CODE_OPCODES_PER_INT;
-        }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
-            int sym_i = 0;
-            err = fus_code_get_int(code, i + 1, &sym_i);
-            if(err)return err;
-            fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
-            if(sym == NULL){
-                ERR_INFO();
-                fprintf(stderr,
-                    "After opcode %i (%s): could not find sym %i\n",
-                    opcode, opcode_sym->token, sym_i);
-                return 2;
-            }
-            printf("OPCODE %i: %i (%s %s)\n", i, opcode,
-                opcode_sym->token, sym->token);
-            i += FUS_CODE_OPCODES_PER_INT;
-        }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
-            printf("OPCODE %i: %i (%s)\n", i, opcode, opcode_sym->token);
-        }else{
+        }else if(opcode_sym->argtype < 0
+            || opcode_sym->argtype >= FUS_SYMCODE_ARGTYPES
+        ){
             ERR_INFO();
             fprintf(stderr, "OPCODE %i: %i (%s) - ERROR: sym is not a "
                 "standard opcode type\n",
                 i, opcode, opcode_sym->token);
             return 2;
         }
+
+        printf("OPCODE %i: %i (", i, opcode);
+        fus_code_print_opcode_at(code, i, symtable, stdout);
+        printf(")\n");
+
+        i += fus_symcode_argtype_get_size(opcode_sym->argtype);
     }
     return 0;
 }
@@ -106,6 +133,7 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
 
 
 void fus_coderef_cleanup(fus_coderef_t *coderef){
+    /* Nothing to do... */
 }
 
 int fus_coderef_init(fus_coderef_t *coderef, fus_code_t *code){

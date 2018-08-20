@@ -18,6 +18,16 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     return 0;
 }
 
+int run(fus_state_t *state){
+    int err;
+    fus_code_t *code = &state->compiler->frames[0]->code;
+    err = fus_state_push_frame(state, code);
+    if(err)return err;
+    err = fus_state_run(state);
+    if(err)return err;
+    return 0;
+}
+
 int main(int n_args, char *args[]){
     int err;
 
@@ -70,6 +80,9 @@ int main(int n_args, char *args[]){
 
     fus_state_t state;
     err = fus_state_init(&state, &compiler);
+    if(err)return err;
+
+    err = run(&state);
     if(err)return err;
 
 

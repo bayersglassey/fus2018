@@ -4,6 +4,7 @@
 
 typedef unsigned char fus_opcode_t;
 
+
 typedef struct fus_code {
     ARRAY_DECL(fus_opcode_t, opcodes)
     ARRAY_DECL(fus_value_t, literals)
@@ -15,11 +16,17 @@ typedef struct fus_coderef {
 } fus_coderef_t;
 
 
+
 #define FUS_CODE_OPCODES_PER_INT (sizeof(int) / sizeof(fus_opcode_t))
+
+void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
+    FILE *f);
 
 
 void fus_code_cleanup(fus_code_t *code);
 int fus_code_init(fus_code_t *code);
+void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
+    fus_symtable_t *symtable, FILE *f);
 void fus_code_print_opcodes(fus_code_t *code, int indent);
 int fus_code_push_int(fus_code_t *code, int i);
 int fus_code_get_int(fus_code_t *code, int opcode_i, int *i_ptr);

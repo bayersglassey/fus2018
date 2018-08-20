@@ -17,7 +17,8 @@ int fus_state_frame_init(fus_state_frame_t *frame, fus_code_t *code){
 
 void fus_state_cleanup(fus_state_t *state){
     fus_stack_cleanup(&state->stack);
-    ARRAY_FREE(fus_state_frame_t, state->frames, fus_state_frame_cleanup)
+    ARRAY_FREE_PTRS(fus_state_frame_t, state->frames,
+        fus_state_frame_cleanup)
 }
 
 int fus_state_init(fus_state_t *state, fus_compiler_t *compiler){
@@ -31,22 +32,53 @@ int fus_state_init(fus_state_t *state, fus_compiler_t *compiler){
 
 
 
-fus_state_frame_t *fus_state_get_cur_frame(fus_state_t *state){
+int fus_state_push_frame(fus_state_t *state, fus_code_t *code){
+    int err;
+    ARRAY_PUSH_NEW(fus_state_frame_t*, state->frames, frame);
+    err = fus_state_frame_init(frame, code);
+    if(err)return err;
+    return 0;
+}
+
+static fus_state_frame_t *fus_state_get_cur_frame(fus_state_t *state){
     if(state->frames_len == 0)return NULL;
-    return &state->frames[state->frames_len - 1];
+    return state->frames[state->frames_len - 1];
+}
+
+int fus_state_run(fus_state_t *state){
+    int err;
+    while(1){
+        fus_state_frame_t *frame = fus_state_get_cur_frame(state);
+        if(frame == NULL)break;
+
+        err = fus_state_step_inner(state, frame);
+        if(err)return err;
+    }
+    return 0;
 }
 
 int fus_state_step(fus_state_t *state){
-    int err;
     fus_state_frame_t *frame = fus_state_get_cur_frame(state);
     if(frame == NULL){
         ERR_INFO();
         fprintf(stderr, "No current frame\n");
         return 2;
     }
+    return fus_state_step_inner(state, frame);
+}
+
+int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame){
+    int err;
     fus_coderef_t *coderef = &frame->coderef;
     fus_code_t *code = coderef->code;
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
+
+    printf("STATE STEP INNER: OPCODE %i: %i (",
+        coderef->opcode_i, opcode);
+    fus_code_print_opcode_at(code, coderef->opcode_i,
+        state->compiler->symtable, stdout);
+    printf(")\n");
+
     coderef->opcode_i++;
     switch(opcode){
     case FUS_SYMCODE_LITERAL: {
@@ -142,6 +174,12 @@ int fus_state_step(fus_state_t *state){
         FUS_STACK_POP(state->stack, popped_value)
         state->stack.tos.data.i += popped_value.data.i;
         fus_value_detach(popped_value);
+        break;}
+    case FUS_SYMCODE_OBJ: {
+        FUS_STACK_PUSH(state->stack, fus_value_obj(NULL))
+        break;}
+    case FUS_SYMCODE_ARR: {
+        FUS_STACK_PUSH(state->stack, fus_value_arr(NULL))
         break;}
     default: {
         ERR_INFO();
