@@ -1,74 +1,79 @@
 
-def int_methods(-> o):
+sigdef methods(-> o)
+sigdef new(-> o)
+sigdef binop(* * -> *)
+
+def int_methods methods:
     obj
-        fun(x y -> x)(+) =.add
-        fun(x y -> x)(-) =.sub
-        fun(x y -> x)(==) =.eq
-def str_methods(-> o):
+        fun binop(+) =.add
+        fun binop(-) =.sub
+        fun binop(==) =.eq
+def str_methods methods:
     obj
-        fun(x y -> x)(str_add) =.add
-        fun(x y -> x)(drop "Can't subtract strings" error) =.sub
-        fun(x y -> x)(str_eq) =.eq
-def point_methods(-> o):
+        fun binop(str_add) =.add
+        fun binop(drop "Can't subtract strings" error) =.sub
+        fun binop(str_eq) =.eq
+def point_methods methods:
     obj
-        fun(a b -> a):
+        fun binop:
             ='b ='a
             ''a
-                ..x 'b .x &add =.x
-                ..y 'b .y &add =.y
+                ..x 'b .x @add =.x
+                ..y 'b .y @add =.y
         =.add
-        fun(a b -> a):
+        fun binop:
             ='b ='a
             ''a
-                ..x 'b .x &sub =.x
-                ..y 'b .y &sub =.y
+                ..x 'b .x @sub =.x
+                ..y 'b .y @sub =.y
         =.sub
-        fun(a b -> bool):
+        fun binop:
             ='b ='a
             'a .x 'b .x == ifelse:
                 'a .y 'b .y ==
             : n
         =.eq
-def int_new(-> o):
+def int_new new:
     obj
-        swap =.data `int =.classname &int_methods =.methods
-def str_new(-> o):
+        swap =.data `int =.classname @int_methods =.methods
+def str_new new:
     obj
-        swap =.data `str =.classname &str_methods =.methods
-def point_new(-> o):
+        swap =.data `str =.classname @str_methods =.methods
+def point_new new:
     ='y ='x
     obj
         'x =.x 'y =.y
         `point =.classname
-        &point_methods =.methods
+        @point_methods =.methods
 
 def method_binop_call(a b sym -> *):
     ='method_name ='b ='a
     'a .classname 'b .classname sym_eq assert
-    'a .methods `method_name obj_get arr ''a, ''b, @ pop nip
-def add(a b -> a): `add &method_binop_call
-def sub(a b -> a): `sub &method_binop_call
-def eq(a b -> bool): `eq &method_binop_call
-def ne(a b -> bool): &eq not
+    'a .methods `method_name obj_get ='f
+    ''a ''b ''f call binop
+def add binop: `add @method_binop_call
+def sub binop: `sub @method_binop_call
+def eq binop: `eq @method_binop_call
+def ne binop: @eq not
 
 #
 
-        1 &int_new
-        2 &int_new
-    &add
-    3 &int_new
-&eq assert
+        1 @int_new
+        2 @int_new
+    @add
+    3 @int_new
+@eq assert
 
 
-            1 &int_new
-            2 &int_new
-        &point_new
-            3 &int_new
-            4 &int_new
-        &point_new
-    &add
-        4 &int_new
-        6 &int_new
-    &point_new
-&eq assert
+            1 @int_new
+            2 @int_new
+        @point_new
+            3 @int_new
+            4 @int_new
+        @point_new
+    @add
+        4 @int_new
+        6 @int_new
+    @point_new
+@eq assert
 

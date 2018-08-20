@@ -1,4 +1,8 @@
 
+# modules
+
+    module def sigdef import @ &
+
 # stack
 
     dup drop swap nip over
@@ -52,5 +56,5 @@
 
 # fun
 
-    fun(...)(...) @
+    fun(...)(...) call(...)
 
