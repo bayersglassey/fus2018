@@ -10,14 +10,15 @@ void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame){
 }
 
 int fus_compiler_frame_init(fus_compiler_frame_t *frame,
-    fus_compiler_frame_t *parent, const char *name
+    fus_compiler_frame_t *parent, const char *name,
+    fus_signature_t *sig
 ){
     int err;
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
     frame->name = strdup(name);
     if(frame->name == NULL)return 1;
-    err = fus_code_init(&frame->code);
+    err = fus_code_init(&frame->code, sig);
     if(err)return err;
     return 0;
 }
@@ -36,11 +37,13 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
     return 0;
 }
 
-int fus_compiler_push_frame(fus_compiler_t *compiler, const char *name){
+int fus_compiler_push_frame(fus_compiler_t *compiler, const char *name,
+    fus_signature_t *sig
+){
     int err;
     fus_compiler_frame_t *new_frame = malloc(sizeof(*new_frame));
     if(new_frame == NULL)return 1;
-    err = fus_compiler_frame_init(new_frame, compiler->cur_frame, name);
+    err = fus_compiler_frame_init(new_frame, compiler->cur_frame, name, sig);
     if(err)return err;
     ARRAY_PUSH(fus_compiler_frame_t*, compiler->frames, new_frame)
     compiler->cur_frame = new_frame;
@@ -58,11 +61,49 @@ int fus_compiler_pop_frame(fus_compiler_t *compiler){
 }
 
 
+static int fus_lexer_get_sig(fus_lexer_t *lexer, fus_signature_t *sig){
+    int err;
+    err = fus_lexer_get(lexer, "(");
+    if(err)return err;
+    int encountered_arrow = 0;
+    int n_args_in = 0;
+    int n_args_out = 0;
+    while(1){
+        if(fus_lexer_done(lexer) || fus_lexer_got(lexer, ")"))break;
+        if(fus_lexer_got(lexer, "->")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            encountered_arrow++;
+            if(encountered_arrow > 1){
+                ERR_INFO();
+                fprintf(stderr, "Encountered multiple \"->\"\n");
+                return 2;
+            }
+        }else{
+            err = fus_lexer_get_name(lexer, NULL);
+            if(err)return err;
+
+            if(encountered_arrow == 0)n_args_in++;
+            else n_args_out++;
+        }
+    }
+    if(encountered_arrow == 0){
+        return fus_lexer_unexpected(lexer, "\"->\"");
+    }
+    err = fus_lexer_get(lexer, ")");
+    if(err)return err;
+
+    err = fus_signature_init(sig, n_args_in, n_args_out);
+    if(err)return err;
+    return 0;
+}
+
 static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
-    fus_lexer_t *lexer, const char *name, int depth
+    fus_lexer_t *lexer, const char *name, int depth,
+    fus_signature_t *sig, fus_compiler_frame_t **new_frame
 ){
     int err;
-    err = fus_compiler_push_frame(compiler, name);
+    err = fus_compiler_push_frame(compiler, name, sig);
     if(err)return err;
 
     fus_compiler_frame_t *frame = compiler->cur_frame;
@@ -89,11 +130,19 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_get_name(lexer, &def_name);
             if(err)return err;
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("Def: %s\n", def_name);
+            fus_signature_t sig;
+            err = fus_lexer_get_sig(lexer, &sig);
+            if(err)return err;
+
+            printf("Def: %s (%i -> %i)\n", def_name,
+                sig.n_args_in, sig.n_args_out);
+
             err = fus_lexer_get(lexer, "(");
             if(err)return err;
+            fus_compiler_frame_t *new_frame = NULL;
             err = fus_compiler_compile_frame_from_lexer(
-                compiler, lexer, def_name, depth + 1);
+                compiler, lexer, def_name, depth + 1,
+                &sig, &new_frame);
             if(err)return err;
             err = fus_lexer_get(lexer, ")");
             if(err)return err;
@@ -109,18 +158,27 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             int i;
             err = fus_lexer_get_int(lexer, &i);
             if(err)return err;
+            for(int i = 0; i < depth; i++)printf("  ");
             printf("Int: %i\n", i);
             ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
                 FUS_SYMCODE_INT_LITERAL)
             err = fus_code_push_int(&frame->code, i);
             if(err)return err;
         }else if(fus_lexer_got_str(lexer)){
-            char *s;
-            err = fus_lexer_get_str(lexer, &s);
+            char *ss;
+            err = fus_lexer_get_str(lexer, &ss);
             if(err)return err;
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("Str: %s\n", s);
-            free(s);
+            printf("Str: %s\n", ss);
+            fus_str_t *s = fus_str(ss);
+            if(s == NULL)return 1;
+            ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                FUS_SYMCODE_LITERAL)
+            ARRAY_PUSH(fus_value_t, frame->code.literals,
+                fus_value_str(s))
+            err = fus_code_push_int(&frame->code,
+                frame->code.literals_len - 1);
+            if(err)return err;
         }else{
             int opcode_sym_i = fus_symtable_find(compiler->symtable,
                 lexer->token, lexer->token_len);
@@ -183,6 +241,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     }
     err = fus_compiler_pop_frame(compiler);
     if(err)return err;
+    if(new_frame != NULL)*new_frame = frame;
     return 0;
 }
 
@@ -191,7 +250,7 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
 ){
     int err;
     err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
-        lexer->filename, 0);
+        lexer->filename, 0, NULL, NULL);
     if(err)return err;
     return 0;
 }

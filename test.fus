@@ -1,3 +1,13 @@
-1 2 + 3 + p
-obj 1 =.x 2 =.y dup p
-dup .z p
+
+def a(->):
+    1 2 + 3 + p
+
+def b(->):
+    obj 1 =.x 2 =.y p
+
+@a
+"lala" p
+@c
+
+
+def c(->): @a @b

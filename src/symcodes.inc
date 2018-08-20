@@ -4,7 +4,9 @@ definitions of DEF_SYMCODE */
 
 
 DEF_SYMCODE(DEF, "def", NOT_OPCODE, false)
-DEF_SYMCODE(CALL, "&", NOT_OPCODE, false)
+DEF_SYMCODE(REF, "&", INT, false)
+DEF_SYMCODE(CALL, "@", INT, false)
+DEF_SYMCODE(QUOTE, "quote", NOT_OPCODE, false)
 DEF_SYMCODE(NULL, "null", NONE, true)
 DEF_SYMCODE(BOOL, "bool", NOT_OPCODE, false)
 DEF_SYMCODE(INT, "int", NOT_OPCODE, false)
@@ -85,5 +87,5 @@ DEF_SYMCODE(ARR_LEN, "len", NONE, true)
 DEF_SYMCODE(ARR_GET, ".$", NONE, true)
 DEF_SYMCODE(ARR_RIP, "..$", NONE, true)
 DEF_SYMCODE(ARR_SET, "=.$", NONE, true)
-DEF_SYMCODE(FUN_APPLY, "@", NONE, true)
+DEF_SYMCODE(FUN_CALL, "call", INT, false)
 

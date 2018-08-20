@@ -109,7 +109,7 @@ void fus_value_cleanup(fus_value_t value);
 fus_value_t fus_value_null();
 fus_value_t fus_value_bool(bool b);
 fus_value_t fus_value_int(int i);
-fus_str_t *fus_str(const char *ss);
+fus_str_t *fus_str(char *ss);
 fus_value_t fus_value_str(fus_str_t *s);
 fus_value_t fus_value_sym(int sym_i);
 fus_value_t fus_value_arr(fus_arr_t *a);

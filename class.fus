@@ -1,7 +1,7 @@
 
 sigdef methods(-> o)
 sigdef new(-> o)
-sigdef binop(* * -> *)
+sigdef binop(a b -> c)
 
 def int_methods methods:
     obj
@@ -46,7 +46,7 @@ def point_new new:
         `point =.classname
         @point_methods =.methods
 
-def method_binop_call(a b sym -> *):
+def method_binop_call(a b sym -> c):
     ='method_name ='b ='a
     'a .classname 'b .classname sym_eq assert
     'a .methods `method_name obj_get ='f

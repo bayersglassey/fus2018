@@ -11,12 +11,32 @@ void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
 }
 
 
+
+void fus_signature_cleanup(fus_signature_t *sig){
+    /* Nothing to do */
+}
+int fus_signature_init(fus_signature_t *sig, int n_args_in, int n_args_out){
+    sig->n_args_in = n_args_in;
+    sig->n_args_out = n_args_out;
+    return 0;
+}
+
+
+
 void fus_code_cleanup(fus_code_t *code){
     ARRAY_FREE(fus_opcode_t, code->opcodes, (void))
     ARRAY_FREE_BYVAL(fus_value_t, code->literals, fus_value_detach)
 }
 
-int fus_code_init(fus_code_t *code){
+int fus_code_init(fus_code_t *code, fus_signature_t *sig){
+    int err;
+    code->has_sig = sig != NULL;
+    if(code->has_sig){
+        code->sig = *sig;
+    }else{
+        err = fus_signature_init(&code->sig, 0, 0);
+        if(err)return err;
+    }
     ARRAY_INIT(code->opcodes)
     ARRAY_INIT(code->literals)
     return 0;

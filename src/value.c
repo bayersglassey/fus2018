@@ -99,16 +99,11 @@ fus_value_t fus_value_int(int i){
     return value;
 }
 
-fus_str_t *fus_str(const char *ss){
-    if(ss == NULL)return NULL;
+fus_str_t *fus_str(char *ss){
     fus_str_t *s = malloc(sizeof(*s));
     if(s == NULL)return NULL;
-    s->text = strdup(ss);
-    if(s->text == NULL){
-        free(s);
-        return NULL;
-    }
-    int text_len = strlen(s->text);
+    s->text = ss;
+    int text_len = strlen(ss);
     s->text_len = text_len; /* or text_len + 1 ?.. */
     s->text_size = text_len + 1;
     return s;
