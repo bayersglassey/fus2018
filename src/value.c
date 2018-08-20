@@ -4,6 +4,7 @@
 
 char fus_type_to_c(fus_type_t type){
     switch(type){
+    case FUS_TYPE_ANY: return '*';
     case FUS_TYPE_NULL: return 'n';
     case FUS_TYPE_BOOL: return 'b';
     case FUS_TYPE_INT: return 'i';
@@ -22,6 +23,7 @@ char fus_type_to_c(fus_type_t type){
 
 fus_type_t fus_type_from_c(char c){
     switch(c){
+    case '*': return FUS_TYPE_ANY;
     case 'n': return FUS_TYPE_NULL;
     case 'b': return FUS_TYPE_BOOL;
     case 'i': return FUS_TYPE_INT;
@@ -37,31 +39,6 @@ fus_type_t fus_type_from_c(char c){
     }
 }
 
-
-
-
-#define FUS_VALUE_ATTACH(T, tt, v) { \
-    fus_##T##_t *t = v.data.tt; \
-    if(t != NULL){ \
-        t->refcount++; \
-    } \
-}
-
-#define FUS_VALUE_DETACH(T, tt, v) { \
-    fus_##T##_t *t = v.data.tt; \
-    if(t != NULL){ \
-        t->refcount--; \
-        if(t->refcount <= 0){ \
-            if(t->refcount < 0){ \
-                fprintf(stderr, #T " with negative refcount: %p\n", \
-                    t); \
-            } \
-            fus_##T##_cleanup(t); \
-            free(t); \
-            v.data.tt = NULL; \
-        } \
-    } \
-}
 
 void fus_value_attach(fus_value_t value){
     if(value.type == FUS_TYPE_BIGINT){
@@ -195,6 +172,23 @@ void fus_arr_cleanup(fus_arr_t *a){
     ARRAY_FREE_BYVAL(fus_value_t, a->values, fus_value_detach)
 }
 
+int fus_arr_init(fus_arr_t *a){
+    a->refcount = 0;
+    ARRAY_INIT(a->values)
+    return 0;
+}
+
+int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0){
+    int err;
+    err = fus_arr_init(a);
+    if(err)return err;
+    ARRAY_COPY(fus_value_t, a0->values, a->values)
+    for(int i = 0; i < a->values_len; i++){
+        fus_value_attach(a->values[i]);
+    }
+    return 0;
+}
+
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry){
     if(entry == NULL)return;
     fus_value_detach(entry->value);
@@ -220,6 +214,43 @@ int fus_obj_init(fus_obj_t *o){
     return 0;
 }
 
+int fus_obj_copy(fus_obj_t *o, fus_obj_t *o0){
+    int err;
+    err = fus_obj_init(o);
+    if(err)return err;
+    ARRAY_COPY(fus_obj_entry_t, o0->entries, o->entries)
+    for(int i = 0; i < o->entries_len; i++){
+        fus_value_attach(o->entries[i].value);
+    }
+    return 0;
+}
+
+fus_obj_entry_t *fus_obj_get(fus_obj_t *o, int sym_i){
+    if(o != NULL){
+        for(int i = 0; i < o->entries_len; i++){
+            fus_obj_entry_t *entry = &o->entries[i];
+            if(entry->sym_i == sym_i)return entry;
+        }
+    }
+    return NULL;
+}
+
+int fus_obj_set(fus_obj_t *o, int sym_i, fus_value_t value){
+    /* The obj is expected to be "unique" (that is, non-NULL and
+    with refcount == 1) */
+    for(int i = 0; i < o->entries_len; i++){
+        fus_obj_entry_t *entry = &o->entries[i];
+        if(entry->sym_i == sym_i){
+            entry->value = value;
+            return 0;
+        }
+    }
+    ARRAY_PUSH(fus_obj_entry_t, o->entries, (fus_obj_entry_t){0})
+    fus_obj_entry_t *entry = &o->entries[o->entries_len - 1];
+    entry->sym_i = sym_i;
+    entry->value = value;
+    return 0;
+}
 
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth

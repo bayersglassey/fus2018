@@ -47,37 +47,60 @@ static fus_state_frame_t *fus_state_get_cur_frame(fus_state_t *state){
 
 int fus_state_run(fus_state_t *state){
     int err;
-    while(1){
-        fus_state_frame_t *frame = fus_state_get_cur_frame(state);
-        if(frame == NULL)break;
-
-        err = fus_state_step_inner(state, frame);
+    bool done = false;
+    while(!done){
+        err = fus_state_step(state, &done);
         if(err)return err;
     }
     return 0;
 }
 
-int fus_state_step(fus_state_t *state){
+int fus_state_step(fus_state_t *state, bool *done_ptr){
+    int err;
     fus_state_frame_t *frame = fus_state_get_cur_frame(state);
     if(frame == NULL){
-        ERR_INFO();
-        fprintf(stderr, "No current frame\n");
-        return 2;
-    }
-    return fus_state_step_inner(state, frame);
-}
-
-int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame){
-    int err;
+        *done_ptr = true; return 0;}
     fus_coderef_t *coderef = &frame->coderef;
     fus_code_t *code = coderef->code;
+    if(coderef->opcode_i >= code->opcodes_len){
+        *done_ptr = true; return 0;}
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
+    fus_stack_t *stack = &state->stack;
 
     printf("STATE STEP INNER: OPCODE %i: %i (",
         coderef->opcode_i, opcode);
     fus_code_print_opcode_at(code, coderef->opcode_i,
         state->compiler->symtable, stdout);
     printf(")\n");
+
+    #define FUS_STATE_ASSERT_STACK(T) if(!( \
+        (T == FUS_TYPE_ANY || stack->tos.type == T) \
+    )){ \
+        ERR_INFO(); \
+        fus_sym_t *opcode_sym = fus_symtable_get( \
+            state->compiler->symtable, opcode); \
+        fprintf(stderr, "Executing opcode %s: " \
+            "Expected (%c) on stack, found (%c)\n", \
+            fus_symtable_get_token(state->compiler->symtable, opcode), \
+            fus_type_to_c(T), fus_type_to_c(stack->tos.type)); \
+        return 2; \
+    }
+
+    #define FUS_STATE_ASSERT_STACK2(T1, T2) if(!( \
+        (T1 == FUS_TYPE_ANY || stack->nos.type == T1) && \
+        (T2 == FUS_TYPE_ANY || stack->tos.type == T2) \
+    )){ \
+        ERR_INFO(); \
+        fus_sym_t *opcode_sym = fus_symtable_get( \
+            state->compiler->symtable, opcode); \
+        fprintf(stderr, "Executing opcode %s: " \
+            "Expected (%c %c) on stack, found (%c %c)\n", \
+            fus_symtable_get_token(state->compiler->symtable, opcode), \
+            fus_type_to_c(T1), fus_type_to_c(T1), \
+            fus_type_to_c(stack->nos.type), \
+            fus_type_to_c(stack->tos.type)); \
+        return 2; \
+    }
 
     coderef->opcode_i++;
     switch(opcode){
@@ -86,11 +109,11 @@ int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame){
         err = fus_code_get_int(code, coderef->opcode_i, &literal_i);
         if(err)return err;
         coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
-        FUS_STACK_PUSH(state->stack, code->literals[literal_i])
+        FUS_STACK_PUSH(*stack, code->literals[literal_i])
         break;}
     case FUS_SYMCODE_TYPEOF: {
         int sym_i = -1;
-        fus_type_t type = state->stack.tos.type;
+        fus_type_t type = stack->tos.type;
         if(type == FUS_TYPE_NULL){
             sym_i = FUS_SYMCODE_NULL;
         }else if(type == FUS_TYPE_BOOL){
@@ -112,40 +135,41 @@ int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame){
             fprintf(stderr, "Unrecognized type: %i\n", type);
             return 2;
         }
-        fus_value_detach(state->stack.tos);
-        state->stack.tos = fus_value_sym(sym_i);
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_sym(sym_i);
         break;}
     case FUS_SYMCODE_STACK_DUP: {
         /* x -> x x */
-        FUS_STACK_PUSH(state->stack, state->stack.tos)
+        FUS_STACK_PUSH(*stack, stack->tos)
         break;}
     case FUS_SYMCODE_STACK_DROP: {
         /* x -> */
         fus_value_t popped_value;
-        FUS_STACK_POP(state->stack, popped_value)
+        FUS_STACK_POP(*stack, popped_value)
         fus_value_detach(popped_value);
         break;}
     case FUS_SYMCODE_STACK_SWAP: {
         /* x y -> y x */
-        fus_value_t temp_value = state->stack.tos;
-        state->stack.tos = state->stack.nos;
-        state->stack.nos = temp_value;
+        fus_value_t temp_value = stack->tos;
+        stack->tos = stack->nos;
+        stack->nos = temp_value;
         break;}
     case FUS_SYMCODE_STACK_NIP: {
         /* x y -> y */
         fus_value_t popped_value;
-        FUS_STACK_POP(state->stack, popped_value)
-        fus_value_detach(state->stack.tos);
-        state->stack.tos = popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        fus_value_detach(stack->tos);
+        stack->tos = popped_value;
         break;}
     case FUS_SYMCODE_STACK_OVER: {
         /* x y -> x y x */
         break;}
     case FUS_SYMCODE_DEBUG_PRINT: {
         fus_value_t popped_value;
-        FUS_STACK_POP(state->stack, popped_value)
+        FUS_STACK_POP(*stack, popped_value)
         fus_value_print(popped_value, state->compiler->symtable,
             stdout, 0, 0);
+        printf("\n");
         fus_value_detach(popped_value);
         break;}
     case FUS_SYMCODE_INT_LITERAL: {
@@ -153,33 +177,51 @@ int fus_state_step_inner(fus_state_t *state, fus_state_frame_t *frame){
         err = fus_code_get_int(code, coderef->opcode_i, &i);
         if(err)return err;
         coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
-        FUS_STACK_PUSH(state->stack, fus_value_int(i))
+        FUS_STACK_PUSH(*stack, fus_value_int(i))
         break;}
     case FUS_SYMCODE_INT_ADD: {
-        if(!(
-            state->stack.nos.type == FUS_TYPE_INT &&
-            state->stack.tos.type == FUS_TYPE_INT
-        )){
-            ERR_INFO();
-            fus_sym_t *opcode_sym = fus_symtable_get(
-                state->compiler->symtable, opcode);
-            fprintf(stderr, "Executing opcode %s: "
-                "Expected (i i) on stack, found (%c %c)\n",
-                fus_symtable_get_token(state->compiler->symtable, opcode),
-                fus_type_to_c(state->stack.nos.type),
-                fus_type_to_c(state->stack.tos.type));
-            return 2;
-        }
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
         fus_value_t popped_value;
-        FUS_STACK_POP(state->stack, popped_value)
-        state->stack.tos.data.i += popped_value.data.i;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.i += popped_value.data.i;
         fus_value_detach(popped_value);
         break;}
     case FUS_SYMCODE_OBJ: {
-        FUS_STACK_PUSH(state->stack, fus_value_obj(NULL))
+        FUS_STACK_PUSH(*stack, fus_value_obj(NULL))
+        break;}
+    case FUS_SYMCODE_OBJ_GET: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_OBJ)
+        int sym_i = -1;
+        err = fus_code_get_int(code, coderef->opcode_i, &sym_i);
+        if(err)return err;
+        coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
+        fus_value_t old_value = stack->tos;
+        fus_obj_entry_t *entry = fus_obj_get(
+            old_value.data.o, sym_i);
+        if(entry == NULL){
+            ERR_INFO();
+            fprintf(stderr, "Obj key not found: %s\n",
+                fus_symtable_get_token(state->compiler->symtable, sym_i));
+            return 2;
+        }
+        stack->tos = entry->value;
+        fus_value_attach(stack->tos);
+        fus_value_detach(old_value);
+        break;}
+    case FUS_SYMCODE_OBJ_SET: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_OBJ, FUS_TYPE_ANY)
+        int sym_i = -1;
+        err = fus_code_get_int(code, coderef->opcode_i, &sym_i);
+        if(err)return err;
+        coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        FUS_VALUE_MKUNIQUE(obj, stack->tos.data.o)
+        err = fus_obj_set(stack->tos.data.o, sym_i, popped_value);
+        if(err)return err;
         break;}
     case FUS_SYMCODE_ARR: {
-        FUS_STACK_PUSH(state->stack, fus_value_arr(NULL))
+        FUS_STACK_PUSH(*stack, fus_value_arr(NULL))
         break;}
     default: {
         ERR_INFO();

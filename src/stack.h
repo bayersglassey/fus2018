@@ -11,23 +11,23 @@ typedef struct fus_stack {
 
 
 #define FUS_STACK_PUSH(s, x) { \
-    if(s.nos.type != FUS_TYPE_NULL){ \
-        ARRAY_PUSH(fus_value_t, s.tail, s.nos) \
+    if((s).nos.type != FUS_TYPE_NULL){ \
+        ARRAY_PUSH(fus_value_t, (s).tail, (s).nos) \
     } \
-    s.nos = s.tos; \
-    s.tos = x; \
+    (s).nos = (s).tos; \
+    (s).tos = x; \
     fus_value_attach(x); \
 }
 
 #define FUS_STACK_POP(s, x) { \
-    x = s.tos; \
-    s.tos = s.nos; \
-    if(s.tail_len > 0){ \
-        s.nos = s.tail[s.tail_len - 1]; \
-        s.tail[s.tail_len - 1] = fus_value_null(); \
-        s.tail_len--; \
+    x = (s).tos; \
+    (s).tos = (s).nos; \
+    if((s).tail_len > 0){ \
+        (s).nos = (s).tail[(s).tail_len - 1]; \
+        (s).tail[(s).tail_len - 1] = fus_value_null(); \
+        (s).tail_len--; \
     }else{ \
-        s.nos = fus_value_null(); \
+        (s).nos = fus_value_null(); \
     } \
 }
 

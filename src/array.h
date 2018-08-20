@@ -11,10 +11,16 @@
     array##_len = 0; \
     array##_size = 0;
 
-#define ARRAY_COPY(array, array2) \
-    array = array2; \
-    array##_len = array2##_len; \
-    array##_size = array##_size;
+#define ARRAY_COPY(T, array, array2) \
+{ \
+    T *new_array = malloc(sizeof(*new_array) * array##_size); \
+    if(new_array == NULL)return 1; \
+    for(int i = 0; i < array##_size; i++){ \
+        new_array[i] = array[i];} \
+    array2 = new_array; \
+    array2##_len = array##_len; \
+    array2##_size = array##_size; \
+}
 
 #define ARRAY_GROW(T, array) \
 { \
