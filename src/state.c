@@ -172,6 +172,62 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         printf("\n");
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_DEBUG_ASSERT: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_BOOL)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        if(!popped_value.data.b){
+            ERR_INFO();
+            fprintf(stderr, "Failed assertion\n");
+            return 2;
+        }
+        fus_value_detach(popped_value);
+        break;}
+    case FUS_SYMCODE_DEBUG_ERROR: {
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        ERR_INFO();
+        fprintf(stderr, "Error raised: ");
+        fus_value_print(popped_value, state->compiler->symtable,
+            stderr, 0, 0);
+        fprintf(stderr, "\n");
+        fus_value_detach(popped_value);
+        break;}
+    case FUS_SYMCODE_NULL: {
+        FUS_STACK_PUSH(*stack, fus_value_null())
+        break;}
+    case FUS_SYMCODE_NULL_ISNULL: {
+        stack->tos = fus_value_bool(
+            stack->tos.type == FUS_TYPE_NULL);
+        break;}
+    case FUS_SYMCODE_BOOL_Y: {
+        FUS_STACK_PUSH(*stack, fus_value_bool(true))
+        break;}
+    case FUS_SYMCODE_BOOL_N: {
+        FUS_STACK_PUSH(*stack, fus_value_bool(false))
+        break;}
+    case FUS_SYMCODE_BOOL_NOT: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_BOOL)
+        stack->tos.data.b = !stack->tos.data.b;
+        break;}
+    case FUS_SYMCODE_BOOL_AND: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_BOOL, FUS_TYPE_BOOL)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.b = stack->tos.data.b && popped_value.data.b;
+        break;}
+    case FUS_SYMCODE_BOOL_OR: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_BOOL, FUS_TYPE_BOOL)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.b = stack->tos.data.b || popped_value.data.b;
+        break;}
+    case FUS_SYMCODE_BOOL_EQ: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_BOOL, FUS_TYPE_BOOL)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.b = stack->tos.data.b == popped_value.data.b;
+        break;}
     case FUS_SYMCODE_INT_LITERAL: {
         int i = -1;
         err = fus_code_get_int(code, coderef->opcode_i, &i);
@@ -179,12 +235,81 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         coderef->opcode_i += FUS_CODE_OPCODES_PER_INT;
         FUS_STACK_PUSH(*stack, fus_value_int(i))
         break;}
+    case FUS_SYMCODE_INT_NEG: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_INT)
+        stack->tos.data.i = -stack->tos.data.i;
+        break;}
     case FUS_SYMCODE_INT_ADD: {
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
         fus_value_t popped_value;
         FUS_STACK_POP(*stack, popped_value)
         stack->tos.data.i += popped_value.data.i;
-        fus_value_detach(popped_value);
+        break;}
+    case FUS_SYMCODE_INT_SUB: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.i -= popped_value.data.i;
+        break;}
+    case FUS_SYMCODE_INT_MUL: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.i *= popped_value.data.i;
+        break;}
+    case FUS_SYMCODE_INT_DIV: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.i /= popped_value.data.i;
+        break;}
+    case FUS_SYMCODE_INT_MOD: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos.data.i %= popped_value.data.i;
+        break;}
+    case FUS_SYMCODE_INT_LT: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i < popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_INT_GT: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i > popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_INT_LE: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i <= popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_INT_GE: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i >= popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_INT_EQ: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i == popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_INT_NE: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_INT, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i != popped_value.data.i);
         break;}
     case FUS_SYMCODE_OBJ: {
         FUS_STACK_PUSH(*stack, fus_value_obj(NULL))
@@ -224,8 +349,16 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         FUS_STACK_PUSH(*stack, fus_value_arr(NULL))
         break;}
     default: {
+        fus_sym_t *opcode_sym = fus_symtable_get(
+            state->compiler->symtable, opcode);
         ERR_INFO();
-        fprintf(stderr, "Unrecognized opcode: %i\n", opcode);
+        fprintf(stderr, "Executing opcode %i (%s): ", opcode,
+            fus_symtable_get_token(state->compiler->symtable, opcode));
+        if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NOT_OPCODE){
+            fprintf(stderr, "Not an opcode\n");
+        }else{
+            fprintf(stderr, "Not yet implemented\n");
+        }
         return 2;}
     }
     return 0;
