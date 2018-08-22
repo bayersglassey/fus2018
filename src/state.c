@@ -338,6 +338,21 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         stack->tos = fus_value_bool(
             stack->tos.data.i != popped_value.data.i);
         break;}
+    case FUS_SYMCODE_SYM_EQ: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_SYM, FUS_TYPE_SYM)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(
+            stack->tos.data.i == popped_value.data.i);
+        break;}
+    case FUS_SYMCODE_SYM_TOSTR: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_SYM)
+        const char *token = fus_symtable_get_token(
+            state->compiler->symtable, stack->tos.data.i);
+        fus_str_t *s = fus_str(strdup(token));
+        if(s == NULL)return 1;
+        stack->tos = fus_value_str(s);
+        break;}
     case FUS_SYMCODE_OBJ: {
         FUS_STACK_PUSH(*stack, fus_value_obj(NULL))
         break;}

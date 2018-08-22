@@ -100,6 +100,7 @@ fus_value_t fus_value_int(int i){
 }
 
 fus_str_t *fus_str(char *ss){
+    if(ss == NULL)return NULL;
     fus_str_t *s = malloc(sizeof(*s));
     if(s == NULL)return NULL;
     s->text = ss;
@@ -262,6 +263,10 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
         /* TODO: Properly escape strings */
         fprintf(stderr, "TODO: Properly escape strings in %s\n", __FILE__);
         fprintf(f, "\"%s\"", value.data.s == NULL? "": value.data.s->text);
+    }else if(value.type == FUS_TYPE_SYM){
+        const char *sym_token = fus_symtable_get_token(
+            symtable, value.data.i);
+        fprintf(f, "`%s", sym_token == NULL? "SYM_NOT_FOUND": sym_token);
     }else if(value.type == FUS_TYPE_ARR){
         fprintf(f, "arr");
         fus_arr_t *a = value.data.a;
@@ -283,7 +288,7 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
                     indent, depth + 1);
                 const char *sym_token = fus_symtable_get_token(
                     symtable, entry->sym_i);
-                fprintf(f, " =.%s ", sym_token == NULL?
+                fprintf(f, " =.%s", sym_token == NULL?
                     "SYM_NOT_FOUND": sym_token);
             }
         }

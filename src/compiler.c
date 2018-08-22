@@ -113,6 +113,16 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     printf("Compiling frame: %s\n", frame->name);
 #endif
 
+    #define FUS_COMPILER_PUSH_LITERAL(m_value) { \
+        fus_value_t value = m_value; \
+        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, \
+            FUS_SYMCODE_LITERAL) \
+        ARRAY_PUSH(fus_value_t, frame->code.literals, value) \
+        err = fus_code_push_int(&frame->code, \
+            frame->code.literals_len - 1); \
+        if(err)return err; \
+    }
+
     int block_depth = 0;
     while(1){
         if(fus_lexer_done(lexer)){
@@ -185,13 +195,23 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 #endif
             fus_str_t *s = fus_str(ss);
             if(s == NULL)return 1;
-            ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
-                FUS_SYMCODE_LITERAL)
-            ARRAY_PUSH(fus_value_t, frame->code.literals,
-                fus_value_str(s))
-            err = fus_code_push_int(&frame->code,
-                frame->code.literals_len - 1);
+            FUS_COMPILER_PUSH_LITERAL(fus_value_str(s))
+        }else if(fus_lexer_got(lexer, "`")){
+            err = fus_lexer_next(lexer);
             if(err)return err;
+            if(!fus_lexer_got_name(lexer)){
+                return fus_lexer_unexpected(lexer, "name");
+            }
+#ifdef FUS_DEBUG_COMPILER
+            for(int i = 0; i < depth; i++)printf("  ");
+            printf("Sym: %.*s\n", lexer->token_len, lexer->token);
+#endif
+            int sym_i = fus_symtable_find_or_add(compiler->symtable,
+                lexer->token, lexer->token_len);
+            if(sym_i < 0)return 1;
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            FUS_COMPILER_PUSH_LITERAL(fus_value_sym(sym_i))
         }else{
             int opcode_sym_i = fus_symtable_find(compiler->symtable,
                 lexer->token, lexer->token_len);
@@ -244,14 +264,11 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     return 2;
                 }
             }else{
-#ifdef FUS_DEBUG_COMPILER
-                for(int i = 0; i < depth; i++)printf("  ");
-                printf("Lexed: ");
+                ERR_INFO();
+                printf("Unrecognized token: ");
                 fus_lexer_show(lexer, stdout);
                 printf("\n");
-#endif
-                int err = fus_lexer_next(lexer);
-                if(err)return err;
+                return 2;
             }
         }
 

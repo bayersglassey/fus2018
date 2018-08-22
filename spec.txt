@@ -36,7 +36,7 @@
 
     "abc"
     ;;abc
-    str_eq str_add str_indexof str_len str_get str_set
+    str_eq str_indexof str_len str_get str_set str_split str_join
     str_tosym str_toint str_toarr
 
 # sym
@@ -51,7 +51,7 @@
 
 # arr
 
-    arr , push pop lpush lpop len .$ ..$ =.$
+    arr len , push pop lpush lpop split join .$ ..$ =.$
     quote(...)
 
 # fun

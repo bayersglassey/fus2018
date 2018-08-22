@@ -1,13 +1,8 @@
 
-def a(->):
-    1 2 + 3 + p
-
-def b(->):
-    obj 1 =.x 2 =.y p
-
-@a
-"lala" p
-@c
+#obj 1 =.x 2 =.y ='o
+#'o ..x p p
+#'o .x p p
 
 
-def c(->): @a @b
+`x sym_tostr p
+

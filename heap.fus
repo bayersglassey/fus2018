@@ -9,6 +9,12 @@ module heap:
   import: simple del
 
   module simple:
+    # SIMPLE HEAP IMPLEMENTATION:
+    #
+    # Keys are integers, key-value pairs are stored in a big array,
+    # search algorithm is linear.
+    # An improved heap would e.g. use a binary tree instead of an
+    # array.
 
     def new(-> h):
         obj

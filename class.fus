@@ -10,7 +10,7 @@ def int_methods methods:
         fun binop(==) =.eq
 def str_methods methods:
     obj
-        fun binop(str_add) =.add
+        fun binop(str_join) =.add
         fun binop(drop "Can't subtract strings" error) =.sub
         fun binop(str_eq) =.eq
 def point_methods methods:
