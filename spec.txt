@@ -44,11 +44,11 @@
 
 # obj
 
-    obj .x ..x =.x keys get set rip has
+    obj .x ..x =.x ?.x keys get rip set has
 
 # arr
 
-    arr len , push pop lpush lpop split join .$ ..$ =.$
+    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$
     quote(...)
 
 # fun
