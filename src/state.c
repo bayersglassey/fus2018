@@ -169,6 +169,7 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         break;}
     case FUS_SYMCODE_STACK_OVER: {
         /* x y -> x y x */
+        FUS_STACK_PUSH(*stack, stack->nos)
         break;}
     case FUS_SYMCODE_VAR_GET: case FUS_SYMCODE_VAR_RIP: {
         int sym_i = -1;

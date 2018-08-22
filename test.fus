@@ -1,3 +1,63 @@
 
-quote: 1 2 "ASD" (whoah `yeah "xxx") 3333
-p
+
+
+"Stack" p
+1 dup 1 == assert 1 == assert
+1 2 drop 1 == assert
+1 2 swap 1 == assert 2 == assert
+1 2 nip 2 == assert
+1 2 over 1 == assert 2 == assert 1 == assert
+"ok" p
+
+"Vars" p
+1 ='x
+'x 1 == assert
+''x 1 == assert
+'x isnull assert
+"ok" p
+
+"Arithmetic" p
+10 neg -10 == assert
+1 2 +    3 == assert
+1 2 -   -1 == assert
+2 3 *    6 == assert
+6 3 /    2 == assert
+7 3 mod  1 == assert
+# TODO: tests for "/" and "%" when there are negatives involved
+3 4 == not assert
+3 4 != assert
+3 4 <  assert
+3 4 <= assert
+3 4 >  not assert
+3 4 >= not assert
+"ok" p
+
+"Logic" p
+y assert
+n not assert
+y y and assert
+y n and not assert
+n y and not assert
+n n and not assert
+y y or assert
+y n or assert
+n y or assert
+n n or not assert
+"ok" p
+
+"Arrays" p
+mkarr 1, 2, 3, ='a
+'a 0 .$ 1 == assert
+'a 1 .$ 2 == assert
+'a
+    20 1 =.$
+    pop drop
+    pop 20 == assert
+drop
+'a len 3 == assert
+'a lpop 1 == assert len 2 == assert
+'a pop 3 == assert len 2 == assert
+"ok" p
+
+
+
