@@ -1,46 +1,69 @@
 
 module heap:
+
   import: simple new
   import: simple add
+  import: simple has
   import: simple get
   import: simple set
+  import: simple del
+
   module simple:
+
     def new(-> h):
         obj
             0 =.next_key
             arr =.entries
+
     def add(h v -> h k):
         ='v ='h
         ''h
             ..next_key dup ='k 1 + =.next_key
             ..entries obj 'k =.key 'v =.value push =.entries
         'k
-    def get(h k -> v):
+
+    def find(h k -> i):
         ='k ='h
-        ''h ..entries ='entries
+        'h .entries ='entries
         0 'entries len do loop:
-            over over >= if: break loop
+            over over >= if: null ='i break loop
             over '=i
-            'entries 'i .$ ='entry
-            'entry .key 'k sym_eq if:
-                'entry .value ='v break loop
+            'entries 'i .$ .key 'k sym_eq if: break loop
             continue loop
         drop drop
-        ''v
+        'i
+
+    def has(h k -> has):
+        @find isnull not
+
+    def get(h k -> v):
+        over ='h
+        @find ='i
+        'h .entries 'i .$ .value
+
     def set(h v k -> h):
-        ='k ='v ='h
+        swap ='v
+        over ='h
+        @find ='i
         ''h
-            ..entries ='entries
-            0 'entries len do loop:
-                over over >= if: break loop
-                over '=i
-                'entries 'i .$ ='entry
-                'entry .key 'k sym_eq if:
-                    ''entries
-                        ''entry 'v =.value 'i =.$
-                    ='entries
-                    break loop
-                continue loop
-            drop drop
-            ''entries =.entries
+            ..entries 'i ..$ 'v =.value 'i =.$ =.entries
+
+    def del(h k -> h):
+        over ='h
+        @find ='i
+        ''h
+            ..entries 'i split lpop join =.entries
+
+    def test(->):
+        @new ='h
+        ''h "Lawl" @add ='k1 ='h
+        ''h "Rawr" @add ='k2 ='h
+        ''h "Rofl" 'k1 @set ='h
+
+        'h 'k1 @get "Rofl" str_eq assert
+        'h 'k2 @get "Rawr" str_eq assert
+
+        'h 'k1 @has assert
+        ''h 'k1 @del ='h
+        'h 'k1 @has not assert
 
