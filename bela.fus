@@ -1,0 +1,201 @@
+
+import: ^ square triangle noise apply_sounds
+
+
+250 ='beat
+
+# I'm gonna call this a "jazz scale" for now...
+# ...until we can fix it
+
+obj ='jazz_scale
+arr
+    `a0, `b0, `c0, `d0, `e0, `f0, `g0,
+    `a1, `b1, `c1, `d1, `e1, `f1, `g1,
+    `a2, `b2, `c2, `d2, `e2, `f2, `g2,
+    `a3, `b3, `c3, `d3, `e3, `f3, `g3,
+='keys
+0 'keys do loop:
+    over over len < while loop
+    over ='i
+    'keys 'i .$ ='key
+    500 (29 'i -) 1 6000 obj -5 =.volinc @square
+    ''jazz_scale swap 'key set
+    continue loop
+drop drop
+
+obj
+     500 10000 obj -10 =.volinc 5000 =.limit 1 =.step y =.wacky @noise =.drum1
+     500 10000 obj -10 =.volinc 5000 =.limit 2 =.step y =.wacky @noise =.drum2
+     500 10000 obj -10 =.volinc 5000 =.limit 3 =.step y =.wacky @noise =.drum3
+    1500 10000 obj -10 =.volinc 1000 =.limit y =.wacky @noise =.cymb1
+='drum_sounds
+
+quote:
+    drum1,, drum2,, drum3,,
+    drum1,, drum2,, drum3,,
+    cymb1,,      ,, drum1,,
+    cymb1,, cymb1,, drum2,,
+'drum_sounds @apply_sounds ='drums1
+
+quote:
+    drum1,, drum2,, drum3,,
+    cymb1,,      ,,      ,,
+    drum1,,      ,,      ,,
+    cymb1,,      ,, drum1,,
+'drum_sounds @apply_sounds ='drums2
+
+
+obj
+     500  500 10000 obj 1000 =.limit y =.wacky @triangle =.bass1
+     500 1000  9000 obj 0 =.limit y =.wacky @triangle =.bass2
+     500  750  9000 obj 1 =.addinc1 y =.wacky @triangle =.bass3
+    7500 1000 15000 obj -1 =.addinc1 y =.wacky @triangle =.bass4
+='bass_sounds
+
+quote:
+    bass1 ,, ,, ,,
+    bass2 ,, ,, ,,
+    bass1 ,, ,, ,,
+    bass3 ,, ,, ,,
+
+    bass1 ,, ,, ,,
+    bass2 ,, ,, ,,
+    bass1 ,, ,, ,,
+    bass4 ,, ,, ,,
+'bass_sounds @apply_sounds ='bass
+
+
+quote: @loop 4: @loop 4: ,, ,, ,,
+obj @apply_sounds ='verse
+#
+# OR:
+#quote: ,, ,, ,,
+#obj @apply_sounds 4 @loop 4 @loop ='verse
+
+
+obj
+    'jazz_scale .a0 ='v1a
+    'jazz_scale .a1 ='v1b
+    'jazz_scale .d1 ='v1c
+    'jazz_scale .e1 ='v1d
+    'jazz_scale .a2 ='v1e
+='blues1_scale
+
+quote:
+    v1e,,    ,, v1e,,
+       ,,    ,, v1e,,
+    v1b,, v1c,, v1d,,
+    v1e,,    ,, v1e,,
+
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+
+    v1e,,    ,, v1e,,
+       ,,    ,, v1e,,
+    v1b,, v1c,, v1d,,
+    v1a,,    ,, v1a,,
+
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+'blues1_scale @apply_sounds ='melody1
+
+obj
+    'jazz_scale .a2 ='v2a
+    'jazz_scale .b2 ='v2b
+    'jazz_scale .c2 ='v2c
+    'jazz_scale .e2 ='v2d
+    'jazz_scale .f2 ='v2e
+    'jazz_scale .g2 ='v2f
+    'jazz_scale .a3 ='v2g
+='blues2_scale
+
+
+quote:
+    v2g,, v2f,, v2e,,
+    v2f,, v2e,, v2d,,
+    v2e,, v2d,, v2c,,
+    v2c,, v2d,, v2e,,
+
+    v2g,, v2f,, v2e,,
+    v2f,, v2e,, v2d,,
+    v2e,,    ,, v2e,,
+    v2d,, v2e,, v2f,,
+
+    v2g,, v2f,, v2e,,
+    v2f,, v2e,, v2d,,
+    v2e,, v2d,, v2c,,
+    v2c,, v2d,, v2e,,
+
+    v2f,, v2d,, v2c,,
+    v2b,, v2a,, v2a,,
+       ,,    ,,    ,,
+       ,,    ,,    ,,
+'blues2_scale @apply_sounds ='melody2
+
+
+
+def add_song_part(song_parts new_part name -> song_parts):
+    ='name ='new_part ='song_parts
+    ''new_part 'song_parts @apply_sounds ''song_parts swap 'name set
+
+obj from_vars: drums1 drums2 bass melody1 melody2
+:
+    quote:
+        drums1
+        drums1
+
+        (bass)
+        drums1
+        drums1
+    `intro @add_song_part
+
+    quote:
+        : @loop 4: drums1
+        : @loop 2: bass
+        melody1
+    `verse1 @add_song_part
+
+    quote:
+        : @loop 4: drums2
+        melody2
+    `verse2 @add_song_part
+
+    quote:
+        : @loop 4: drums1
+        : @loop 2: bass
+
+        # maybe the melodies harmonize?..
+        (melody1) melody2
+    `verse3 @add_song_part
+
+
+    quote:
+        intro
+        @loop 2: verse1
+        @loop 2: verse2
+        @loop 2: verse3
+    `song @add_song_part
+='song_parts
+
+
+# How does a file "return a value"?..
+'song_parts
+
+ignore:
+    # We want to do something like:
+    def song:
+        'song_parts
+    # ...but that obviously makes no sense.
+    # It seems likely that we will run into this kind of thing fairly
+    # often, where we have variables which we want to "export" from
+    # a module.
+    # What if we do:
+    'song_parts export song_parts
+    # ...so module's code is executed, and "export <name>" turns TOS
+    # into something you can use with "@".
+    # But then the order in which modules are "run" is important,
+    # etc... bleah

@@ -44,7 +44,7 @@
 
 # obj
 
-    obj .x ..x =.x keys
+    obj .x ..x =.x keys get set rip has
 
 # arr
 
