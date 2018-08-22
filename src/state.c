@@ -67,11 +67,13 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     fus_stack_t *stack = &state->stack;
 
+#ifdef FUS_STATE_DEBUG
     printf("STATE STEP INNER: OPCODE %i: %i (",
         coderef->opcode_i, opcode);
     fus_code_print_opcode_at(code, coderef->opcode_i,
         state->compiler->symtable, stdout);
     printf(")\n");
+#endif
 
     #define FUS_STATE_ASSERT_STACK(T) if(!( \
         (T == FUS_TYPE_ANY || stack->tos.type == T) \

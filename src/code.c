@@ -138,9 +138,11 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
             return 2;
         }
 
+#ifdef FUS_CODE_DEBUG
         printf("OPCODE %i: %i (", i, opcode);
         fus_code_print_opcode_at(code, i, symtable, stdout);
         printf(")\n");
+#endif
 
         i += fus_symcode_argtype_get_size(opcode_sym->argtype);
     }

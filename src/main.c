@@ -9,8 +9,11 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     if(err)return err;
 
     fus_compiler_frame_t *frame = compiler->frames[0];
+
+#ifdef FUS_FRAME_DEBUG
     printf("FRAME: %s (%i)\n", frame->name, frame->code.opcodes_len);
     fus_code_print_opcodes(&frame->code, 2);
+#endif
 
     err = fus_code_print_opcodes_detailed(&frame->code, compiler->symtable);
     if(err)return err;
@@ -64,19 +67,8 @@ int main(int n_args, char *args[]){
     err = fus_compiler_init(&compiler, &symtable);
     if(err)return err;
 
-#if 0
-    while(1){
-        if(fus_lexer_done(&lexer))break;
-        printf("Lexed: ");
-        fus_lexer_show(&lexer, stdout);
-        printf("\n");
-        int err = fus_lexer_next(&lexer);
-        if(err)return err;
-    }
-#else
     err = compile(&compiler, &lexer);
     if(err)return err;
-#endif
 
     fus_state_t state;
     err = fus_state_init(&state, &compiler);
