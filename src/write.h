@@ -1,0 +1,10 @@
+#ifndef _FUS_WRITE_H_
+#define _FUS_WRITE_H_
+
+#include <stdio.h>
+
+
+void fus_write_str(FILE *f, const char *s);
+void fus_write_str_padded(FILE *f, const char *s, int w);
+
+#endif

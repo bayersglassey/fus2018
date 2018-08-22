@@ -308,9 +308,7 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     }else if(value.type == FUS_TYPE_BIGINT){
         fprintf(f, "\"No representation for bigints yet\" error");
     }else if(value.type == FUS_TYPE_STR){
-        /* TODO: Properly escape strings */
-        fprintf(stderr, "TODO: Properly escape strings in %s\n", __FILE__);
-        fprintf(f, "\"%s\"", value.data.s == NULL? "": value.data.s->text);
+        fus_write_str(f, value.data.s == NULL? NULL: value.data.s->text);
     }else if(value.type == FUS_TYPE_SYM){
         fus_sym_t *sym = fus_symtable_get(symtable, value.data.i);
         if(sym == NULL){

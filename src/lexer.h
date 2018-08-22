@@ -11,7 +11,7 @@
     Lexer usage example:
 
         fus_lexer_t lexer;
-        int err = fus_lexer_init(&lexer, "1 2 (3 4) 5");
+        int err = fus_lexer_init(&lexer, "1 2 (3 4) 5", "Test");
         if(err)return err;
 
         while(1){

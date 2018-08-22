@@ -8,6 +8,7 @@
 
 #include "array.h"
 #include "lexer.h"
+#include "write.h"
 
 #include "symcodes.h"
 #include "symtable.h"

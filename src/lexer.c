@@ -496,7 +496,7 @@ int fus_lexer_get_str(fus_lexer_t *lexer, char **s){
         '"' characters */
         int s_len = token_len - 2;
 
-        char *ss0 = malloc(s_len + 1);
+        char *ss0 = calloc(sizeof(*ss0), s_len + 1);
         if(ss0 == NULL)return 1;
         char *ss = ss0;
 
@@ -505,6 +505,9 @@ int fus_lexer_get_str(fus_lexer_t *lexer, char **s){
             if(c == '\\'){
                 i++;
                 c = token[i];
+                if(c == 'n'){
+                    c = '\n';
+                }
             }
             *ss = c;
             ss++;

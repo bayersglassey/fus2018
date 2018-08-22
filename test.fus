@@ -1,4 +1,6 @@
 
+"HALLO\nDUDE" p
+
 obj 1 =.x 2 `y set
 dup p
 dup keys p
