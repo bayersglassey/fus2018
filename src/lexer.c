@@ -434,6 +434,16 @@ bool fus_lexer_got_name(fus_lexer_t *lexer){
     return lexer->token_type == FUS_LEXER_TOKEN_SYM;
 }
 
+bool fus_lexer_got_op(fus_lexer_t *lexer){
+    return lexer->token_type == FUS_LEXER_TOKEN_OP;
+}
+
+bool fus_lexer_got_sym(fus_lexer_t *lexer){
+    return
+        lexer->token_type == FUS_LEXER_TOKEN_SYM ||
+        lexer->token_type == FUS_LEXER_TOKEN_OP;
+}
+
 bool fus_lexer_got_str(fus_lexer_t *lexer){
     return
         lexer->token_type == FUS_LEXER_TOKEN_STR ||

@@ -103,6 +103,7 @@ fus_str_t *fus_str(char *ss){
     if(ss == NULL)return NULL;
     fus_str_t *s = malloc(sizeof(*s));
     if(s == NULL)return NULL;
+    s->refcount = 0;
     s->text = ss;
     int text_len = strlen(ss);
     s->text_len = text_len; /* or text_len + 1 ?.. */
@@ -114,7 +115,6 @@ fus_value_t fus_value_str(fus_str_t *s){
     fus_value_t value;
     value.type = FUS_TYPE_STR;
     value.data.s = s;
-    FUS_ATTACH(str, value.data.s)
     return value;
 }
 
@@ -129,7 +129,6 @@ fus_value_t fus_value_arr(fus_arr_t *a){
     fus_value_t value;
     value.type = FUS_TYPE_ARR;
     value.data.a = a;
-    FUS_ATTACH(arr, value.data.a)
     return value;
 }
 
@@ -137,7 +136,6 @@ fus_value_t fus_value_obj(fus_obj_t *o){
     fus_value_t value;
     value.type = FUS_TYPE_OBJ;
     value.data.o = o;
-    FUS_ATTACH(obj, value.data.o)
     return value;
 }
 
@@ -187,9 +185,34 @@ int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0){
 
 int fus_arr_push(fus_arr_t *a, fus_value_t value){
     int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't push onto NULL arr\n");
+        return 2;
+    }
     ARRAY_PUSH(fus_value_t, a->values, value)
     fus_value_attach(value);
     return 0;
+}
+
+int fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr){
+    int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't pop from NULL arr\n");
+        return 2;
+    }else if(a->values_len <= 0){
+        ERR_INFO();
+        fprintf(stderr, "Can't pop from empty arr\n");
+        return 2;
+    }
+    ARRAY_POP(fus_value_t, a->values, *value_ptr)
+    return 0;
+}
+
+int fus_arr_len(fus_arr_t *a){
+    if(a == NULL)return 0;
+    return a->values_len;
 }
 
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry){
@@ -271,21 +294,28 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
         fprintf(stderr, "TODO: Properly escape strings in %s\n", __FILE__);
         fprintf(f, "\"%s\"", value.data.s == NULL? "": value.data.s->text);
     }else if(value.type == FUS_TYPE_SYM){
-        const char *sym_token = fus_symtable_get_token(
-            symtable, value.data.i);
-        fprintf(f, "`%s", sym_token == NULL? "SYM_NOT_FOUND": sym_token);
+        fus_sym_t *sym = fus_symtable_get(symtable, value.data.i);
+        if(sym == NULL){
+            fprintf(f, "`SYM_NOT_FOUND");
+        }else if(sym->is_name){
+            fprintf(f, "`%s", sym->token);
+        }else{
+            fprintf(f, "(` %s)", sym->token);
+        }
     }else if(value.type == FUS_TYPE_ARR){
-        fprintf(f, "arr");
+        fprintf(f, "(arr");
         fus_arr_t *a = value.data.a;
         if(a != NULL){
             for(int i = 0; i < a->values_len; i++){
                 fprintf(f, " ");
                 fus_value_print(a->values[i], symtable, f,
                     indent, depth + 1);
+                fprintf(f, ",");
             }
         }
+        fprintf(f, ")");
     }else if(value.type == FUS_TYPE_OBJ){
-        fprintf(f, "obj");
+        fprintf(f, "(obj");
         fus_obj_t *o = value.data.o;
         if(o != NULL){
             for(int i = 0; i < o->entries_len; i++){
@@ -299,6 +329,7 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
                     "SYM_NOT_FOUND": sym_token);
             }
         }
+        fprintf(f, ")");
     }else{
         fprintf(f, "\"Unknown type: %i\" error", value.type);
     }

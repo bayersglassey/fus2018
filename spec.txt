@@ -17,7 +17,7 @@
 
 # debug
 
-    p stack vars assert error
+    p stack vars assert error ignore
 
 # null
 
@@ -30,14 +30,12 @@
 # int
 
     0 + - / * neg mod < > <= >= == !=
-    int_tostr
 
 # str
 
     "abc"
-    ;;abc
     str_eq str_indexof str_len str_get str_set str_split str_join
-    str_tosym str_toint str_toarr
+    str_toarr
 
 # sym
 
@@ -46,8 +44,7 @@
 
 # obj
 
-    obj .x ..x =.x keys has
-    fromvars tovars
+    obj .x ..x =.x keys
 
 # arr
 

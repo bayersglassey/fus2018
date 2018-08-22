@@ -393,6 +393,36 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
     case FUS_SYMCODE_ARR: {
         FUS_STACK_PUSH(*stack, fus_value_arr(NULL))
         break;}
+    case FUS_SYMCODE_ARR_LEN: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_ARR)
+        int len = fus_arr_len(stack->tos.data.a);
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_int(len);
+        break;}
+    case FUS_SYMCODE_ARR_PUSH: case FUS_SYMCODE_ARR_PUSH_ALT: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_ANY)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        if(stack->tos.data.a == NULL){
+            fus_arr_t *a = malloc(sizeof(*a));
+            if(a == NULL)return 1;
+            err = fus_arr_init(a);
+            if(err)return err;
+            a->refcount++;
+            stack->tos.data.a = a;
+        }
+        err = fus_arr_push(stack->tos.data.a, popped_value);
+        if(err)return err;
+        fus_value_detach(popped_value);
+        break;}
+    case FUS_SYMCODE_ARR_POP: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_ARR)
+        fus_arr_t *a = stack->tos.data.a;
+        fus_value_t value;
+        err = fus_arr_pop(a, &value);
+        if(err)return err;
+        FUS_STACK_PUSH(*stack, value)
+        break;}
     default: {
         fus_sym_t *opcode_sym = fus_symtable_get(
             state->compiler->symtable, opcode);

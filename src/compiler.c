@@ -98,6 +98,69 @@ static int fus_lexer_get_sig(fus_lexer_t *lexer, fus_signature_t *sig){
     return 0;
 }
 
+static int fus_parse_quote(fus_symtable_t *symtable, fus_lexer_t *lexer,
+    fus_arr_t **arr_ptr
+){
+    int err;
+
+    ARRAY_DECL(fus_arr_t*, prev_arrs)
+    ARRAY_INIT(prev_arrs)
+    fus_arr_t *cur_arr = malloc(sizeof(*cur_arr));
+    if(cur_arr == NULL)return 1;
+    err = fus_arr_init(cur_arr);
+    if(err)return err;
+
+    while(1){
+        if(fus_lexer_got(lexer, "(")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+
+            ARRAY_PUSH(fus_arr_t*, prev_arrs, cur_arr)
+            cur_arr = malloc(sizeof(*cur_arr));
+            if(cur_arr == NULL)return 1;
+            err = fus_arr_init(cur_arr);
+            if(err)return err;
+        }else if(fus_lexer_got(lexer, ")")){
+            if(prev_arrs_len <= 0)break;
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            fus_arr_t *old_arr = cur_arr;
+            ARRAY_POP(fus_arr_t*, prev_arrs, cur_arr)
+            err = fus_arr_push(cur_arr, fus_value_arr(old_arr));
+            if(err)return err;
+        }else if(fus_lexer_got_int(lexer)){
+            int i = 0;
+            err = fus_lexer_get_int(lexer, &i);
+            if(err)return err;
+            err = fus_arr_push(cur_arr, fus_value_int(i));
+            if(err)return err;
+        }else if(fus_lexer_got_str(lexer)){
+            char *s = NULL;
+            err = fus_lexer_get_str(lexer, &s);
+            if(err)return err;
+            fus_str_t *ss = fus_str(s);
+            if(ss == NULL)return 1;
+            err = fus_arr_push(cur_arr, fus_value_str(ss));
+            if(err)return err;
+        }else if(fus_lexer_done(lexer)){
+            return fus_lexer_unexpected(lexer, NULL);
+        }else{
+            int sym_i = fus_symtable_find_or_add(symtable,
+                lexer->token, lexer->token_len);
+            if(sym_i < 0)return 1;
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_arr_push(cur_arr, fus_value_sym(sym_i));
+            if(err)return err;
+        }
+    }
+
+    ARRAY_FREE(fus_arr_t*, prev_arrs, (void))
+
+    *arr_ptr = cur_arr;
+    return 0;
+}
+
 static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer, char *name, int depth,
     fus_signature_t *sig, fus_compiler_frame_t **new_frame
@@ -199,8 +262,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         }else if(fus_lexer_got(lexer, "`")){
             err = fus_lexer_next(lexer);
             if(err)return err;
-            if(!fus_lexer_got_name(lexer)){
-                return fus_lexer_unexpected(lexer, "name");
+            if(!fus_lexer_got_sym(lexer)){
+                return fus_lexer_unexpected(lexer, "sym");
             }
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
@@ -212,6 +275,26 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_next(lexer);
             if(err)return err;
             FUS_COMPILER_PUSH_LITERAL(fus_value_sym(sym_i))
+        }else if(fus_lexer_got(lexer, "ignore")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+            err = fus_lexer_parse_silent(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, ")");
+            if(err)return err;
+        }else if(fus_lexer_got(lexer, "quote")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+            fus_arr_t *a = NULL;
+            err = fus_parse_quote(compiler->symtable, lexer, &a);
+            if(err)return err;
+            err = fus_lexer_get(lexer, ")");
+            if(err)return err;
+            FUS_COMPILER_PUSH_LITERAL(fus_value_arr(a))
         }else{
             int opcode_sym_i = fus_symtable_find(compiler->symtable,
                 lexer->token, lexer->token_len);

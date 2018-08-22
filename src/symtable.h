@@ -7,6 +7,7 @@ typedef struct fus_sym {
     char *token;
     int argtype;
     bool autocompile;
+    bool is_name;
 } fus_sym_t;
 
 void fus_sym_cleanup(fus_sym_t *sym);
