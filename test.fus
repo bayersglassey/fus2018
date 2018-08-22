@@ -1,4 +1,8 @@
 
-obj 1 =.x
-dup ?.x p
-dup ?.y p
+obj 1 =.x 2 `y set
+dup p
+dup keys p
+dup ?.x assert
+dup ?.z not assert
+dup `x get 1 == assert
+dup `y rip 2 == assert .y isnull assert

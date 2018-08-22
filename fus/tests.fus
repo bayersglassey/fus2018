@@ -59,5 +59,12 @@ drop
 'a pop 3 == assert len 2 == assert
 "ok" p
 
-
+"Objects" p
+obj 1 =.x 2 `y set
+dup keys len 2 == assert
+dup ?.x assert
+dup ?.z not assert
+dup `x get 1 == assert
+dup `y rip 2 == assert .y isnull assert
+"ok" p
 

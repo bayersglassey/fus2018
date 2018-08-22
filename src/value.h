@@ -132,6 +132,7 @@ int fus_obj_init(fus_obj_t *o);
 int fus_obj_copy(fus_obj_t *o, fus_obj_t *o0);
 fus_obj_entry_t *fus_obj_get(fus_obj_t *o, int sym_i);
 int fus_obj_set(fus_obj_t *o, int sym_i, fus_value_t value);
+int fus_obj_keys(fus_obj_t *o, fus_arr_t **a_ptr);
 
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth);

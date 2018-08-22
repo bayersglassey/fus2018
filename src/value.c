@@ -278,6 +278,24 @@ int fus_obj_set(fus_obj_t *o, int sym_i, fus_value_t value){
     return 0;
 }
 
+int fus_obj_keys(fus_obj_t *o, fus_arr_t **a_ptr){
+    int err;
+    fus_arr_t *a = NULL;
+    if(o != NULL && o->entries_len > 0){
+        a = malloc(sizeof(*a));
+        if(a == NULL)return 1;
+        err = fus_arr_init(a);
+        if(err)return err;
+        for(int i = 0; i < o->entries_len; i++){
+            fus_obj_entry_t *entry = &o->entries[i];
+            err = fus_arr_push(a, fus_value_sym(entry->sym_i));
+            if(err)return err;
+        }
+    }
+    *a_ptr = a;
+    return 0;
+}
+
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth
 ){

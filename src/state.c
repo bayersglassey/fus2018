@@ -120,6 +120,20 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
         } \
     }
 
+    #define FUS_STATE_GET_SYM(_dynamic) \
+    int sym_i = -1; \
+    { \
+        bool dynamic = (_dynamic); \
+        if(dynamic){ \
+            FUS_STATE_ASSERT_STACK(FUS_TYPE_SYM) \
+            fus_value_t popped_value; \
+            FUS_STACK_POP(*stack, popped_value) \
+            sym_i = popped_value.data.i; \
+        }else{ \
+            FUS_STATE_CODE_GET_SYM(sym_i) \
+        } \
+    }
+
     coderef->opcode_i++;
     switch(opcode){
     case FUS_SYMCODE_LITERAL: {
@@ -367,13 +381,14 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
     case FUS_SYMCODE_OBJ: {
         FUS_STACK_PUSH(*stack, fus_value_obj(NULL))
         break;}
-    case FUS_SYMCODE_OBJ_GET: case FUS_SYMCODE_OBJ_RIP: {
+    case FUS_SYMCODE_OBJ_GET: case FUS_SYMCODE_OBJ_RIP:
+    case FUS_SYMCODE_OBJ_DYNAMIC_GET: case FUS_SYMCODE_OBJ_DYNAMIC_RIP: {
+        FUS_STATE_GET_SYM(opcode == FUS_SYMCODE_OBJ_DYNAMIC_GET
+            || opcode == FUS_SYMCODE_OBJ_DYNAMIC_RIP)
         FUS_STATE_ASSERT_STACK(FUS_TYPE_OBJ)
-        int sym_i = -1;
-        FUS_STATE_CODE_GET_SYM(sym_i)
-        if(opcode == FUS_SYMCODE_OBJ_RIP){
-            FUS_VALUE_MKUNIQUE(obj, stack->tos.data.o)
-        }
+        bool is_rip = opcode == FUS_SYMCODE_OBJ_RIP
+            || opcode == FUS_SYMCODE_OBJ_DYNAMIC_RIP;
+        if(is_rip){FUS_VALUE_MKUNIQUE(obj, stack->tos.data.o)}
         fus_obj_t *o = stack->tos.data.o;
         fus_obj_entry_t *entry = fus_obj_get(o, sym_i);
         if(entry == NULL){
@@ -382,7 +397,7 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
                 fus_symtable_get_token(state->compiler->symtable, sym_i));
             return 2;
         }
-        if(opcode == FUS_SYMCODE_OBJ_RIP){
+        if(is_rip){
             FUS_STACK_PUSH(*stack, entry->value)
             entry->value = fus_value_null();
         }else{
@@ -391,25 +406,32 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
             fus_value_attach(stack->tos);
         }
         break;}
-    case FUS_SYMCODE_OBJ_SET: {
+    case FUS_SYMCODE_OBJ_SET: case FUS_SYMCODE_OBJ_DYNAMIC_SET: {
+        FUS_STATE_GET_SYM(opcode == FUS_SYMCODE_OBJ_DYNAMIC_SET)
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_OBJ, FUS_TYPE_ANY)
-        int sym_i = -1;
-        FUS_STATE_CODE_GET_SYM(sym_i)
         fus_value_t popped_value;
         FUS_STACK_POP(*stack, popped_value)
         FUS_VALUE_MKUNIQUE(obj, stack->tos.data.o)
         err = fus_obj_set(stack->tos.data.o, sym_i, popped_value);
         if(err)return err;
         break;}
-    case FUS_SYMCODE_OBJ_HAS: {
+    case FUS_SYMCODE_OBJ_HAS: case FUS_SYMCODE_OBJ_DYNAMIC_HAS: {
+        FUS_STATE_GET_SYM(opcode == FUS_SYMCODE_OBJ_DYNAMIC_HAS)
         FUS_STATE_ASSERT_STACK(FUS_TYPE_OBJ)
-        int sym_i = -1;
-        FUS_STATE_CODE_GET_SYM(sym_i)
         fus_obj_t *o = stack->tos.data.o;
         fus_obj_entry_t *entry = fus_obj_get(o, sym_i);
         bool b = entry != NULL;
         fus_value_detach(stack->tos);
         stack->tos = fus_value_bool(b);
+        break;}
+    case FUS_SYMCODE_OBJ_KEYS: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_OBJ)
+        fus_arr_t *a = NULL;
+        err = fus_obj_keys(stack->tos.data.o, &a);
+        if(err)return err;
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_arr(a);
+        fus_value_attach(stack->tos);
         break;}
     case FUS_SYMCODE_ARR: {
         FUS_STACK_PUSH(*stack, fus_value_arr(NULL))
