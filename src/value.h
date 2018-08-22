@@ -62,15 +62,15 @@ char fus_type_to_c(fus_type_t type);
 fus_type_t fus_type_from_c(char c);
 
 
-#define FUS_VALUE_ATTACH(T, tt, v) { \
-    fus_##T##_t *t = v.data.tt; \
+#define FUS_ATTACH(T, t0) { \
+    fus_##T##_t *t = (t0); \
     if(t != NULL){ \
         t->refcount++; \
     } \
 }
 
-#define FUS_VALUE_DETACH(T, tt, v) { \
-    fus_##T##_t *t = v.data.tt; \
+#define FUS_DETACH(T, t0) { \
+    fus_##T##_t *t = (t0); \
     if(t != NULL){ \
         t->refcount--; \
         if(t->refcount <= 0){ \
@@ -80,7 +80,7 @@ fus_type_t fus_type_from_c(char c);
             } \
             fus_##T##_cleanup(t); \
             free(t); \
-            v.data.tt = NULL; \
+            (t0) = NULL; \
         } \
     } \
 }

@@ -42,25 +42,25 @@ fus_type_t fus_type_from_c(char c){
 
 void fus_value_attach(fus_value_t value){
     if(value.type == FUS_TYPE_BIGINT){
-        FUS_VALUE_ATTACH(bigint, bi, value)
+        FUS_ATTACH(bigint, value.data.bi)
     }else if(value.type == FUS_TYPE_STR){
-        FUS_VALUE_ATTACH(str, s, value)
+        FUS_ATTACH(str, value.data.s)
     }else if(value.type == FUS_TYPE_ARR){
-        FUS_VALUE_ATTACH(arr, a, value)
+        FUS_ATTACH(arr, value.data.a)
     }else if(value.type == FUS_TYPE_OBJ){
-        FUS_VALUE_ATTACH(obj, o, value)
+        FUS_ATTACH(obj, value.data.o)
     }
 }
 
 void fus_value_detach(fus_value_t value){
     if(value.type == FUS_TYPE_BIGINT){
-        FUS_VALUE_DETACH(bigint, bi, value)
+        FUS_DETACH(bigint, value.data.bi)
     }else if(value.type == FUS_TYPE_STR){
-        FUS_VALUE_DETACH(str, s, value)
+        FUS_DETACH(str, value.data.s)
     }else if(value.type == FUS_TYPE_ARR){
-        FUS_VALUE_DETACH(arr, a, value)
+        FUS_DETACH(arr, value.data.a)
     }else if(value.type == FUS_TYPE_OBJ){
-        FUS_VALUE_DETACH(obj, o, value)
+        FUS_DETACH(obj, value.data.o)
     }
 }
 
@@ -114,7 +114,7 @@ fus_value_t fus_value_str(fus_str_t *s){
     fus_value_t value;
     value.type = FUS_TYPE_STR;
     value.data.s = s;
-    FUS_VALUE_ATTACH(str, s, value)
+    FUS_ATTACH(str, value.data.s)
     return value;
 }
 
@@ -129,7 +129,7 @@ fus_value_t fus_value_arr(fus_arr_t *a){
     fus_value_t value;
     value.type = FUS_TYPE_ARR;
     value.data.a = a;
-    FUS_VALUE_ATTACH(arr, a, value)
+    FUS_ATTACH(arr, value.data.a)
     return value;
 }
 
@@ -137,7 +137,7 @@ fus_value_t fus_value_obj(fus_obj_t *o){
     fus_value_t value;
     value.type = FUS_TYPE_OBJ;
     value.data.o = o;
-    FUS_VALUE_ATTACH(obj, o, value)
+    FUS_ATTACH(obj, value.data.o)
     return value;
 }
 
