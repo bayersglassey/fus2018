@@ -185,6 +185,13 @@ int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0){
     return 0;
 }
 
+int fus_arr_push(fus_arr_t *a, fus_value_t value){
+    int err;
+    ARRAY_PUSH(fus_value_t, a->values, value)
+    fus_value_attach(value);
+    return 0;
+}
+
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry){
     if(entry == NULL)return;
     fus_value_detach(entry->value);

@@ -121,6 +121,7 @@ void fus_str_cleanup(fus_str_t *s);
 void fus_arr_cleanup(fus_arr_t *a);
 int fus_arr_init(fus_arr_t *a);
 int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0);
+int fus_arr_push(fus_arr_t *a, fus_value_t value);
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry);
 int fus_obj_entry_init(fus_obj_entry_t *entry, int sym_i,
     fus_value_t value);

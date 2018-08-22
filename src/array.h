@@ -72,6 +72,18 @@ T new_elem = NULL; \
     array[array##_len - 1] = new_elem; \
 }
 
+#define ARRAY_POP(T, array, x) \
+{ \
+    if(array##_len <= 0){ \
+        ERR_INFO(); \
+        fprintf(stderr, "Can't pop from empty array\n"); \
+        return 2; \
+    } \
+    x = array[array##_len - 1]; \
+    array[array##_len - 1] = (T){0}; \
+    array##_len--; \
+}
+
 #define ARRAY_FREE(T, array, elem_cleanup) \
 { \
     for(int i = 0; i < array##_len; i++){ \

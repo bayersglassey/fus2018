@@ -10,30 +10,20 @@ typedef struct fus_stack {
 } fus_stack_t;
 
 
+void fus_stack_cleanup(fus_stack_t *stack);
+int fus_stack_init(fus_stack_t *stack);
+int fus_stack_push(fus_stack_t *stack, fus_value_t value);
+int fus_stack_pop(fus_stack_t *stack, fus_value_t *value_ptr);
+
 #define FUS_STACK_PUSH(s, x) { \
-    if((s).nos.type != FUS_TYPE_NULL){ \
-        ARRAY_PUSH(fus_value_t, (s).tail, (s).nos) \
-    } \
-    (s).nos = (s).tos; \
-    (s).tos = x; \
-    fus_value_attach(x); \
+    int err = fus_stack_push(&(s), (x)); \
+    if(err)return err; \
 }
 
 #define FUS_STACK_POP(s, x) { \
-    x = (s).tos; \
-    (s).tos = (s).nos; \
-    if((s).tail_len > 0){ \
-        (s).nos = (s).tail[(s).tail_len - 1]; \
-        (s).tail[(s).tail_len - 1] = fus_value_null(); \
-        (s).tail_len--; \
-    }else{ \
-        (s).nos = fus_value_null(); \
-    } \
+    int err = fus_stack_pop(&(s), &(x)); \
+    if(err)return err; \
 }
-
-
-void fus_stack_cleanup(fus_stack_t *stack);
-int fus_stack_init(fus_stack_t *stack);
 
 
 #endif
