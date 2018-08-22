@@ -21,37 +21,37 @@
 
 # null
 
-    null isnull
+    null is_null
 
 # bool
 
-    y n not and or bool_eq
+    y n not and or bool_eq is_bool
 
 # int
 
-    0 + - / * neg mod < > <= >= == !=
+    0 + - / * neg mod < > <= >= == != is_int
 
 # str
 
     "abc"
-    str_eq str_indexof str_len str_get str_set str_split str_join
+    str_eq str_indexof str_len str_get str_set str_split str_join is_str
     str_toarr
 
 # sym
 
-    `x typeof sym_eq
+    `x typeof sym_eq is_sym
     sym_tostr
 
 # obj
 
-    obj .x ..x =.x ?.x keys get rip set has
+    obj .x ..x =.x ?.x keys get rip set has is_obj
 
 # arr
 
-    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$
+    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$ repeat is_arr
     quote(...)
 
 # fun
 
-    fun(...)(...) call(...)
+    fun(...)(...) call(...) is_fun
 

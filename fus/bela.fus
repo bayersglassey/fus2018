@@ -1,5 +1,8 @@
 
-import: ^ square triangle noise apply_sounds
+import: ^ music square
+import: ^ music triangle
+import: ^ music noise
+import: ^ music apply_sounds
 
 
 250 ='beat

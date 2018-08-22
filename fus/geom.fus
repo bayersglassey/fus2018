@@ -1,0 +1,113 @@
+
+module geom:
+
+    module Prend:
+        def new(-> prend):
+            obj
+                arr =.prismels
+                arr =.shapes
+        def add_prismel(prend prismel name -> prend):
+            ='name ='prismel
+            ..prismels (''prismel 'name =.name) ''name set =.prismels
+
+    module Prismel:
+        def N_FLIP(-> i): 2
+        def N_ROT(-> i): 12
+        def N_IMAGES(-> i): @N_FLIP @N_ROT *
+        def new(-> prismel):
+            obj
+                null =.name
+                arr @N_IMAGES repeat =.images
+        def parse(data -> prismel):
+            ='data
+            @new ='prismel
+
+            ''data
+                lpop `images sym_eq assert
+                lpop ='images_data
+            len 0 == assert
+
+            n ='DO_LOTS_OF_VERIFICATION
+            'DO_LOTS_OF_VERIFICATION if:
+                # If we want to go crazy with verification...
+                'images_data len @N_IMAGES == assert
+                'images_data do loop:
+                    dup len 0 > while loop
+                    lpop ='image_data
+                    ''image_data do loop:
+                        dup len 0 > while loop
+                        lpop ='line_data
+                        ''line_data
+                            lpop is_int assert
+                            lpop is_int assert
+                            lpop is_int assert
+                        len 0 == assert
+                        continue loop
+                    continue loop
+                drop
+
+            ''prismel
+                'images_data =.images
+
+    module Shape:
+
+
+@(Prend new)
+
+    `vert quote:
+        # ++
+        # +X
+        images:
+            : (-1 -1 2) (-1 0 2)
+            (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0)
+            (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0)
+    @(Prismel parse) swap @(Prend add_prismel)
+
+    `edge quote:
+        # an edge (invisible line)
+        images:
+            () () () () () () () () () () () ()
+            () () () () () () () () () () () ()
+    @(Prismel parse) swap @(Prend add_prismel)
+
+    `sq quote:
+
+        # +---+
+        # |   |
+        # |   |
+        # 0---+
+
+        #     +   +
+        # ++ +++ +++ ++   +                             +
+        # ++  +   +  ++  +++   +                    +  +++
+        # .   .    .   .  + . +++. ++.  +.  X  X+  X++ .+
+        #                      +   ++  +++ +++ ++   +
+        #                               +   +
+
+        images:
+            : ( 0 -2  2) ( 0 -1  2)
+            : ( 0 -3  1) (-1 -2  3) ( 0 -1  1)
+            : (-1 -3  1) (-2 -2  3) (-1 -1  1)
+            : (-2 -2  2) (-2 -1  2)
+            : (-2 -2  1) (-3 -1  3) (-2  0  1)
+            : (-2 -1  1) (-3  0  3) (-2  1  1)
+            : (-2  0  2) (-2  1  2)
+            : (-1  0  1) (-2  1  3) (-1  2  1)
+            : ( 0  0  1) (-1  1  3) ( 0  2  1)
+            : ( 0  0  2) ( 0  1  2)
+            : ( 1 -1  1) ( 0  0  3) ( 1  1  1)
+            : ( 1 -2  1) ( 0 -1  3) ( 1  0  1)
+            :  9
+            :  8
+            :  7
+            :  6
+            :  5
+            :  4
+            :  3
+            :  2
+            :  1
+            :  0
+            : 11
+            : 10
+    @(Prismel parse) swap @(Prend add_prismel)
+
