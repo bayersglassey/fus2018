@@ -23,7 +23,7 @@ arr
     'keys 'i .$ ='key
     500 (29 'i -) 1 6000 obj -5 =.volinc @square
     ''jazz_scale swap 'key set
-    continue loop
+    next loop
 drop drop
 
 obj
