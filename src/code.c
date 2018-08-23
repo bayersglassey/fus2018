@@ -30,15 +30,31 @@ void fus_code_cleanup(fus_code_t *code){
 
 int fus_code_init(fus_code_t *code, fus_signature_t *sig){
     int err;
-    code->has_sig = sig != NULL;
-    if(code->has_sig){
-        code->sig = *sig;
+    code->has_sig = false;
+    if(sig != NULL){
+        err = fus_code_init_sig(code, sig);
+        if(err)return err;
     }else{
         err = fus_signature_init(&code->sig, 0, 0);
         if(err)return err;
     }
     ARRAY_INIT(code->opcodes)
     ARRAY_INIT(code->literals)
+    return 0;
+}
+
+int fus_code_init_sig(fus_code_t *code, fus_signature_t *sig){
+    if(code->has_sig){
+        ERR_INFO();
+        fprintf(stderr, "Code already has signature\n");
+        return 2;
+    }else if(sig == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Signature is NULL\n");
+        return 2;
+    }
+    code->has_sig = true;
+    code->sig = *sig;
     return 0;
 }
 
