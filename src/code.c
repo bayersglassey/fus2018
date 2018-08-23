@@ -12,9 +12,6 @@ void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
 
 
 
-void fus_signature_cleanup(fus_signature_t *sig){
-    /* Nothing to do */
-}
 int fus_signature_init(fus_signature_t *sig, int n_args_in, int n_args_out){
     sig->n_args_in = n_args_in;
     sig->n_args_out = n_args_out;
@@ -177,6 +174,47 @@ void fus_coderef_cleanup(fus_coderef_t *coderef){
 int fus_coderef_init(fus_coderef_t *coderef, fus_code_t *code){
     coderef->opcode_i = 0;
     coderef->code = code;
+    return 0;
+}
+
+
+
+
+
+int fus_lexer_get_sig(fus_lexer_t *lexer, fus_signature_t *sig){
+    int err;
+    err = fus_lexer_get(lexer, "(");
+    if(err)return err;
+    int encountered_arrow = 0;
+    int n_args_in = 0;
+    int n_args_out = 0;
+    while(1){
+    if(fus_lexer_done(lexer) || fus_lexer_got(lexer, ")"))break;
+        if(fus_lexer_got(lexer, "->")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            encountered_arrow++;
+            if(encountered_arrow > 1){
+                ERR_INFO();
+                fprintf(stderr, "Encountered multiple \"->\"\n");
+                return 2;
+            }
+        }else{
+            err = fus_lexer_get_name(lexer, NULL);
+            if(err)return err;
+
+            if(encountered_arrow == 0)n_args_in++;
+            else n_args_out++;
+        }
+    }
+    if(encountered_arrow == 0){
+        return fus_lexer_unexpected(lexer, "\"->\"");
+    }
+    err = fus_lexer_get(lexer, ")");
+    if(err)return err;
+
+    err = fus_signature_init(sig, n_args_in, n_args_out);
+    if(err)return err;
     return 0;
 }
 

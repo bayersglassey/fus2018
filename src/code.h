@@ -30,7 +30,6 @@ void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
     FILE *f);
 
 
-void fus_signature_cleanup(fus_signature_t *sig);
 int fus_signature_init(fus_signature_t *sig, int n_args_in, int n_args_out);
 
 
@@ -51,6 +50,9 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
 
 void fus_coderef_cleanup(fus_coderef_t *coderef);
 int fus_coderef_init(fus_coderef_t *coderef, fus_code_t *code);
+
+
+int fus_lexer_get_sig(fus_lexer_t *lexer, fus_signature_t *sig);
 
 
 #endif

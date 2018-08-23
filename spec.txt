@@ -1,7 +1,7 @@
 
 # modules
 
-    module def sigdef import @ &
+    module def sig import @ &
 
 # stack
 

@@ -2,8 +2,8 @@
 import: format format
 
 module iter:
-    sigdef iter: x -> it
-    sigdef next: it -> it value ok
+    sig iter: x -> it
+    sig next: it -> it value ok
 
     def next next: dup .next call next
 

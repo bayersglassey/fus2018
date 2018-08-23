@@ -1,7 +1,7 @@
 
-sigdef methods(-> o)
-sigdef new(-> o)
-sigdef binop(a b -> c)
+sig methods(-> o)
+sig new(-> o)
+sig binop(a b -> c)
 
 def int_methods methods:
     obj

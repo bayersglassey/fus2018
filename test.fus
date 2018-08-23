@@ -1,4 +1,7 @@
 
+sig S: x -> y
+sig Q: x y -> z
+
 def f(->): "EFF" p
 def g(->): "GEE" p
 

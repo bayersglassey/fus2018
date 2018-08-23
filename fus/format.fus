@@ -1,6 +1,6 @@
 
-sigdef format: a -> s
-sigdef tostr: x -> s
+sig format: a -> s
+sig tostr: x -> s
 
 def format format:
     "" ='s
