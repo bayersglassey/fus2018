@@ -42,8 +42,7 @@ module geom:
                             lpop is_int assert
                             lpop is_int assert
                         len 0 == assert
-                        next loop
-                    next loop
+                    drop
                 drop
 
             ''prismel

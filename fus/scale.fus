@@ -12,7 +12,7 @@ def range(x0 x1 add -> xs):
             # (x1 x0)
             'add +
         swap
-        next loop
+    drop drop
     ''a
 
 
@@ -39,8 +39,7 @@ def get_scale(-> o):
     @label_new ='label
     obj ='scale
 
-    0 (29 1 -1 @range)
-    do loop:
+    0 (29 1 -1 @range) do loop:
         over over len < while loop
         over over swap .$ ='i
         ''scale
@@ -48,7 +47,7 @@ def get_scale(-> o):
             'label @label_tostr str_tosym obj_set
         ='scale
         ''label @label_next ='label
-        next loop
+    drop drop
 
     ''scale
 
@@ -60,12 +59,12 @@ def obj_add_prefix(o s -> o):
     ='prefix ='o0
     obj ='o1
 
-    'o0 keys do loop:
+    ('o0 keys) do loop:
         dup len 0 > while loop
         lpop ='key0
         'key0 sym_tostr 'prefix swap str_join str_tosym ='key1
         ''o1 'o0 'key0 obj_get 'key1 obj_set ='o1
-        next loop
+    drop
 
     ''o1
 

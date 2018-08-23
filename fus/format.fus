@@ -1,0 +1,62 @@
+
+sigdef format: a -> s
+sigdef tostr: x -> s
+
+def format format:
+    "" ='s
+    do loop:
+        dup len 0 > while loop
+        lpop @tostr ''s swap str_join ='s
+    drop
+    ''s
+
+def tostr tostr:
+    obj
+        fun tostr(drop "null") =.null
+        fun tostr(ifelse("y")("n")) =.bool
+        fun tostr(int_tostr) =.int
+        fun tostr() =.str
+        fun tostr(sym_tostr) =.sym
+        fun tostr(drop "<fun>") =.fun
+        fun &obj_tostr =.obj
+        fun &arr_tostr =.arr
+    over typeof get call tostr
+
+def obj_tostr tostr:
+    ='o
+
+    "(" ='s
+    y ='first
+
+    'o keys do loop:
+        dup len 0 > while loop
+        lpop ='key
+        'o 'key get ='val
+        ''s
+            'first ifelse: n ='first
+            : ", " str_join
+            'key sym_tostr str_join
+            ": " str_join
+            'val @tostr str_join
+        ='s
+    drop
+
+    ''s ")" str_join
+
+def arr_tostr tostr:
+    ='a
+
+    "(" ='s
+    y ='first
+
+    0 'a len do loop:
+        over over < while loop
+        over 'a swap .$ ='val
+        ''s
+            'first ifelse: n ='first
+            : ", " str_join
+            'val @tostr str_join
+        ='s
+    drop drop
+
+    ''s ")" str_join

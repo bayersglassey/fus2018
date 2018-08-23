@@ -35,7 +35,6 @@ module heap:
             over over >= if: null ='i break loop
             over '=i
             'entries 'i .$ .key 'k sym_eq if: break loop
-            next loop
         drop drop
         'i
 
