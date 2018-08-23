@@ -8,3 +8,6 @@ module M:
     @f
 
 @f
+
+"END!" p
+

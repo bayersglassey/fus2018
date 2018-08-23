@@ -40,6 +40,19 @@ int fus_state_push_frame(fus_state_t *state, fus_code_t *code){
     return 0;
 }
 
+int fus_state_pop_frame(fus_state_t *state){
+    int err;
+    if(state->frames_len <= 0){
+        ERR_INFO();
+        fprintf(stderr, "No frame to pop!\n");
+        return 2;
+    }
+    fus_state_frame_t *frame = NULL;
+    ARRAY_POP(fus_state_frame_t*, state->frames, frame)
+    fus_state_frame_cleanup(frame);
+    return 0;
+}
+
 static fus_state_frame_t *fus_state_get_cur_frame(fus_state_t *state){
     if(state->frames_len == 0)return NULL;
     return state->frames[state->frames_len - 1];
@@ -56,14 +69,23 @@ int fus_state_run(fus_state_t *state){
 }
 
 int fus_state_step(fus_state_t *state, bool *done_ptr){
+start: ;
     int err;
+
     fus_state_frame_t *frame = fus_state_get_cur_frame(state);
     if(frame == NULL){
-        *done_ptr = true; return 0;}
+        *done_ptr = true;
+        return 0;
+    }
+
     fus_coderef_t *coderef = &frame->coderef;
     fus_code_t *code = coderef->code;
     if(coderef->opcode_i >= code->opcodes_len){
-        *done_ptr = true; return 0;}
+        err = fus_state_pop_frame(state);
+        if(err)return err;
+        goto start;
+    }
+
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     fus_stack_t *stack = &state->stack;
 
@@ -136,6 +158,15 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
 
     coderef->opcode_i++;
     switch(opcode){
+    case FUS_SYMCODE_CALL: {
+        int def_i = -1;
+        FUS_STATE_CODE_GET_INT(def_i)
+        fus_compiler_frame_t *frame = NULL;
+        err = fus_compiler_get_frame(state->compiler, def_i, &frame);
+        if(err)return err;
+        err = fus_state_push_frame(state, &frame->code);
+        if(err)return err;
+        break;}
     case FUS_SYMCODE_LITERAL: {
         int literal_i = -1;
         FUS_STATE_CODE_GET_INT(literal_i)

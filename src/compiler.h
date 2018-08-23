@@ -3,6 +3,7 @@
 
 
 typedef struct fus_compiler_frame {
+    int i;
     bool compiled;
     bool is_module;
     struct fus_compiler_frame *module;
@@ -21,13 +22,15 @@ typedef struct fus_compiler {
 
 
 void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame);
-int fus_compiler_frame_init(fus_compiler_frame_t *frame,
+int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
     fus_compiler_frame_t *module,
     fus_compiler_frame_t *parent,
     char *name, fus_signature_t *sig, bool is_module);
 void fus_compiler_cleanup(fus_compiler_t *compiler);
 int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable);
 
+int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
+    fus_compiler_frame_t **frame_ptr);
 int fus_compiler_add_frame(fus_compiler_t *compiler, char *name,
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr);
 int fus_compiler_push_frame(fus_compiler_t *compiler,
