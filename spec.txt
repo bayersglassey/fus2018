@@ -19,39 +19,43 @@
 
     p stack vars assert error ignore
 
+# types
+
+    typeof is
+
 # null
 
-    null is_null
+    null
 
 # bool
 
-    y n not and or bool_eq is_bool
+    y n not and or bool_eq
 
 # int
 
-    0 + - / * neg mod < > <= >= == != is_int
+    0 + - / * neg mod < > <= >= == !=
 
 # str
 
     "abc"
-    str_eq str_indexof str_len str_get str_set str_split str_join is_str
+    str_eq str_indexof str_len str_get str_set str_split str_join
     str_toarr
 
 # sym
 
-    `x typeof sym_eq is_sym
+    `x typeof sym_eq
     sym_tostr
 
 # obj
 
-    obj .x ..x =.x ?.x keys get rip set has is_obj
+    obj .x ..x =.x ?.x keys get rip set has
 
 # arr
 
-    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$ repeat is_arr
+    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$ repeat
     quote(...)
 
 # fun
 
-    fun(...)(...) call(...) is_fun
+    fun(...)(...) call(...)
 

@@ -13,7 +13,7 @@
 1 ='x
 'x 1 == assert
 ''x 1 == assert
-'x isnull assert
+'x is null assert
 "ok" p
 
 "Arithmetic" p
@@ -65,6 +65,6 @@ dup keys len 2 == assert
 dup ?.x assert
 dup ?.z not assert
 dup `x get 1 == assert
-dup `y rip 2 == assert .y isnull assert
+dup `y rip 2 == assert .y is null assert
 "ok" p
 

@@ -58,6 +58,7 @@ typedef struct fus_obj {
 
 
 
+int fus_type_get_sym_i(fus_type_t type);
 char fus_type_to_c(fus_type_t type);
 fus_type_t fus_type_from_c(char c);
 

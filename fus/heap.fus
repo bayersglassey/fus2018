@@ -39,7 +39,7 @@ module heap:
         'i
 
     def has(h k -> has):
-        @find isnull not
+        @find is null not
 
     def get(h k -> v):
         over ='h

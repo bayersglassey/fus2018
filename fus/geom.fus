@@ -38,9 +38,9 @@ module geom:
                         dup len 0 > while loop
                         lpop ='line_data
                         ''line_data
-                            lpop is_int assert
-                            lpop is_int assert
-                            lpop is_int assert
+                            lpop is int assert
+                            lpop is int assert
+                            lpop is int assert
                         len 0 == assert
                     drop
                 drop

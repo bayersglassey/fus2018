@@ -2,6 +2,30 @@
 #include "includes.h"
 
 
+int fus_type_get_sym_i(fus_type_t type){
+    if(type == FUS_TYPE_NULL){
+        return FUS_SYMCODE_NULL;
+    }else if(type == FUS_TYPE_BOOL){
+        return FUS_SYMCODE_BOOL;
+    }else if(type == FUS_TYPE_INT || type == FUS_TYPE_BIGINT){
+        return FUS_SYMCODE_INT;
+    }else if(type == FUS_TYPE_STR){
+        return FUS_SYMCODE_STR;
+    }else if(type == FUS_TYPE_SYM){
+        return FUS_SYMCODE_SYM;
+    }else if(type == FUS_TYPE_ARR){
+        return FUS_SYMCODE_ARR;
+    }else if(type == FUS_TYPE_OBJ){
+        return FUS_SYMCODE_OBJ;
+    }else if(type == FUS_TYPE_FUN){
+        return FUS_SYMCODE_FUN;
+    }else{
+        ERR_INFO();
+        fprintf(stderr, "Unrecognized type: %i\n", type);
+        return -1;
+    }
+}
+
 char fus_type_to_c(fus_type_t type){
     switch(type){
     case FUS_TYPE_ANY: return '*';

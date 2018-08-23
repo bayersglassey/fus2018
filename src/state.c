@@ -172,30 +172,17 @@ start: ;
         FUS_STATE_CODE_GET_INT(literal_i)
         FUS_STACK_PUSH(*stack, code->literals[literal_i])
         break;}
-    case FUS_SYMCODE_TYPEOF: {
+    case FUS_SYMCODE_TYPES_IS: {
         int sym_i = -1;
+        FUS_STATE_CODE_GET_SYM(sym_i)
         fus_type_t type = stack->tos.type;
-        if(type == FUS_TYPE_NULL){
-            sym_i = FUS_SYMCODE_NULL;
-        }else if(type == FUS_TYPE_BOOL){
-            sym_i = FUS_SYMCODE_BOOL;
-        }else if(type == FUS_TYPE_INT || type == FUS_TYPE_BIGINT){
-            sym_i = FUS_SYMCODE_INT;
-        }else if(type == FUS_TYPE_STR){
-            sym_i = FUS_SYMCODE_STR;
-        }else if(type == FUS_TYPE_SYM){
-            sym_i = FUS_SYMCODE_SYM;
-        }else if(type == FUS_TYPE_ARR){
-            sym_i = FUS_SYMCODE_ARR;
-        }else if(type == FUS_TYPE_OBJ){
-            sym_i = FUS_SYMCODE_OBJ;
-        }else if(type == FUS_TYPE_FUN){
-            sym_i = FUS_SYMCODE_FUN;
-        }else{
-            ERR_INFO();
-            fprintf(stderr, "Unrecognized type: %i\n", type);
-            return 2;
-        }
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_bool(
+            sym_i == fus_type_get_sym_i(type));
+        break;}
+    case FUS_SYMCODE_TYPES_TYPEOF: {
+        fus_type_t type = stack->tos.type;
+        int sym_i = fus_type_get_sym_i(type);
         fus_value_detach(stack->tos);
         stack->tos = fus_value_sym(sym_i);
         break;}
@@ -280,10 +267,6 @@ start: ;
         break;}
     case FUS_SYMCODE_NULL: {
         FUS_STACK_PUSH(*stack, fus_value_null())
-        break;}
-    case FUS_SYMCODE_NULL_ISNULL: {
-        stack->tos = fus_value_bool(
-            stack->tos.type == FUS_TYPE_NULL);
         break;}
     case FUS_SYMCODE_BOOL_Y: {
         FUS_STACK_PUSH(*stack, fus_value_bool(true))
