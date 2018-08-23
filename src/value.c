@@ -296,6 +296,58 @@ int fus_obj_keys(fus_obj_t *o, fus_arr_t **a_ptr){
     return 0;
 }
 
+
+
+void fus_bigint_print(fus_bigint_t *bi, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth
+){
+    fprintf(f, "\"No representation for bigints yet\" error");
+}
+
+void fus_str_print(fus_str_t *s, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth
+){
+    fus_write_str(f, s == NULL? NULL: s->text);
+}
+
+void fus_arr_print(fus_arr_t *a, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth
+){
+    fprintf(f, "(arr");
+    if(a != NULL){
+        for(int i = 0; i < a->values_len; i++){
+            fprintf(f, " ");
+            fus_value_print(a->values[i], symtable, f,
+                indent, depth + 1);
+            fprintf(f, ",");
+        }
+    }
+    fprintf(f, ")");
+}
+
+void fus_obj_print(fus_obj_t *o, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth
+){
+    fprintf(f, "(obj");
+    if(o != NULL){
+        for(int i = 0; i < o->entries_len; i++){
+            fus_obj_entry_t *entry = &o->entries[i];
+            fprintf(f, " ");
+            fus_value_print(entry->value, symtable, f,
+                indent, depth + 1);
+            if(symtable == NULL){
+                fprintf(f, " =.%i", entry->sym_i);
+            }else{
+                const char *sym_token = fus_symtable_get_token(
+                    symtable, entry->sym_i);
+                fprintf(f, " =.%s", sym_token == NULL?
+                    "SYM_NOT_FOUND": sym_token);
+            }
+        }
+    }
+    fprintf(f, ")");
+}
+
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth
 ){
@@ -306,46 +358,26 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     }else if(value.type == FUS_TYPE_INT){
         fprintf(f, "%i", value.data.i);
     }else if(value.type == FUS_TYPE_BIGINT){
-        fprintf(f, "\"No representation for bigints yet\" error");
+        fus_bigint_print(value.data.bi, symtable, f, indent, depth);
     }else if(value.type == FUS_TYPE_STR){
-        fus_write_str(f, value.data.s == NULL? NULL: value.data.s->text);
+        fus_str_print(value.data.s, symtable, f, indent, depth);
     }else if(value.type == FUS_TYPE_SYM){
-        fus_sym_t *sym = fus_symtable_get(symtable, value.data.i);
-        if(sym == NULL){
-            fprintf(f, "`SYM_NOT_FOUND");
-        }else if(sym->is_name){
-            fprintf(f, "`%s", sym->token);
+        if(symtable == NULL){
+            fprintf(f, "`%i", value.data.i);
         }else{
-            fprintf(f, "(` %s)", sym->token);
+            fus_sym_t *sym = fus_symtable_get(symtable, value.data.i);
+            if(sym == NULL){
+                fprintf(f, "`SYM_NOT_FOUND");
+            }else if(sym->is_name){
+                fprintf(f, "`%s", sym->token);
+            }else{
+                fprintf(f, "(` %s)", sym->token);
+            }
         }
     }else if(value.type == FUS_TYPE_ARR){
-        fprintf(f, "(arr");
-        fus_arr_t *a = value.data.a;
-        if(a != NULL){
-            for(int i = 0; i < a->values_len; i++){
-                fprintf(f, " ");
-                fus_value_print(a->values[i], symtable, f,
-                    indent, depth + 1);
-                fprintf(f, ",");
-            }
-        }
-        fprintf(f, ")");
+        fus_arr_print(value.data.a, symtable, f, indent, depth);
     }else if(value.type == FUS_TYPE_OBJ){
-        fprintf(f, "(obj");
-        fus_obj_t *o = value.data.o;
-        if(o != NULL){
-            for(int i = 0; i < o->entries_len; i++){
-                fus_obj_entry_t *entry = &o->entries[i];
-                fprintf(f, " ");
-                fus_value_print(entry->value, symtable, f,
-                    indent, depth + 1);
-                const char *sym_token = fus_symtable_get_token(
-                    symtable, entry->sym_i);
-                fprintf(f, " =.%s", sym_token == NULL?
-                    "SYM_NOT_FOUND": sym_token);
-            }
-        }
-        fprintf(f, ")");
+        fus_obj_print(value.data.o, symtable, f, indent, depth);
     }else{
         fprintf(f, "\"Unknown type: %i\" error", value.type);
     }

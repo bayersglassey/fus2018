@@ -75,8 +75,9 @@ fus_type_t fus_type_from_c(char c);
         t->refcount--; \
         if(t->refcount <= 0){ \
             if(t->refcount < 0){ \
-                fprintf(stderr, #T " with negative refcount: %p\n", \
-                    t); \
+                fprintf(stderr, #T " with negative refcount: "); \
+                fus_##T##_print(t, NULL, stderr, 0, 0); \
+                fprintf(stderr, "\n"); \
                 BACKTRACE \
             } \
             fus_##T##_cleanup(t); \
@@ -135,6 +136,14 @@ fus_obj_entry_t *fus_obj_get(fus_obj_t *o, int sym_i);
 int fus_obj_set(fus_obj_t *o, int sym_i, fus_value_t value);
 int fus_obj_keys(fus_obj_t *o, fus_arr_t **a_ptr);
 
+void fus_bigint_print(fus_bigint_t *bi, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth);
+void fus_str_print(fus_str_t *s, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth);
+void fus_arr_print(fus_arr_t *a, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth);
+void fus_obj_print(fus_obj_t *o, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth);
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth);
 
