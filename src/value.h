@@ -61,10 +61,22 @@ typedef struct fus_obj {
 char fus_type_to_c(fus_type_t type);
 fus_type_t fus_type_from_c(char c);
 
+#if FUS_ENABLE_BACKTRACE
+    #define FUS_ATTACH_DEBUG_PRINT(T, t, txt) { \
+        printf(">>> "); \
+        fus_##T##_print(t, NULL, stdout, 0, 0); \
+        printf(" refcount=%i " txt "\n", t->refcount); \
+        BACKTRACE \
+    }
+#else
+    #define FUS_ATTACH_DEBUG_PRINT(T, t, txt) ;
+#endif
+
 
 #define FUS_ATTACH(T, t0) { \
     fus_##T##_t *t = (t0); \
     if(t != NULL){ \
+        FUS_ATTACH_DEBUG_PRINT(T, t, "++") \
         t->refcount++; \
     } \
 }
@@ -72,6 +84,7 @@ fus_type_t fus_type_from_c(char c);
 #define FUS_DETACH(T, t0) { \
     fus_##T##_t *t = (t0); \
     if(t != NULL){ \
+        FUS_ATTACH_DEBUG_PRINT(T, t, "--") \
         t->refcount--; \
         if(t->refcount <= 0){ \
             if(t->refcount < 0){ \

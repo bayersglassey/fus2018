@@ -14,6 +14,10 @@
     #define BACKTRACE ;
 #endif
 
+#ifdef FUS_DEBUG_MALLOC
+    #include <malloc.h>
+#endif
+
 
 #include "array.h"
 #include "lexer.h"

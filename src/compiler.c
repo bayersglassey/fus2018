@@ -224,6 +224,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, \
             FUS_SYMCODE_LITERAL) \
         ARRAY_PUSH(fus_value_t, frame->code.literals, value) \
+        fus_value_attach(value); \
         err = fus_code_push_int(&frame->code, \
             frame->code.literals_len - 1); \
         if(err)return err; \

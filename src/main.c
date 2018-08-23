@@ -2,6 +2,7 @@
 #include "includes.h"
 
 
+
 int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     int err;
 
@@ -34,6 +35,11 @@ int run(fus_state_t *state){
 int main(int n_args, char *args[]){
     int err;
 
+#ifdef FUS_DEBUG_MALLOC
+    printf("MALLOC AT START:\n");
+    malloc_stats();
+#endif
+
     const char *filename = "./class.fus";
 
     for(int i = 1; i < n_args; i++){
@@ -54,6 +60,11 @@ int main(int n_args, char *args[]){
 
     char *buffer = load_file(filename);
     if(buffer == NULL)return 2;
+
+#ifdef FUS_DEBUG_MALLOC
+    printf("MALLOC AGAIN:\n");
+    malloc_stats();
+#endif
 
     fus_lexer_t lexer;
     err = fus_lexer_init(&lexer, buffer, filename);
@@ -78,11 +89,23 @@ int main(int n_args, char *args[]){
     if(err)return err;
 
 
+
+#ifdef FUS_DEBUG_MALLOC
+    printf("MALLOC BEFORE CLEANUP:\n");
+    malloc_stats();
+#endif
+
     /* Clean up */
+    free(buffer);
     fus_lexer_cleanup(&lexer);
     fus_symtable_cleanup(&symtable);
     fus_compiler_cleanup(&compiler);
     fus_state_cleanup(&state);
+
+#ifdef FUS_DEBUG_MALLOC
+    printf("MALLOC AFTER CLEANUP:\n");
+    malloc_stats();
+#endif
 
     printf("OK!\n");
     return 0;
