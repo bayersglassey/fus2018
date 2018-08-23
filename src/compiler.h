@@ -2,21 +2,36 @@
 #define _FUS_COMPILER_H_
 
 
+enum {
+    FUS_COMPILER_FRAME_TYPE_DEF,
+    FUS_COMPILER_FRAME_TYPE_REF,
+    FUS_COMPILER_FRAME_TYPE_SIG,
+    FUS_COMPILER_FRAME_TYPES
+};
+
 typedef struct fus_compiler_frame {
     int i;
-    bool compiled;
-    bool is_module;
     struct fus_compiler_frame *module;
     struct fus_compiler_frame *parent;
     int depth;
     char *name;
-    fus_code_t code;
+    int type;
+    union {
+        struct {
+            bool compiled;
+            bool is_module;
+            fus_code_t code;
+        } def;
+        fus_signature_t sig;
+        struct fus_compiler_frame *ref;
+    } data;
 } fus_compiler_frame_t;
 
 typedef struct fus_compiler {
     fus_symtable_t *symtable;
     fus_compiler_frame_t *cur_module;
     fus_compiler_frame_t *cur_frame;
+    fus_compiler_frame_t *root_frame;
     ARRAY_DECL(fus_compiler_frame_t*, frames)
 } fus_compiler_t;
 
@@ -29,6 +44,8 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
 void fus_compiler_cleanup(fus_compiler_t *compiler);
 int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable);
 
+int fus_compiler_get_root_frame(fus_compiler_t *compiler,
+    fus_compiler_frame_t **frame_ptr);
 int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
     fus_compiler_frame_t **frame_ptr);
 int fus_compiler_add_frame(fus_compiler_t *compiler,

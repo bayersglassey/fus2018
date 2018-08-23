@@ -6,7 +6,7 @@
 
 void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame){
     free(frame->name);
-    fus_code_cleanup(&frame->code);
+    fus_code_cleanup(&frame->data.def.code);
 }
 
 int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
@@ -15,15 +15,16 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
     char *name, fus_signature_t *sig, bool is_module
 ){
     int err;
+    frame->type = FUS_COMPILER_FRAME_TYPE_DEF;
     frame->i = i;
-    frame->compiled = false;
-    frame->is_module = is_module;
+    frame->data.def.compiled = false;
+    frame->data.def.is_module = is_module;
     frame->module = module;
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
     frame->name = name;
     if(frame->name == NULL)return 1;
-    err = fus_code_init(&frame->code, sig);
+    err = fus_code_init(&frame->data.def.code, sig);
     if(err)return err;
     return 0;
 }
@@ -39,7 +40,20 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
     compiler->symtable = symtable;
     compiler->cur_module = NULL;
     compiler->cur_frame = NULL;
+    compiler->root_frame = NULL;
     ARRAY_INIT(compiler->frames)
+    return 0;
+}
+
+int fus_compiler_get_root_frame(fus_compiler_t *compiler,
+    fus_compiler_frame_t **frame_ptr
+){
+    if(compiler->root_frame == NULL){
+        ERR_INFO();
+        fprintf(stderr, "No root frame");
+        return 2;
+    }
+    *frame_ptr = compiler->root_frame;
     return 0;
 }
 
@@ -74,7 +88,7 @@ int fus_compiler_add_frame(fus_compiler_t *compiler,
 int fus_compiler_push_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t *frame
 ){
-    if(frame->is_module){
+    if(frame->data.def.is_module){
         compiler->cur_module = frame;
     }
     compiler->cur_frame = frame;
@@ -88,7 +102,7 @@ int fus_compiler_pop_frame(fus_compiler_t *compiler){
         fprintf(stderr, "No frame to pop\n");
         return 2;
     }
-    if(frame->is_module){
+    if(frame->data.def.is_module){
         compiler->cur_module = frame->parent;
     }
     compiler->cur_frame = frame->parent;
@@ -211,10 +225,10 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     We update it here to be compiler->cur_frame at time of definition. */
     frame->parent = compiler->cur_frame;
 
-    if(!frame->code.has_sig && !is_module){
+    if(!frame->data.def.code.has_sig && !is_module){
         /* It may be the case that frame was previously declared, but
         only now is it being defined and given a signature */
-        err = fus_code_init_sig(&frame->code, sig);
+        err = fus_code_init_sig(&frame->data.def.code, sig);
         if(err)return err;
     }
 
@@ -228,12 +242,12 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
     #define FUS_COMPILER_PUSH_LITERAL(m_value) { \
         fus_value_t value = m_value; \
-        ARRAY_PUSH(fus_opcode_t, frame->code.opcodes, \
+        ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes, \
             FUS_SYMCODE_LITERAL) \
-        ARRAY_PUSH(fus_value_t, frame->code.literals, value) \
+        ARRAY_PUSH(fus_value_t, frame->data.def.code.literals, value) \
         fus_value_attach(value); \
-        err = fus_code_push_int(&frame->code, \
-            frame->code.literals_len - 1); \
+        err = fus_code_push_int(&frame->data.def.code, \
+            frame->data.def.code.literals_len - 1); \
         if(err)return err; \
     }
 
@@ -302,9 +316,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             for(int i = 0; i < depth; i++)printf("  ");
             printf("Int: %i\n", i);
 #endif
-            ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+            ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                 FUS_SYMCODE_INT_LITERAL)
-            err = fus_code_push_int(&frame->code, i);
+            err = fus_code_push_int(&frame->data.def.code, i);
             if(err)return err;
         }else if(fus_lexer_got_str(lexer)){
             char *ss;
@@ -395,9 +409,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 #endif
             err = fus_lexer_next(lexer);
             if(err)return err;
-            ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+            ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                 FUS_SYMCODE_CALL)
-            err = fus_code_push_int(&frame->code, def->i);
+            err = fus_code_push_int(&frame->data.def.code, def->i);
             if(err)return err;
         }else{
             int opcode_sym_i = fus_symtable_find(compiler->symtable,
@@ -419,15 +433,15 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         opcode_sym->token);
                     return 2;
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NONE){
-                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                    ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                         opcode_sym_i)
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
                     int i = 0;
                     int err = fus_lexer_get_int(lexer, &i);
                     if(err)return err;
-                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                    ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                         opcode_sym_i)
-                    err = fus_code_push_int(&frame->code, i);
+                    err = fus_code_push_int(&frame->data.def.code, i);
                     if(err)return err;
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
                     int sym_i = fus_symtable_find_or_add(compiler->symtable,
@@ -438,9 +452,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                             lexer->token_len, lexer->token);
                         return 2;
                     }
-                    ARRAY_PUSH(fus_opcode_t, frame->code.opcodes,
+                    ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                         opcode_sym_i)
-                    err = fus_code_push_int(&frame->code, sym_i);
+                    err = fus_code_push_int(&frame->data.def.code, sym_i);
                     if(err)return err;
                     int err = fus_lexer_next(lexer);
                     if(err)return err;
@@ -463,7 +477,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     err = fus_compiler_pop_frame(compiler);
     if(err)return err;
     if(frame_ptr != NULL)*frame_ptr = frame;
-    frame->compiled = true;
+    frame->data.def.compiled = true;
     return 0;
 }
 
@@ -474,9 +488,10 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
     err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
         strdup(lexer->filename), true, 0, NULL, NULL);
     if(err)return err;
+    compiler->root_frame = compiler->frames[0];
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
-        if(!frame->compiled){
+        if(!frame->data.def.compiled){
             ERR_INFO();
             fprintf(stderr, "Frame declared but not compiled: %i (%s)\n",
                 frame->i, frame->name);
@@ -497,10 +512,10 @@ int fus_compiler_find_frame(
         if(strlen(frame->name) == token_len
             && !strncmp(frame->name, token, token_len)
         ){
-            if(frame->is_module != is_module){
+            if(frame->data.def.is_module != is_module){
                 ERR_INFO();
                 fprintf(stderr, "Found %s when expecting %s: %s",
-                    frame->is_module? "module": "def",
+                    frame->data.def.is_module? "module": "def",
                     is_module? "module": "def",
                     frame->name);
                 return 2;

@@ -164,7 +164,7 @@ start: ;
         fus_compiler_frame_t *frame = NULL;
         err = fus_compiler_get_frame(state->compiler, def_i, &frame);
         if(err)return err;
-        err = fus_state_push_frame(state, &frame->code);
+        err = fus_state_push_frame(state, &frame->data.def.code);
         if(err)return err;
         break;}
     case FUS_SYMCODE_LITERAL: {

@@ -9,14 +9,16 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     err = fus_compiler_compile_from_lexer(compiler, lexer);
     if(err)return err;
 
-    fus_compiler_frame_t *frame = compiler->frames[0];
+    fus_compiler_frame_t *frame = NULL;
+    err = fus_compiler_get_root_frame(compiler, &frame);
+    if(err)return err;
 
 #ifdef FUS_FRAME_DEBUG
-    printf("FRAME: %s (%i)\n", frame->name, frame->code.opcodes_len);
-    fus_code_print_opcodes(&frame->code, 2);
+    printf("FRAME: %s (%i)\n", frame->name, frame->data.def.code.opcodes_len);
+    fus_code_print_opcodes(&frame->data.def.code, 2);
 #endif
 
-    err = fus_code_print_opcodes_detailed(&frame->code, compiler->symtable);
+    err = fus_code_print_opcodes_detailed(&frame->data.def.code, compiler->symtable);
     if(err)return err;
 
     return 0;
@@ -24,7 +26,10 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
 
 int run(fus_state_t *state){
     int err;
-    fus_code_t *code = &state->compiler->frames[0]->code;
+    fus_compiler_frame_t *root_frame = NULL;
+    err = fus_compiler_get_root_frame(state->compiler, &root_frame);
+    if(err)return err;
+    fus_code_t *code = &root_frame->data.def.code;
     err = fus_state_push_frame(state, code);
     if(err)return err;
     err = fus_state_run(state);
