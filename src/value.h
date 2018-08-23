@@ -77,6 +77,7 @@ fus_type_t fus_type_from_c(char c);
             if(t->refcount < 0){ \
                 fprintf(stderr, #T " with negative refcount: %p\n", \
                     t); \
+                BACKTRACE \
             } \
             fus_##T##_cleanup(t); \
             free(t); \

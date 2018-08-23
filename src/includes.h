@@ -6,6 +6,15 @@
 #include <stdbool.h>
 #include <string.h>
 
+#ifdef FUS_ENABLE_BACKTRACE
+    #include <execinfo.h>
+    void btrace();
+    #define BACKTRACE btrace();
+#else
+    #define BACKTRACE ;
+#endif
+
+
 #include "array.h"
 #include "lexer.h"
 #include "write.h"
