@@ -56,14 +56,15 @@ int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
     return 0;
 }
 
-int fus_compiler_add_frame(fus_compiler_t *compiler, char *name,
+int fus_compiler_add_frame(fus_compiler_t *compiler,
+    fus_compiler_frame_t *module, char *name,
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr
 ){
     int err;
     fus_compiler_frame_t *new_frame = malloc(sizeof(*new_frame));
     if(new_frame == NULL)return 1;
     err = fus_compiler_frame_init(new_frame, compiler->frames_len,
-        compiler->cur_module, compiler->cur_frame, name, sig, is_module);
+        module, compiler->cur_frame, name, sig, is_module);
     if(err)return err;
     ARRAY_PUSH(fus_compiler_frame_t*, compiler->frames, new_frame)
     *frame_ptr = new_frame;
@@ -201,11 +202,14 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 ){
     int err;
     fus_compiler_frame_t *frame = NULL;
-    err = fus_compiler_find_or_add_frame(
-        compiler, name, strlen(name), sig, is_module, &frame);
+    err = fus_compiler_find_or_add_frame(compiler, compiler->cur_module,
+        name, strlen(name), sig, is_module, &frame);
     if(err)return err;
-    err = fus_compiler_push_frame(compiler, frame);
-    if(err)return err;
+
+    /* If frame was only declared previously, its parent will be whatever
+    compiler->cur_frame was at the time of declaration.
+    We update it here to be compiler->cur_frame at time of definition. */
+    frame->parent = compiler->cur_frame;
 
     if(!frame->code.has_sig && !is_module){
         /* It may be the case that frame was previously declared, but
@@ -213,6 +217,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         err = fus_code_init_sig(&frame->code, sig);
         if(err)return err;
     }
+
+    err = fus_compiler_push_frame(compiler, frame);
+    if(err)return err;
 
 #ifdef FUS_DEBUG_COMPILER
     for(int i = 0; i < depth; i++)printf("  ");
@@ -349,13 +356,39 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         }else if(fus_lexer_got(lexer, "@")){
             err = fus_lexer_next(lexer);
             if(err)return err;
-            if(!fus_lexer_got_name(lexer)){
-                return fus_lexer_unexpected(lexer, "name");
-            }
             fus_compiler_frame_t *def = NULL;
-            err = fus_compiler_find_or_add_frame(compiler,
-                lexer->token, lexer->token_len, NULL, false, &def);
-            if(err)return err;
+            if(fus_lexer_got(lexer, "(")){
+                fus_compiler_frame_t *module = compiler->cur_module;
+                err = fus_lexer_next(lexer);
+                if(err)return err;
+                while(1){
+                    const char *token = lexer->token;
+                    int token_len = lexer->token_len;
+                    err = fus_lexer_next(lexer);
+                    if(err)return err;
+                    if(fus_lexer_got(lexer, ")")){
+                        err = fus_compiler_find_or_add_frame(compiler,
+                            module, token, token_len, NULL, false, &def);
+                        if(err)return err;
+                        break;
+                    }else{
+                        if(!fus_lexer_got_name(lexer)){
+                            return fus_lexer_unexpected(lexer, "name");
+                        }
+                        err = fus_compiler_find_or_add_frame(compiler,
+                            module, token, token_len, NULL, true, &module);
+                        if(err)return err;
+                    }
+                }
+            }else{
+                if(!fus_lexer_got_name(lexer)){
+                    return fus_lexer_unexpected(lexer, "name");
+                }
+                err = fus_compiler_find_or_add_frame(compiler,
+                    compiler->cur_module,
+                    lexer->token, lexer->token_len, NULL, false, &def);
+                if(err)return err;
+            }
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
             printf("Lexed call: %i (%s)\n", def->i, def->name);
@@ -466,9 +499,10 @@ int fus_compiler_find_frame(
         ){
             if(frame->is_module != is_module){
                 ERR_INFO();
-                fprintf(stderr, "Found frame %s but is_module is wrong: "
-                    "%i, expected %i\n", frame->name,
-                    frame->is_module, is_module);
+                fprintf(stderr, "Found %s when expecting %s: %s",
+                    frame->is_module? "module": "def",
+                    is_module? "module": "def",
+                    frame->name);
                 return 2;
             }
             *frame_ptr = frame;
@@ -480,17 +514,17 @@ int fus_compiler_find_frame(
 }
 
 int fus_compiler_find_or_add_frame(
-    fus_compiler_t *compiler,
+    fus_compiler_t *compiler, fus_compiler_frame_t *module,
     const char *token, int token_len,
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr
 ){
     int err;
     fus_compiler_frame_t *frame = NULL;
-    err = fus_compiler_find_frame(compiler,
-        compiler->cur_module, token, token_len, is_module, &frame);
+    err = fus_compiler_find_frame(compiler, module,
+        token, token_len, is_module, &frame);
     if(err)return err;
     if(frame == NULL){
-        int err = fus_compiler_add_frame(compiler,
+        int err = fus_compiler_add_frame(compiler, module,
             strndup(token, token_len), sig, is_module, &frame);
         if(err)return err;
     }

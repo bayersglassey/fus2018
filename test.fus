@@ -2,10 +2,12 @@
 def f(->): "EFF" p
 def g(->): "GEE" p
 
+@(M f)
+
 module M:
+    @f
     def f(->): "EM EFF" p
     def g(->): "EM GEE" p
-    @f
 
 @f
 

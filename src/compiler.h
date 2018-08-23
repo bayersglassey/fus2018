@@ -31,7 +31,8 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable);
 
 int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
     fus_compiler_frame_t **frame_ptr);
-int fus_compiler_add_frame(fus_compiler_t *compiler, char *name,
+int fus_compiler_add_frame(fus_compiler_t *compiler,
+    fus_compiler_frame_t *module, char *name,
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr);
 int fus_compiler_push_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t *frame);
@@ -43,7 +44,7 @@ int fus_compiler_find_frame(
     const char *token, int token_len,
     bool is_module, fus_compiler_frame_t **frame_ptr);
 int fus_compiler_find_or_add_frame(
-    fus_compiler_t *compiler,
+    fus_compiler_t *compiler, fus_compiler_frame_t *module,
     const char *token, int token_len,
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr);
 
