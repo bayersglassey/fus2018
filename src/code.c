@@ -12,6 +12,9 @@ void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
 
 
 
+void fus_signature_cleanup(fus_signature_t *sig){
+    /* Nothing to do! */
+}
 int fus_signature_init(fus_signature_t *sig, int n_args_in, int n_args_out){
     sig->n_args_in = n_args_in;
     sig->n_args_out = n_args_out;
@@ -25,33 +28,10 @@ void fus_code_cleanup(fus_code_t *code){
     ARRAY_FREE_BYVAL(fus_value_t, code->literals, fus_value_detach)
 }
 
-int fus_code_init(fus_code_t *code, fus_signature_t *sig){
+int fus_code_init(fus_code_t *code){
     int err;
-    code->has_sig = false;
-    if(sig != NULL){
-        err = fus_code_init_sig(code, sig);
-        if(err)return err;
-    }else{
-        err = fus_signature_init(&code->sig, 0, 0);
-        if(err)return err;
-    }
     ARRAY_INIT(code->opcodes)
     ARRAY_INIT(code->literals)
-    return 0;
-}
-
-int fus_code_init_sig(fus_code_t *code, fus_signature_t *sig){
-    if(code->has_sig){
-        ERR_INFO();
-        fprintf(stderr, "Code already has signature\n");
-        return 2;
-    }else if(sig == NULL){
-        ERR_INFO();
-        fprintf(stderr, "Signature is NULL\n");
-        return 2;
-    }
-    code->has_sig = true;
-    code->sig = *sig;
     return 0;
 }
 

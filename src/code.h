@@ -11,8 +11,6 @@ typedef struct fus_signature {
 } fus_signature_t;
 
 typedef struct fus_code {
-    bool has_sig;
-    fus_signature_t sig;
     ARRAY_DECL(fus_opcode_t, opcodes)
     ARRAY_DECL(fus_value_t, literals)
 } fus_code_t;
@@ -30,12 +28,12 @@ void fus_opcode_print(fus_opcode_t opcode, fus_symtable_t *symtable,
     FILE *f);
 
 
+void fus_signature_cleanup(fus_signature_t *sig);
 int fus_signature_init(fus_signature_t *sig, int n_args_in, int n_args_out);
 
 
 void fus_code_cleanup(fus_code_t *code);
-int fus_code_init(fus_code_t *code, fus_signature_t *sig);
-int fus_code_init_sig(fus_code_t *code, fus_signature_t *sig);
+int fus_code_init(fus_code_t *code);
 void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
     fus_symtable_t *symtable, FILE *f);
 void fus_code_print_opcodes(fus_code_t *code, int indent);

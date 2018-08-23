@@ -2,8 +2,8 @@
 sig S: x -> y
 sig Q: x y -> z
 
-def f(->): "EFF" p
-def g(->): "GEE" p
+def f S: "EFF" p
+def g S: "GEE" p
 
 @(M f)
 
