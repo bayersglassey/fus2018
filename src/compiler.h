@@ -38,9 +38,10 @@ int fus_compiler_push_frame(fus_compiler_t *compiler,
 int fus_compiler_pop_frame(fus_compiler_t *compiler);
 int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer);
-fus_compiler_frame_t *fus_compiler_find_frame(
+int fus_compiler_find_frame(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
-    const char *token, int token_len, bool is_module);
+    const char *token, int token_len,
+    bool is_module, fus_compiler_frame_t **frame_ptr);
 int fus_compiler_find_or_add_frame(
     fus_compiler_t *compiler,
     const char *token, int token_len,

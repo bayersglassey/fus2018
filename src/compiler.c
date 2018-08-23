@@ -453,19 +453,30 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
     return 0;
 }
 
-fus_compiler_frame_t *fus_compiler_find_frame(
+int fus_compiler_find_frame(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
-    const char *token, int token_len, bool is_module
+    const char *token, int token_len,
+    bool is_module, fus_compiler_frame_t **frame_ptr
 ){
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
-        if(frame->is_module != is_module)continue;
         if(frame->module != module)continue;
         if(strlen(frame->name) == token_len
-            && !strncmp(frame->name, token, token_len)){
-                return frame;}
+            && !strncmp(frame->name, token, token_len)
+        ){
+            if(frame->is_module != is_module){
+                ERR_INFO();
+                fprintf(stderr, "Found frame %s but is_module is wrong: "
+                    "%i, expected %i\n", frame->name,
+                    frame->is_module, is_module);
+                return 2;
+            }
+            *frame_ptr = frame;
+            return 0;
+        }
     }
-    return NULL;
+    *frame_ptr = NULL;
+    return 0;
 }
 
 int fus_compiler_find_or_add_frame(
@@ -474,8 +485,10 @@ int fus_compiler_find_or_add_frame(
     fus_signature_t *sig, bool is_module, fus_compiler_frame_t **frame_ptr
 ){
     int err;
-    fus_compiler_frame_t *frame = fus_compiler_find_frame(compiler,
-        compiler->cur_module, token, token_len, is_module);
+    fus_compiler_frame_t *frame = NULL;
+    err = fus_compiler_find_frame(compiler,
+        compiler->cur_module, token, token_len, is_module, &frame);
+    if(err)return err;
     if(frame == NULL){
         int err = fus_compiler_add_frame(compiler,
             strndup(token, token_len), sig, is_module, &frame);
