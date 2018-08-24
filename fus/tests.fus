@@ -68,3 +68,20 @@ dup `x get 1 == assert
 dup `y rip 2 == assert .y is null assert
 "ok" p
 
+"Modules & Functions"
+module ModuleTest:
+    sig F: -> i
+
+    def f F: 2
+
+    def test(-> bool):
+        fun F: 1
+        ='f
+
+        @f 2 == assert
+        'f call F 1 == assert
+        &f call F 2 == assert
+
+        y
+@(ModuleTest test) assert
+"ok" p
