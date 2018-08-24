@@ -138,7 +138,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         ARRAY_PUSH(fus_compiler_block_t, blocks, \
             (fus_compiler_block_t){0}) \
         err = fus_compiler_block_init(&blocks[blocks_len - 1], \
-            FUS_COMPILER_BLOCK_TYPE_##TYPE); \
+            FUS_COMPILER_BLOCK_TYPE_##TYPE, \
+            &frame->data.def.code); \
         if(err)return err; \
     }
 
@@ -163,6 +164,21 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             fus_compiler_block_t block;
             ARRAY_POP(fus_compiler_block_t, blocks, block)
             depth--;
+            int block_type = block.type;
+            err = fus_compiler_block_finish(&block);
+            if(err)return err;
+            if(block_type == FUS_COMPILER_BLOCK_TYPE_IFELSE_A){
+                err = fus_lexer_get(lexer, "(");
+                if(err)return err;
+                FUS_COMPILER_PUSH_BLOCK(IFELSE_B)
+                depth++;
+            }
+        }else if(fus_lexer_got(lexer, "do")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+            FUS_COMPILER_PUSH_BLOCK(DO)
         }else if(fus_lexer_got(lexer, "if")){
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -174,7 +190,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             err = fus_lexer_get(lexer, "(");
             if(err)return err;
-            FUS_COMPILER_PUSH_BLOCK(IFELSE)
+            FUS_COMPILER_PUSH_BLOCK(IFELSE_A)
         }else if(fus_lexer_got(lexer, "call")){
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -247,8 +263,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
             printf("%s: %s (%i -> %i)\n",
-                got_module? "Module": "Def",
-                def_name, sig.n_args_in, sig.n_args_out);
+                got_module? "Module": "Def", def_name,
+                sig_frame->data.sig.n_args_in,
+                sig_frame->data.sig.n_args_out);
 #endif
 
             err = fus_lexer_get(lexer, "(");

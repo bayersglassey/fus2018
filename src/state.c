@@ -236,6 +236,28 @@ start: ;
         err = fus_obj_set(&frame->vars, sym_i, popped_value);
         if(err)return err;
         break;}
+    case FUS_SYMCODE_CONTROL_JUMP: {
+        int i = 0;
+        FUS_STATE_CODE_GET_INT(i)
+
+        //coderef->opcode_i += i;
+        printf("JUMP %i\n", i);
+
+        break;}
+    case FUS_SYMCODE_CONTROL_JUMPIF: case FUS_SYMCODE_CONTROL_JUMPIFNOT: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_BOOL)
+        int i = 0;
+        FUS_STATE_CODE_GET_INT(i)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        bool b = opcode == FUS_SYMCODE_CONTROL_JUMPIF?
+            popped_value.data.b: !popped_value.data.b;
+
+        //if(b)coderef->opcode_i += i;
+        printf("JUMP%s %i\n",
+            opcode == FUS_SYMCODE_CONTROL_JUMPIF? "IF": "IFNOT", i);
+
+        break;}
     case FUS_SYMCODE_DEBUG_PRINT: {
         fus_value_t popped_value;
         FUS_STACK_POP(*stack, popped_value)

@@ -10,16 +10,21 @@ enum {
     FUS_COMPILER_BLOCK_TYPE_PAREN,
     FUS_COMPILER_BLOCK_TYPE_DO,
     FUS_COMPILER_BLOCK_TYPE_IF,
-    FUS_COMPILER_BLOCK_TYPE_IFELSE,
+    FUS_COMPILER_BLOCK_TYPE_IFELSE_A,
+    FUS_COMPILER_BLOCK_TYPE_IFELSE_B,
     FUS_COMPILER_BLOCK_TYPES
 };
 
 typedef struct fus_compiler_block {
     int type;
+    fus_code_t *code;
+    int opcode_i;
 } fus_compiler_block_t;
 
 void fus_compiler_block_cleanup(fus_compiler_block_t *block);
-int fus_compiler_block_init(fus_compiler_block_t *block, int type);
+int fus_compiler_block_init(fus_compiler_block_t *block, int type,
+    fus_code_t *code);
+int fus_compiler_block_finish(fus_compiler_block_t *block);
 
 
 /******************

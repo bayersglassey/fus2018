@@ -1,14 +1,27 @@
 
-def if(b->): if: "YES!" p
-def ifelse(b->):
-    ifelse: "...YES!" p
-    : "...NO!" p
+("BLOCK!" p)
+
+"***A:" p
+y if: "Y" p
+"***B:" p
+n if: "Y" p
+"***C:" p
+y ifelse("Y" p)("N" p)
+"***D:" p
+n ifelse("Y" p)("N" p)
 
 
-y @if
-n @if
-y @ifelse
-n @ifelse
+ignore:
+    def if(b->): if: "YES!" p
+    def ifelse(b->):
+        ifelse: "...YES!" p
+        : "...NO!" p
+
+
+    y @if
+    n @if
+    y @ifelse
+    n @ifelse
 
 
 ignore:

@@ -10,12 +10,43 @@ void fus_compiler_block_cleanup(fus_compiler_block_t *block){
     /* Nothing to do */
 }
 
-int fus_compiler_block_init(fus_compiler_block_t *block, int type){
+int fus_compiler_block_init(fus_compiler_block_t *block, int type,
+    fus_code_t *code
+){
     int err;
     block->type = type;
+    block->code = code;
+    block->opcode_i = code->opcodes_len;
+    if(type == FUS_COMPILER_BLOCK_TYPE_IF
+        || type == FUS_COMPILER_BLOCK_TYPE_IFELSE_A
+    ){
+        ARRAY_PUSH(fus_opcode_t, code->opcodes,
+            FUS_SYMCODE_CONTROL_JUMPIFNOT)
+        err = fus_code_push_int(code, 0);
+        if(err)return err;
+    }else if(type == FUS_COMPILER_BLOCK_TYPE_IFELSE_B){
+        ARRAY_PUSH(fus_opcode_t, code->opcodes,
+            FUS_SYMCODE_CONTROL_JUMP)
+        err = fus_code_push_int(code, 0);
+        if(err)return err;
+    }
     return 0;
 }
 
+int fus_compiler_block_finish(fus_compiler_block_t *block){
+    int err;
+    int type = block->type;
+    fus_code_t *code = block->code;
+    int opcode_i = block->opcode_i;
+    if(type == FUS_COMPILER_BLOCK_TYPE_DO){
+        ARRAY_PUSH(fus_opcode_t, code->opcodes,
+            FUS_SYMCODE_CONTROL_JUMP)
+        err = fus_code_push_int(code, code->opcodes_len - opcode_i);
+        if(err)return err;
+    }
+    fus_compiler_block_cleanup(block);
+    return 0;
+}
 
 
 /******************
