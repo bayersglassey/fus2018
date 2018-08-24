@@ -1,0 +1,37 @@
+
+sig const: -> x
+def unbox(boxed -> unboxed): call const
+
+module Cycle:
+
+    def A const:
+        obj
+            "A" =.label
+            &B =.link
+    def B const:
+        obj
+            "B" =.label
+            &C =.link
+    def C const:
+        obj
+            "C" =.label
+            &A =.link
+
+    def test(->):
+        # The links of A, B, C form a cycle.
+        # We follow the links by unboxing them.
+        # The compiler should be smart enough to cache
+        # the values of defs with signature (-> x),
+        # so even if we form a really big directed graph
+        # structure, there should be no cost to following
+        # its links.
+
+        @A
+            dup .label "A" == assert
+            .link @unbox
+            dup .label "B" == assert
+            .link @unbox
+            dup .label "C" == assert
+            .link @unbox
+            dup .label "A" == assert
+        drop
