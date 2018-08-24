@@ -78,7 +78,7 @@ static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
         err = fus_lexer_next(lexer);
         if(err)return err;
     }else{
-        const char *name = "<anon>";
+        const char *name = "<anon-sig>";
         err = fus_compiler_add_frame_sig(compiler,
             compiler->cur_module, strdup(name), &sig_frame);
         if(err)return err;
@@ -131,23 +131,50 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         if(err)return err; \
     }
 
+    ARRAY_DECL(fus_compiler_block_t, blocks)
+    ARRAY_INIT(blocks)
+
+    #define FUS_COMPILER_PUSH_BLOCK(TYPE) { \
+        ARRAY_PUSH(fus_compiler_block_t, blocks, \
+            (fus_compiler_block_t){0}) \
+        err = fus_compiler_block_init(&blocks[blocks_len - 1], \
+            FUS_COMPILER_BLOCK_TYPE_##TYPE); \
+        if(err)return err; \
+    }
+
+    #define FUS_COMPILER_POP_BLOCK(block) { \
+        ARRAY_POP(fus_compiler_block_t, blocks, block) \
+    }
+
     bool got_module = false;
     bool got_fun = false;
     bool got_call = false;
-    int block_depth = 0;
     while(1){
         if(fus_lexer_done(lexer)){
             break;
         }else if(fus_lexer_got(lexer, ")")){
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("Done. depth=%i, block_depth=%i\n", depth, block_depth);
+            printf("Done.\n");
 #endif
-            if(block_depth <= 0)break;
+            if(blocks_len <= 0)break;
             err = fus_lexer_next(lexer);
             if(err)return err;
-            block_depth--;
+            fus_compiler_block_t block;
+            ARRAY_POP(fus_compiler_block_t, blocks, block)
             depth--;
+        }else if(fus_lexer_got(lexer, "if")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+            FUS_COMPILER_PUSH_BLOCK(IF)
+        }else if(fus_lexer_got(lexer, "ifelse")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+            FUS_COMPILER_PUSH_BLOCK(IFELSE)
         }else if(fus_lexer_got(lexer, "call")){
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -204,7 +231,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             char *def_name = NULL;
             if(got_fun){
-                def_name = strdup("<anon>");
+                def_name = strdup("<anon-def>");
             }else{
                 err = fus_lexer_get_name(lexer, &def_name);
                 if(err)return err;
@@ -248,7 +275,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             for(int i = 0; i < depth; i++)printf("  ");
             printf("Block:\n");
 #endif
-            block_depth++;
+            FUS_COMPILER_PUSH_BLOCK(PAREN)
             depth++;
         }else if(fus_lexer_got_int(lexer)){
             int i;

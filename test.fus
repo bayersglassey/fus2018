@@ -1,5 +1,18 @@
 
+def if(b->): if: "YES!" p
+def ifelse(b->):
+    ifelse: "...YES!" p
+    : "...NO!" p
 
-1 2 3 stack p
-1 ='x 2 ='y 3 ='z vars p
+
+y @if
+n @if
+y @ifelse
+n @ifelse
+
+
+ignore:
+    0 3 do loop:
+        over over < while loop
+        over dup p 1 + swap
 

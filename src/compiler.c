@@ -2,6 +2,21 @@
 #include "includes.h"
 
 
+/******************
+ * COMPILER BLOCK *
+ ******************/
+
+void fus_compiler_block_cleanup(fus_compiler_block_t *block){
+    /* Nothing to do */
+}
+
+int fus_compiler_block_init(fus_compiler_block_t *block, int type){
+    int err;
+    block->type = type;
+    return 0;
+}
+
+
 
 /******************
  * COMPILER FRAME *
