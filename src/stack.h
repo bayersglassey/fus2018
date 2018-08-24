@@ -12,6 +12,7 @@ typedef struct fus_stack {
 
 void fus_stack_cleanup(fus_stack_t *stack);
 int fus_stack_init(fus_stack_t *stack);
+int fus_stack_len(fus_stack_t *stack);
 int fus_stack_push(fus_stack_t *stack, fus_value_t value);
 int fus_stack_pop(fus_stack_t *stack, fus_value_t *value_ptr);
 

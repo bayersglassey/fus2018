@@ -207,6 +207,26 @@ int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0){
     return 0;
 }
 
+int fus_arr_copy_stack(fus_arr_t *a, fus_stack_t *stack){
+    int err;
+    err = fus_arr_init(a);
+    if(err)return err;
+    int len = fus_stack_len(stack);
+    if(len >= 1){
+        err = fus_arr_push_l(a, stack->tos);
+        if(err)return err;
+        if(len >= 2){
+            err = fus_arr_push_l(a, stack->nos);
+            if(err)return err;
+            for(int i = 0; i < stack->tail_len; i++){
+                err = fus_arr_push_l(a, stack->tail[i]);
+                if(err)return err;
+            }
+        }
+    }
+    return 0;
+}
+
 int fus_arr_push(fus_arr_t *a, fus_value_t value){
     int err;
     if(a == NULL){
@@ -215,6 +235,23 @@ int fus_arr_push(fus_arr_t *a, fus_value_t value){
         return 2;
     }
     ARRAY_PUSH(fus_value_t, a->values, value)
+    fus_value_attach(value);
+    return 0;
+}
+
+int fus_arr_push_l(fus_arr_t *a, fus_value_t value){
+    int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't push onto NULL arr\n");
+        return 2;
+    }
+    int old_values_len = a->values_len;
+    ARRAY_PUSH(fus_value_t, a->values, (fus_value_t){0})
+    for(int i = old_values_len - 1; i >= 0; i--){
+        a->values[i + 1] = a->values[i];
+    }
+    a->values[0] = value;
     fus_value_attach(value);
     return 0;
 }
@@ -231,6 +268,26 @@ int fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr){
         return 2;
     }
     ARRAY_POP(fus_value_t, a->values, *value_ptr)
+    return 0;
+}
+
+int fus_arr_pop_l(fus_arr_t *a, fus_value_t *value_ptr){
+    int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't pop from NULL arr\n");
+        return 2;
+    }else if(a->values_len <= 0){
+        ERR_INFO();
+        fprintf(stderr, "Can't pop from empty arr\n");
+        return 2;
+    }
+    *value_ptr = a->values[0];
+    for(int i = 1; i < a->values_len; i++){
+        a->values[i - 1] = a->values[i];
+    }
+    fus_value_t popped_value;
+    ARRAY_POP(fus_value_t, a->values, popped_value)
     return 0;
 }
 

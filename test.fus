@@ -1,13 +1,5 @@
 
-sig F: ->
 
-fun F("FUN EFF" p) ='f
-'f call F
-
-
-def f F: "DEF EFF" p
-
-@f
-
-&f call F
+1 2 3 stack p
+1 ='x 2 ='y 3 ='z vars p
 

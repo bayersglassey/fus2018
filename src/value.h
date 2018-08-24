@@ -137,8 +137,12 @@ void fus_str_cleanup(fus_str_t *s);
 void fus_arr_cleanup(fus_arr_t *a);
 int fus_arr_init(fus_arr_t *a);
 int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0);
+struct fus_stack;
+    int fus_arr_copy_stack(fus_arr_t *a, struct fus_stack *stack);
 int fus_arr_push(fus_arr_t *a, fus_value_t value);
+int fus_arr_push_l(fus_arr_t *a, fus_value_t value);
 int fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr);
+int fus_arr_pop_l(fus_arr_t *a, fus_value_t *value_ptr);
 int fus_arr_len(fus_arr_t *a);
 void fus_obj_entry_cleanup(fus_obj_entry_t *entry);
 int fus_obj_entry_init(fus_obj_entry_t *entry, int sym_i,

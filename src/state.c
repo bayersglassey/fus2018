@@ -244,6 +244,20 @@ start: ;
         printf("\n");
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_DEBUG_STACK: {
+        fus_arr_t *a = malloc(sizeof(a));
+        if(a == NULL)return 1;
+        err = fus_arr_copy_stack(a, stack);
+        if(err)return err;
+        FUS_STACK_PUSH(*stack, fus_value_arr(a))
+        break;}
+    case FUS_SYMCODE_DEBUG_VARS: {
+        fus_obj_t *o = malloc(sizeof(o));
+        if(o == NULL)return 1;
+        err = fus_obj_copy(o, &frame->vars);
+        if(err)return err;
+        FUS_STACK_PUSH(*stack, fus_value_obj(o))
+        break;}
     case FUS_SYMCODE_DEBUG_ASSERT: {
         FUS_STATE_ASSERT_STACK(FUS_TYPE_BOOL)
         fus_value_t popped_value;
