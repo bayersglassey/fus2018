@@ -429,6 +429,13 @@ void fus_obj_print(fus_obj_t *o, fus_symtable_t *symtable, FILE *f,
     fprintf(f, ")");
 }
 
+void fus_fun_print(fus_code_t *code, fus_symtable_t *symtable, FILE *f,
+    int indent, int depth
+){
+    /* Ummmm. */
+    fprintf(f, "(fun ...)");
+}
+
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth
 ){
@@ -459,6 +466,8 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
         fus_arr_print(value.data.a, symtable, f, indent, depth);
     }else if(value.type == FUS_TYPE_OBJ){
         fus_obj_print(value.data.o, symtable, f, indent, depth);
+    }else if(value.type == FUS_TYPE_FUN){
+        fus_fun_print(value.data.f, symtable, f, indent, depth);
     }else{
         fprintf(f, "\"Unknown type: %i\" error", value.type);
     }

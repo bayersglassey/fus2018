@@ -162,6 +162,9 @@ void fus_arr_print(fus_arr_t *a, fus_symtable_t *symtable, FILE *f,
     int indent, int depth);
 void fus_obj_print(fus_obj_t *o, fus_symtable_t *symtable, FILE *f,
     int indent, int depth);
+struct fus_code;
+    void fus_fun_print(struct fus_code *code, fus_symtable_t *symtable, FILE *f,
+        int indent, int depth);
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     FILE *f, int indent, int depth);
 
