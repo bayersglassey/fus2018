@@ -1,7 +1,8 @@
 
-Aug 17, 2018:
+Aug 23, 2018:
 -------------
 
-Time to compile code from a lexer.
+Need better debugging for compiler_t and state_t.
+(row, col, pos etc)
 
 
