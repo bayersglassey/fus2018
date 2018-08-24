@@ -1,14 +1,36 @@
 
-("BLOCK!" p)
+module test_nested_conditionals:
+    def f(b b -> i):
+        ifelse:
+            ifelse: 0 ='x
+            : 1 ='x
+        :
+            ifelse: 2 ='x
+            : 3 ='x
+        ''x
+    def test(->):
+        y y @f 0 == assert
+        n y @f 1 == assert
+        y n @f 2 == assert
+        n n @f 3 == assert
+@(test_nested_conditionals test)
 
-"***A:" p
-y if: "Y" p
-"***B:" p
-n if: "Y" p
-"***C:" p
-y ifelse("Y" p)("N" p)
-"***D:" p
-n ifelse("Y" p)("N" p)
+
+
+ignore:
+    "***y if:" p
+    y if: "Y" p
+    "***n if:" p
+    n if: "Y" p
+    "***y ifelse:" p
+    y ifelse("Y" p)("N" p)
+    "***n ifelse:" p
+    n ifelse("Y" p)("N" p)
+
+ignore:
+    "***LOOP:" p
+    do loop:
+        "loopin" p
 
 
 ignore:

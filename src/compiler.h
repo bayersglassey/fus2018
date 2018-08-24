@@ -17,14 +17,17 @@ enum {
 
 typedef struct fus_compiler_block {
     int type;
+    int depth;
     fus_code_t *code;
     int opcode_i;
+    char *label_name;
 } fus_compiler_block_t;
 
 void fus_compiler_block_cleanup(fus_compiler_block_t *block);
 int fus_compiler_block_init(fus_compiler_block_t *block, int type,
-    fus_code_t *code);
-int fus_compiler_block_finish(fus_compiler_block_t *block);
+    int depth, fus_code_t *code, char *label_name);
+int fus_compiler_block_finish(fus_compiler_block_t *block,
+    fus_symtable_t *symtable);
 
 
 /******************

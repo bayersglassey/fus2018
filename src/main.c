@@ -16,10 +16,10 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
 #ifdef FUS_FRAME_DEBUG
     printf("FRAME: %s (%i)\n", frame->name, frame->data.def.code.opcodes_len);
     fus_code_print_opcodes(&frame->data.def.code, 2);
-#endif
 
     err = fus_code_print_opcodes_detailed(&frame->data.def.code, compiler->symtable);
     if(err)return err;
+#endif
 
     return 0;
 }

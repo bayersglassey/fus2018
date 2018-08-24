@@ -37,8 +37,9 @@ int fus_code_init(fus_code_t *code);
 void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
     fus_symtable_t *symtable, FILE *f);
 void fus_code_print_opcodes(fus_code_t *code, int indent);
+void fus_code_set_int(fus_code_t *code, int opcode_i, int i);
 int fus_code_push_int(fus_code_t *code, int i);
-int fus_code_get_int(fus_code_t *code, int opcode_i, int *i_ptr);
+int fus_code_get_int(fus_code_t *code, int opcode_i);
 int fus_code_get_sym(fus_code_t *code, int opcode_i,
     fus_symtable_t *symtable, fus_sym_t **sym_ptr);
 int fus_code_print_opcodes_detailed(fus_code_t *code,

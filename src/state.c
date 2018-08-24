@@ -127,8 +127,7 @@ start: ;
     }
 
     #define FUS_STATE_CODE_GET_INT(i) { \
-        err = fus_code_get_int(code, coderef->opcode_i, &(i)); \
-        if(err)return err; \
+        (i) = fus_code_get_int(code, coderef->opcode_i); \
         coderef->opcode_i += FUS_CODE_OPCODES_PER_INT; \
     }
 
@@ -240,8 +239,13 @@ start: ;
         int i = 0;
         FUS_STATE_CODE_GET_INT(i)
 
-        //coderef->opcode_i += i;
-        printf("JUMP %i\n", i);
+        /* undo the "++" from start of the switch-block,
+        and undo the FUS_STATE_CODE_GET_INT: */
+        coderef->opcode_i--;
+        coderef->opcode_i -= FUS_CODE_OPCODES_PER_INT;
+
+        /* jump! */
+        coderef->opcode_i += i;
 
         break;}
     case FUS_SYMCODE_CONTROL_JUMPIF: case FUS_SYMCODE_CONTROL_JUMPIFNOT: {
@@ -253,9 +257,15 @@ start: ;
         bool b = opcode == FUS_SYMCODE_CONTROL_JUMPIF?
             popped_value.data.b: !popped_value.data.b;
 
-        //if(b)coderef->opcode_i += i;
-        printf("JUMP%s %i\n",
-            opcode == FUS_SYMCODE_CONTROL_JUMPIF? "IF": "IFNOT", i);
+        if(b){
+            /* undo the "++" from start of the switch-block,
+            and undo the FUS_STATE_CODE_GET_INT: */
+            coderef->opcode_i--;
+            coderef->opcode_i -= FUS_CODE_OPCODES_PER_INT;
+
+            /* jump! */
+            coderef->opcode_i += i;
+        }
 
         break;}
     case FUS_SYMCODE_DEBUG_PRINT: {

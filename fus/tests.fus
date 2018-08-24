@@ -43,6 +43,38 @@ y y or assert
 y n or assert
 n y or assert
 n n or not assert
+:
+    y ='cond
+    n if: n ='cond
+    ''cond assert
+:
+    y ='cond
+    y if: n ='cond
+    ''cond not assert
+:
+    y ifelse: y ='cond
+    : n ='cond
+    ''cond assert
+:
+    n ifelse: y ='cond
+    : n ='cond
+    ''cond not assert
+:
+module test_nested_conditionals:
+    def f(b b -> i):
+        ifelse:
+            ifelse: 0 ='x
+            : 1 ='x
+        :
+            ifelse: 2 ='x
+            : 3 ='x
+        ''x
+    def test(->):
+        y y @f 0 == assert
+        n y @f 1 == assert
+        y n @f 2 == assert
+        n n @f 3 == assert
+@(test_nested_conditionals test)
 "ok" p
 
 "Arrays" p

@@ -48,25 +48,15 @@ void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
     }
     fprintf(f, "%s", opcode_sym->token);
     if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
-        int ii = 0;
-        err = fus_code_get_int(code, opcode_i + 1, &ii);
-        if(err){
-            fprintf(f, " COULDNT_GET_INT");
-        }else{
-            fprintf(f, " %i", ii);
-        }
+        int ii = fus_code_get_int(code, opcode_i + 1);
+        fprintf(f, " %i", ii);
     }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_SYM){
-        int sym_i = 0;
-        err = fus_code_get_int(code, opcode_i + 1, &sym_i);
-        if(err){
-            fprintf(f, " COULDNT_GET_SYM_I");
+        int sym_i = fus_code_get_int(code, opcode_i + 1);
+        fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
+        if(sym == NULL){
+            fprintf(f, " COULDNT_GET_SYM");
         }else{
-            fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
-            if(sym == NULL){
-                fprintf(f, " COULDNT_GET_SYM");
-            }else{
-                fprintf(f, " %s", sym->token);
-            }
+            fprintf(f, " %s", sym->token);
         }
     }
 }
@@ -80,6 +70,10 @@ void fus_code_print_opcodes(fus_code_t *code, int indent){
     printf("\n");
 }
 
+void fus_code_set_int(fus_code_t *code, int opcode_i, int i){
+    *(int*)&code->opcodes[opcode_i] = i;
+}
+
 int fus_code_push_int(fus_code_t *code, int i){
     int err;
     int n = FUS_CODE_OPCODES_PER_INT;
@@ -87,23 +81,19 @@ int fus_code_push_int(fus_code_t *code, int i){
         ARRAY_PUSH(fus_opcode_t, code->opcodes, 0)
     }
     int opcode_i = code->opcodes_len - n;
-    *(int*)&code->opcodes[opcode_i] = i;
+    fus_code_set_int(code, opcode_i, i);
     return 0;
 }
 
-int fus_code_get_int(fus_code_t *code, int opcode_i, int *i_ptr){
-    int err;
-    *i_ptr = *(int*)&code->opcodes[opcode_i];
-    return 0;
+int fus_code_get_int(fus_code_t *code, int opcode_i){
+    return *(int*)&code->opcodes[opcode_i];
 }
 
 int fus_code_get_sym(fus_code_t *code, int opcode_i,
     fus_symtable_t *symtable, fus_sym_t **sym_ptr
 ){
     int err;
-    int sym_i = -1;
-    err = fus_code_get_int(code, opcode_i, &sym_i);
-    if(err)return err;
+    int sym_i = fus_code_get_int(code, opcode_i);
     fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
     if(sym == NULL)return 2;
     *sym_ptr = sym;
@@ -131,11 +121,9 @@ int fus_code_print_opcodes_detailed(fus_code_t *code,
             return 2;
         }
 
-#ifdef FUS_CODE_DEBUG
         printf("OPCODE %i: %i (", i, opcode);
         fus_code_print_opcode_at(code, i, symtable, stdout);
         printf(")\n");
-#endif
 
         i += fus_symcode_argtype_get_size(opcode_sym->argtype);
     }
