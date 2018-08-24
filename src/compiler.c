@@ -74,6 +74,8 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
 
 
 
+/* COMPILER GET FRAME */
+
 int fus_compiler_get_root_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t **frame_ptr
 ){
@@ -100,6 +102,9 @@ int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
 }
 
 
+
+
+/* COMPILER ADD FRAME */
 
 int fus_compiler_add_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t *module, char *name,
@@ -146,6 +151,8 @@ int fus_compiler_add_frame_sig(fus_compiler_t *compiler,
 
 
 
+/* COMPILER PUSH AND POP FRAME */
+
 int fus_compiler_push_frame_def(fus_compiler_t *compiler,
     fus_compiler_frame_t *frame
 ){
@@ -172,21 +179,27 @@ int fus_compiler_pop_frame_def(fus_compiler_t *compiler){
 
 
 
+/* COMPILER FIND FRAME */
+
 int fus_compiler_find_frame(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
     const char *token, int token_len,
     fus_compiler_frame_t **frame_ptr
 ){
-    for(int i = 0; i < compiler->frames_len; i++){
-        fus_compiler_frame_t *frame = compiler->frames[i];
-        if(frame->module != module)continue;
-        if(strlen(frame->name) == token_len
-            && !strncmp(frame->name, token, token_len)
-        ){
-            while(frame->type == FUS_COMPILER_FRAME_TYPE_REF){
-                frame = frame->data.ref;}
-            *frame_ptr = frame;
-            return 0;
+    if(token_len > 0 && token[0] != '<'){
+        for(int i = 0; i < compiler->frames_len; i++){
+            fus_compiler_frame_t *frame = compiler->frames[i];
+            if(frame->module != module)continue;
+            bool match =
+                frame->name[0] != '<' &&
+                strlen(frame->name) == token_len &&
+                !strncmp(frame->name, token, token_len);
+            if(match){
+                while(frame->type == FUS_COMPILER_FRAME_TYPE_REF){
+                    frame = frame->data.ref;}
+                *frame_ptr = frame;
+                return 0;
+            }
         }
     }
     *frame_ptr = NULL;
@@ -261,6 +274,7 @@ int fus_compiler_find_frame_sig(
 
 
 
+/* COMPILER FIND OR ADD FRAME */
 
 int fus_compiler_find_or_add_frame_def(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
