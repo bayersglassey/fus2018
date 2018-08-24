@@ -132,6 +132,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     }
 
     bool got_module = false;
+    bool got_fun = false;
+    bool got_call = false;
     int block_depth = 0;
     while(1){
         if(fus_lexer_done(lexer)){
@@ -146,6 +148,26 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             block_depth--;
             depth--;
+        }else if(fus_lexer_got(lexer, "call")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            if(!fus_lexer_got_name(lexer)){
+                return fus_lexer_unexpected(lexer, "name");
+            }
+
+            fus_compiler_frame_t *sig_frame = NULL;
+            err = fus_compiler_find_or_add_frame_sig(compiler,
+                compiler->cur_module, lexer->token, lexer->token_len,
+                &sig_frame);
+            if(err)return err;
+
+            ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
+                FUS_SYMCODE_FUN_CALL)
+            err = fus_code_push_int(&frame->data.def.code, sig_frame->i);
+            if(err)return err;
+
+            err = fus_lexer_next(lexer);
+            if(err)return err;
         }else if(fus_lexer_got(lexer, "sig")){
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -174,14 +196,19 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             frame->compiled = true;
         }else if(
             (got_module=fus_lexer_got(lexer, "module")) ||
+            (got_fun=fus_lexer_got(lexer, "fun")) ||
             fus_lexer_got(lexer, "def")
         ){
             err = fus_lexer_next(lexer);
             if(err)return err;
 
             char *def_name = NULL;
-            err = fus_lexer_get_name(lexer, &def_name);
-            if(err)return err;
+            if(got_fun){
+                def_name = strdup("<anon>");
+            }else{
+                err = fus_lexer_get_name(lexer, &def_name);
+                if(err)return err;
+            }
 
             fus_compiler_frame_t *sig_frame = NULL;
             if(!got_module){
@@ -207,6 +234,13 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             new_frame->data.def.sig_frame = sig_frame;
             err = fus_lexer_get(lexer, ")");
             if(err)return err;
+
+            if(got_fun){
+                ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
+                    FUS_SYMCODE_FUN_LITERAL)
+                err = fus_code_push_int(&frame->data.def.code, new_frame->i);
+                if(err)return err;
+            }
         }else if(fus_lexer_got(lexer, "(")){
             int err = fus_lexer_next(lexer);
             if(err)return err;
@@ -275,7 +309,10 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_get(lexer, ")");
             if(err)return err;
             FUS_COMPILER_PUSH_LITERAL(fus_value_arr(a))
-        }else if(fus_lexer_got(lexer, "@")){
+        }else if(
+            (got_call=fus_lexer_got(lexer, "@")) ||
+            fus_lexer_got(lexer, "&")
+        ){
             err = fus_lexer_next(lexer);
             if(err)return err;
             fus_compiler_frame_t *def = NULL;
@@ -313,12 +350,13 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             }
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("Lexed call: %i (%s)\n", def->i, def->name);
+            printf("Lexed %s: %i (%s)\n", got_call? "call": "callref",
+                def->i, def->name);
 #endif
             err = fus_lexer_next(lexer);
             if(err)return err;
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
-                FUS_SYMCODE_CALL)
+                got_call? FUS_SYMCODE_CALL: FUS_SYMCODE_FUN_LITERAL)
             err = fus_code_push_int(&frame->data.def.code, def->i);
             if(err)return err;
         }else{

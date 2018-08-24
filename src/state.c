@@ -480,6 +480,36 @@ start: ;
         if(err)return err;
         FUS_STACK_PUSH(*stack, value)
         break;}
+    case FUS_SYMCODE_FUN_LITERAL: {
+        int frame_i = -1;
+        FUS_STATE_CODE_GET_INT(frame_i)
+        fus_compiler_frame_t *frame = NULL;
+        err = fus_compiler_get_frame(state->compiler, frame_i, &frame);
+        if(err)return err;
+        FUS_STACK_PUSH(*stack, fus_value_fun(&frame->data.def.code))
+        break;}
+    case FUS_SYMCODE_FUN_CALL: {
+        int sig_frame_i = -1;
+        FUS_STATE_CODE_GET_INT(sig_frame_i)
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_FUN)
+
+        fus_compiler_frame_t *sig_frame = NULL;
+        err = fus_compiler_get_frame(state->compiler,
+            sig_frame_i, &sig_frame);
+        if(err)return err;
+        /* TODO: Check that signature of sig_frame matches that
+        of popped_value.data.f
+        ...although that's not even possible now that we removed
+        code->sig.
+        So we're going to have to think about what values are actually
+        stored in code->opcodes.
+        (Raw fus_compiler_frame_t pointers?..) */
+
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        err = fus_state_push_frame(state, popped_value.data.f);
+        if(err)return err;
+        break;}
     default: {
         fus_sym_t *opcode_sym = fus_symtable_get(
             state->compiler->symtable, opcode);

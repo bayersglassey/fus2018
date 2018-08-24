@@ -1,20 +1,13 @@
 
-sig S: x -> y
-sig Q: x y -> z
+sig F: ->
 
-def f S: "EFF" p
-def g S: "GEE" p
+fun F("FUN EFF" p) ='f
+'f call F
 
-@(M f)
 
-module M:
-    @f
-    def f(->): "EM EFF" p
-    def g(->): "EM GEE" p
+def f F: "DEF EFF" p
 
 @f
 
-quote: 1 2 3
-
-"END!" p
+&f call F
 
