@@ -28,8 +28,9 @@ int fus_compiler_block_init(fus_compiler_block_t *block, int type,
     block->label_name = label_name;
 
 #ifdef FUS_DEBUG_COMPILER_BLOCKS
+    printf("%5i:", block->opcode_i);
     for(int i = 0; i < block->depth; i++)printf("  ");
-    printf("Entering block:\n");
+    printf("Entering block: %i -> ...\n", block->opcode_i);
 #endif
 
     if(type == FUS_COMPILER_BLOCK_TYPE_IF
@@ -83,11 +84,12 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
     }
 
 #ifdef FUS_DEBUG_COMPILER_BLOCKS
+    printf("%5i:", opcode_i1);
     for(int i = 0; i < block->depth; i++)printf("  ");
-    printf("Finishing block:\n");
+    printf("Finishing block: %i -> %i\n", opcode_i0, opcode_i1);
 #endif
 
-    fus_opcode_t opcode_i00 =
+    int opcode_i00 =
         type == FUS_COMPILER_BLOCK_TYPE_IFELSE_B? opcode_i_A: opcode_i0;
     for(int i = opcode_i00; i < opcode_i1;){
         fus_opcode_t opcode = code->opcodes[i];
@@ -117,6 +119,7 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
         }
 
 #ifdef FUS_DEBUG_COMPILER_BLOCKS
+        printf("%5i:", i);
         for(int i = 0; i < block->depth; i++)printf("  ");
         printf("  ");
         fus_code_print_opcode_at(code, i, symtable, stdout);

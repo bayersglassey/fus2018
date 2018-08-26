@@ -166,13 +166,14 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     bool got_call = false;
     bool got_next = false;
     while(1){
-        if(fus_lexer_done(lexer)){
-            break;
-        }else if(fus_lexer_got(lexer, ")")){
+        if(fus_lexer_done(lexer))break;
+
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("Done.\n");
+            printf("Lexed: %.*s\n", lexer->token_len, lexer->token);
 #endif
+
+        if(fus_lexer_got(lexer, ")")){
             if(blocks_len <= 0)break;
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -329,20 +330,12 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         }else if(fus_lexer_got(lexer, "(")){
             int err = fus_lexer_next(lexer);
             if(err)return err;
-#ifdef FUS_DEBUG_COMPILER
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Block:\n");
-#endif
             FUS_COMPILER_PUSH_BLOCK(PAREN, NULL)
             depth++;
         }else if(fus_lexer_got_int(lexer)){
             int i;
             err = fus_lexer_get_int(lexer, &i);
             if(err)return err;
-#ifdef FUS_DEBUG_COMPILER
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Int: %i\n", i);
-#endif
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                 FUS_SYMCODE_INT_LITERAL)
             err = fus_code_push_int(&frame->data.def.code, i);
@@ -351,10 +344,6 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             char *ss;
             err = fus_lexer_get_str(lexer, &ss);
             if(err)return err;
-#ifdef FUS_DEBUG_COMPILER
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Str: %s\n", ss);
-#endif
             fus_str_t *s = fus_str(ss);
             if(s == NULL)return 1;
             FUS_COMPILER_PUSH_LITERAL(fus_value_str(s))
@@ -364,10 +353,6 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(!fus_lexer_got_sym(lexer)){
                 return fus_lexer_unexpected(lexer, "sym");
             }
-#ifdef FUS_DEBUG_COMPILER
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Sym: %.*s\n", lexer->token_len, lexer->token);
-#endif
             int sym_i = fus_symtable_find_or_add(compiler->symtable,
                 lexer->token, lexer->token_len);
             if(sym_i < 0)return 1;
@@ -433,11 +418,6 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     lexer->token, lexer->token_len, false, &def);
                 if(err)return err;
             }
-#ifdef FUS_DEBUG_COMPILER
-            for(int i = 0; i < depth; i++)printf("  ");
-            printf("Lexed %s: %i (%s)\n", got_call? "call": "callref",
-                def->i, def->name);
-#endif
             err = fus_lexer_next(lexer);
             if(err)return err;
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
@@ -450,11 +430,6 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(opcode_sym_i >= 0){
                 fus_sym_t *opcode_sym = fus_symtable_get(compiler->symtable,
                     opcode_sym_i);
-#ifdef FUS_DEBUG_COMPILER
-                for(int i = 0; i < depth; i++)printf("  ");
-                printf("Lexed opcode: %i (%s)\n",
-                    opcode_sym_i, opcode_sym->token);
-#endif
                 int err = fus_lexer_next(lexer);
                 if(err)return err;
 
