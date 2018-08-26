@@ -1,5 +1,5 @@
 
-
+stack len 0 == assert
 
 "Stack" p
 1 dup 1 == assert 1 == assert
@@ -9,12 +9,16 @@
 1 2 over 1 == assert 2 == assert 1 == assert
 "ok" p
 
+stack len 0 == assert
+
 "Vars" p
 1 ='x
 'x 1 == assert
 ''x 1 == assert
 'x is null assert
 "ok" p
+
+stack len 0 == assert
 
 "Arithmetic" p
 10 neg -10 == assert
@@ -31,6 +35,14 @@
 3 4 >  not assert
 3 4 >= not assert
 "ok" p
+
+stack len 0 == assert
+
+"Blocks" p
+: # empty block
+"ok" p
+
+stack len 0 == assert
 
 "Logic" p
 y assert
@@ -59,23 +71,22 @@ n n or not assert
     n ifelse: y ='cond
     : n ='cond
     ''cond not assert
-:
-module test_nested_conditionals:
-    def f(b b -> i):
-        ifelse:
-            ifelse: 0 ='x
-            : 1 ='x
-        :
-            ifelse: 2 ='x
-            : 3 ='x
-        ''x
-    def test(->):
-        y y @f 0 == assert
-        n y @f 1 == assert
-        y n @f 2 == assert
-        n n @f 3 == assert
-@(test_nested_conditionals test)
+def which_nested_conditional_branch(b b -> i):
+    # Returns 0, 1, 2, or 3 depending on which branch was reached
+    ifelse:
+        ifelse: 0 ='x
+        : 1 ='x
+    :
+        ifelse: 2 ='x
+        : 3 ='x
+    ''x
+y y @which_nested_conditional_branch 0 == assert
+n y @which_nested_conditional_branch 1 == assert
+y n @which_nested_conditional_branch 2 == assert
+n n @which_nested_conditional_branch 3 == assert
 "ok" p
+
+stack len 0 == assert
 
 "Arrays" p
 arr 1, 2, 3, ='a
@@ -91,14 +102,46 @@ drop
 'a pop 3 == assert len 2 == assert
 "ok" p
 
+stack len 0 == assert
+
 "Objects" p
 obj 1 =.x 2 `y set
-dup keys len 2 == assert
-dup ?.x assert
-dup ?.z not assert
-dup `x get 1 == assert
-dup `y rip 2 == assert .y is null assert
+    dup keys len 2 == assert
+    dup ?.x assert
+    dup ?.z not assert
+    dup `x get 1 == assert
+    dup `y rip 2 == assert .y is null assert
+drop
 "ok" p
+
+stack len 0 == assert
+
+"Loops" p
+arr ='a
+0 3 do loop:
+    stack p
+    over over < not if: break loop
+    swap 1 + swap
+    stack p
+    1 2 do loop:
+        stack p
+        over over <= not if: break loop
+        swap
+            ''a over, ='a
+        1 + swap
+    drop drop
+drop drop
+''a
+    lpop 1 == assert
+    lpop 2 == assert
+    lpop 1 == assert
+    lpop 2 == assert
+    lpop 1 == assert
+    lpop 2 == assert
+len 0 == assert
+"ok" p
+
+stack len 0 == assert
 
 "Modules & Functions"
 module ModuleTest:
@@ -117,3 +160,5 @@ module ModuleTest:
         y
 @(ModuleTest test) assert
 "ok" p
+
+stack len 0 == assert
