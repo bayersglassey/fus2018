@@ -52,7 +52,7 @@
 
 # arr
 
-    arr len , push pop lpush lpop split join .$ ..$ =.$ ?.$ repeat
+    arr len , push pop lpush lpop split join repeat .$ ..$ =.$ ?.$
     quote(...)
 
 # fun

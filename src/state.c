@@ -616,6 +616,24 @@ start: ;
         }
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_ARR_REPEAT: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ANY, FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        int n = popped_value.data.i;
+        fus_value_t value = stack->tos;
+        fus_arr_t *a = malloc(sizeof(*a));
+        if(a == NULL)return 1;
+        err = fus_arr_init(a);
+        if(err)return err;
+        for(int i = 0; i < n; i++){
+            err = fus_arr_push(a, value);
+            if(err)return err;
+        }
+        fus_value_detach(value);
+        stack->tos = fus_value_arr(a);
+        fus_value_detach(stack->tos);
+        break;}
     case FUS_SYMCODE_FUN_LITERAL: {
         int frame_i = -1;
         FUS_STATE_CODE_GET_INT(frame_i)
