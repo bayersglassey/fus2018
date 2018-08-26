@@ -120,7 +120,7 @@ start: ;
         fprintf(stderr, "Executing opcode %s: " \
             "Expected (%c %c) on stack, found (%c %c)\n", \
             fus_symtable_get_token(state->compiler->symtable, opcode), \
-            fus_type_to_c(T1), fus_type_to_c(T1), \
+            fus_type_to_c(T1), fus_type_to_c(T2), \
             fus_type_to_c(stack->nos.type), \
             fus_type_to_c(stack->tos.type)); \
         return 2; \
@@ -484,10 +484,13 @@ start: ;
         fus_value_detach(stack->tos);
         stack->tos = fus_value_int(len);
         break;}
-    case FUS_SYMCODE_ARR_PUSH: case FUS_SYMCODE_ARR_PUSH_ALT: {
+    case FUS_SYMCODE_ARR_PUSH:
+    case FUS_SYMCODE_ARR_PUSH_ALT:
+    case FUS_SYMCODE_ARR_LPUSH: {
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_ANY)
         fus_value_t popped_value;
         FUS_STACK_POP(*stack, popped_value)
+        FUS_VALUE_MKUNIQUE(arr, stack->tos.data.a)
         if(stack->tos.data.a == NULL){
             fus_arr_t *a = malloc(sizeof(*a));
             if(a == NULL)return 1;
@@ -496,17 +499,67 @@ start: ;
             a->refcount++;
             stack->tos.data.a = a;
         }
-        err = fus_arr_push(stack->tos.data.a, popped_value);
-        if(err)return err;
+        if(opcode == FUS_SYMCODE_ARR_LPUSH){
+            err = fus_arr_push_l(stack->tos.data.a, popped_value);
+            if(err)return err;
+        }else{
+            err = fus_arr_push(stack->tos.data.a, popped_value);
+            if(err)return err;
+        }
         fus_value_detach(popped_value);
         break;}
-    case FUS_SYMCODE_ARR_POP: {
+    case FUS_SYMCODE_ARR_POP: case FUS_SYMCODE_ARR_LPOP: {
         FUS_STATE_ASSERT_STACK(FUS_TYPE_ARR)
+        FUS_VALUE_MKUNIQUE(arr, stack->tos.data.a)
         fus_arr_t *a = stack->tos.data.a;
         fus_value_t value;
-        err = fus_arr_pop(a, &value);
-        if(err)return err;
+        if(opcode == FUS_SYMCODE_ARR_LPOP){
+            err = fus_arr_pop_l(a, &value);
+            if(err)return err;
+        }else{
+            err = fus_arr_pop(a, &value);
+            if(err)return err;
+        }
         FUS_STACK_PUSH(*stack, value)
+        break;}
+    case FUS_SYMCODE_ARR_GET:
+    case FUS_SYMCODE_ARR_RIP:
+    case FUS_SYMCODE_ARR_HAS: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_INT)
+        int i = stack->tos.data.i;
+        bool is_rip = opcode == FUS_SYMCODE_ARR_RIP;
+        bool is_get = opcode == FUS_SYMCODE_ARR_GET;
+        if(is_rip){FUS_VALUE_MKUNIQUE(arr, stack->nos.data.a)}
+        fus_arr_t *a = stack->nos.data.a;
+        fus_value_t value;
+        if(is_rip){
+            err = fus_arr_rip(a, i, &value);
+            if(err)return err;
+        }else if(is_get){
+            err = fus_arr_get(a, i, &value);
+            if(err)return err;
+            fus_value_t popped_value;
+            FUS_STACK_POP(*stack, popped_value)
+        }else{
+            bool has = i >= 0 && a != NULL && i < a->values_len;
+            value = fus_value_bool(has);
+        }
+        fus_value_detach(stack->tos);
+        stack->tos = value;
+        fus_value_attach(value);
+        break;}
+    case FUS_SYMCODE_ARR_SET: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_INT)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        int i = popped_value.data.i;
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_ANY)
+        FUS_STACK_POP(*stack, popped_value)
+        FUS_VALUE_MKUNIQUE(arr, stack->tos.data.a)
+        fus_arr_t *a = stack->tos.data.a;
+        err = fus_arr_set(a, i, popped_value);
+        if(err)return err;
+        fus_value_detach(popped_value);
         break;}
     case FUS_SYMCODE_FUN_LITERAL: {
         int frame_i = -1;

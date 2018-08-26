@@ -256,6 +256,48 @@ int fus_arr_push_l(fus_arr_t *a, fus_value_t value){
     return 0;
 }
 
+int fus_arr_get(fus_arr_t *a, int i, fus_value_t *value_ptr){
+    int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't get from NULL arr\n");
+        return 2;
+    }else if(i < 0 || i >= a->values_len){
+        ERR_INFO();
+        fprintf(stderr, "Can't get index %i from arr with length %i\n",
+            i, a->values_len);
+        return 2;
+    }
+    *value_ptr = a->values[i];
+    return 0;
+}
+
+int fus_arr_rip(fus_arr_t *a, int i, fus_value_t *value_ptr){
+    int err;
+    err = fus_arr_get(a, i, value_ptr);
+    if(err)return err;
+    a->values[i] = fus_value_null();
+    return 0;
+}
+
+int fus_arr_set(fus_arr_t *a, int i, fus_value_t value){
+    int err;
+    if(a == NULL){
+        ERR_INFO();
+        fprintf(stderr, "Can't set on NULL arr\n");
+        return 2;
+    }else if(i < 0 || i >= a->values_len){
+        ERR_INFO();
+        fprintf(stderr, "Can't set index %i on arr with length %i\n",
+            i, a->values_len);
+        return 2;
+    }
+    fus_value_detach(a->values[i]);
+    a->values[i] = value;
+    fus_value_attach(value);
+    return 0;
+}
+
 int fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr){
     int err;
     if(a == NULL){
