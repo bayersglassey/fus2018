@@ -574,6 +574,47 @@ start: ;
         if(err)return err;
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_ARR_SPLIT: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_INT)
+        int i = stack->tos.data.i;
+        int len = fus_arr_len(stack->nos.data.a);
+        if(i < 0 || i > len){
+            ERR_INFO();
+            fprintf(stderr, "Can't split array with length %i at index %i\n",
+                len, i);
+            return 2;
+        }
+        FUS_VALUE_MKUNIQUE(arr, stack->nos.data.a)
+        fus_arr_t *a = stack->nos.data.a;
+        fus_arr_t *a2 = malloc(sizeof(*a2));
+        if(a2 == NULL)return 1;
+        err = fus_arr_init(a2);
+        if(err)return err;
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_arr(a2);
+        fus_value_attach(stack->tos);
+        for(int j = len - 1; j >= i; j--){
+            fus_value_t value;
+            err = fus_arr_pop(a, &value);
+            if(err)return err;
+            err = fus_arr_push_l(a2, value);
+            if(err)return err;
+        }
+        break;}
+    case FUS_SYMCODE_ARR_JOIN: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_ARR, FUS_TYPE_ARR)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        fus_arr_t *a2 = popped_value.data.a;
+        FUS_VALUE_MKUNIQUE(arr, stack->tos.data.a)
+        fus_arr_t *a = stack->tos.data.a;
+        int a2_len = fus_arr_len(a2);
+        for(int i = 0; i < a2_len; i++){
+            err = fus_arr_push(a, a2->values[i]);
+            if(err)return err;
+        }
+        fus_value_detach(popped_value);
+        break;}
     case FUS_SYMCODE_FUN_LITERAL: {
         int frame_i = -1;
         FUS_STATE_CODE_GET_INT(frame_i)
