@@ -119,12 +119,9 @@ stack len 0 == assert
 "Loops" p
 arr ='a
 0 3 do loop:
-    stack p
     over over < not if: break loop
     swap 1 + swap
-    stack p
     1 2 do loop:
-        stack p
         over over <= not if: break loop
         swap
             ''a over, ='a
@@ -143,7 +140,7 @@ len 0 == assert
 
 stack len 0 == assert
 
-"Modules & Functions"
+"Modules & Functions" p
 module ModuleTest:
     sig F: -> i
 

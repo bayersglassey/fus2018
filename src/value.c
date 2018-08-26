@@ -218,7 +218,7 @@ int fus_arr_copy_stack(fus_arr_t *a, fus_stack_t *stack){
         if(len >= 2){
             err = fus_arr_push_l(a, stack->nos);
             if(err)return err;
-            for(int i = 0; i < stack->tail_len; i++){
+            for(int i = stack->tail_len - 1; i >= 0; i--){
                 err = fus_arr_push_l(a, stack->tail[i]);
                 if(err)return err;
             }
