@@ -292,6 +292,7 @@ start: ;
             stderr, 0, 0);
         fprintf(stderr, "\n");
         fus_value_detach(popped_value);
+        return 2;
         break;}
     case FUS_SYMCODE_NULL: {
         FUS_STACK_PUSH(*stack, fus_value_null())
