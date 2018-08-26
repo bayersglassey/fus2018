@@ -45,7 +45,8 @@ int main(int n_args, char *args[]){
     malloc_stats();
 #endif
 
-    const char *filename = "./class.fus";
+    char *buffer = NULL;
+    const char *filename = "./test.fus";
 
     for(int i = 1; i < n_args; i++){
         char *arg = args[i];
@@ -57,14 +58,27 @@ int main(int n_args, char *args[]){
             }
             char *arg = args[i];
             filename = arg;
+        }else if(!strcmp(arg, "-c")){
+            i++;
+            if(i >= n_args){
+                printf("Missing inline source after argument: %s", arg);
+                return 2;
+            }
+            char *arg = args[i];
+            buffer = arg;
+            filename = "<inline source>";
         }else{
             printf("Unrecognized argument: %s\n", arg);
             return 2;
         }
     }
 
-    char *buffer = load_file(filename);
-    if(buffer == NULL)return 2;
+    bool own_buffer = false;
+    if(buffer == NULL){
+        own_buffer = true;
+        buffer = load_file(filename);
+        if(buffer == NULL)return 2;
+    }
 
 #ifdef FUS_DEBUG_MALLOC
     printf("MALLOC AGAIN:\n");
@@ -101,7 +115,7 @@ int main(int n_args, char *args[]){
 #endif
 
     /* Clean up */
-    free(buffer);
+    if(own_buffer)free(buffer);
     fus_lexer_cleanup(&lexer);
     fus_symtable_cleanup(&symtable);
     fus_compiler_cleanup(&compiler);
