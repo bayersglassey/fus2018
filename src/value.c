@@ -100,6 +100,19 @@ void fus_value_cleanup(fus_value_t value){
     }
 }
 
+int fus_str_len(fus_str_t *s){
+    if(s == NULL)return 0;
+    return s->text_len;
+}
+
+bool fus_str_eq(fus_str_t *s1, fus_str_t *s2){
+    int len1 = fus_str_len(s1);
+    int len2 = fus_str_len(s2);
+    if(len1 == 0 || len2 == 0)return len1 == len2;
+    return !strcmp(s1->text, s2->text);
+}
+
+
 
 
 fus_value_t fus_value_null(){

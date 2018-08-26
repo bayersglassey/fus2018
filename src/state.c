@@ -405,6 +405,19 @@ start: ;
         stack->tos = fus_value_bool(
             stack->tos.data.i != popped_value.data.i);
         break;}
+    case FUS_SYMCODE_STR_LEN: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
+        int len = fus_str_len(stack->tos.data.s);
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_int(len);
+        break;}
+    case FUS_SYMCODE_STR_EQ: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_STR, FUS_TYPE_STR)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        stack->tos = fus_value_bool(fus_str_eq(
+            stack->tos.data.s, popped_value.data.s));
+        break;}
     case FUS_SYMCODE_SYM_EQ: {
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_SYM, FUS_TYPE_SYM)
         fus_value_t popped_value;

@@ -134,6 +134,8 @@ fus_value_t fus_value_fun(struct fus_code *code);
 
 void fus_bigint_cleanup(fus_bigint_t *bi);
 void fus_str_cleanup(fus_str_t *s);
+int fus_str_len(fus_str_t *s);
+bool fus_str_eq(fus_str_t *s1, fus_str_t *s2);
 void fus_arr_cleanup(fus_arr_t *a);
 int fus_arr_init(fus_arr_t *a);
 int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0);
