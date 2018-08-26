@@ -1,53 +1,9 @@
 
-module test_nested_conditionals:
-    def f(b b -> i):
-        ifelse:
-            ifelse: 0 ='x
-            : 1 ='x
-        :
-            ifelse: 2 ='x
-            : 3 ='x
-        ''x
-    def test(->):
-        y y @f 0 == assert
-        n y @f 1 == assert
-        y n @f 2 == assert
-        n n @f 3 == assert
-@(test_nested_conditionals test)
-
-
-
-ignore:
-    "***y if:" p
-    y if: "Y" p
-    "***n if:" p
-    n if: "Y" p
-    "***y ifelse:" p
-    y ifelse("Y" p)("N" p)
-    "***n ifelse:" p
-    n ifelse("Y" p)("N" p)
-
-ignore:
-    "***LOOP:" p
-    do loop:
-        "loopin" p
-
-
-ignore:
-    def if(b->): if: "YES!" p
-    def ifelse(b->):
-        ifelse: "...YES!" p
-        : "...NO!" p
-
-
-    y @if
-    n @if
-    y @ifelse
-    n @ifelse
-
-
-ignore:
-    0 3 do loop:
-        over over < while loop
-        over dup p 1 + swap
-
+0 3 do loop:
+    over over < not if: break loop
+    swap 1 + swap
+    1 3 do loop:
+        over over <= not if: break loop
+        swap dup p 1 + swap
+    drop drop
+drop drop

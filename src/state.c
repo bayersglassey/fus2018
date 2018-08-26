@@ -238,15 +238,7 @@ start: ;
     case FUS_SYMCODE_CONTROL_JUMP: {
         int i = 0;
         FUS_STATE_CODE_GET_INT(i)
-
-        /* undo the "++" from start of the switch-block,
-        and undo the FUS_STATE_CODE_GET_INT: */
-        coderef->opcode_i--;
-        coderef->opcode_i -= FUS_CODE_OPCODES_PER_INT;
-
-        /* jump! */
-        coderef->opcode_i += i;
-
+        coderef->opcode_i = i;
         break;}
     case FUS_SYMCODE_CONTROL_JUMPIF: case FUS_SYMCODE_CONTROL_JUMPIFNOT: {
         FUS_STATE_ASSERT_STACK(FUS_TYPE_BOOL)
@@ -256,17 +248,7 @@ start: ;
         FUS_STACK_POP(*stack, popped_value)
         bool b = opcode == FUS_SYMCODE_CONTROL_JUMPIF?
             popped_value.data.b: !popped_value.data.b;
-
-        if(b){
-            /* undo the "++" from start of the switch-block,
-            and undo the FUS_STATE_CODE_GET_INT: */
-            coderef->opcode_i--;
-            coderef->opcode_i -= FUS_CODE_OPCODES_PER_INT;
-
-            /* jump! */
-            coderef->opcode_i += i;
-        }
-
+        if(b)coderef->opcode_i = i;
         break;}
     case FUS_SYMCODE_DEBUG_PRINT: {
         fus_value_t popped_value;

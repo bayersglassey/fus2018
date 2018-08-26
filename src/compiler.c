@@ -6,6 +6,13 @@
  * COMPILER BLOCK *
  ******************/
 
+
+#define FUS_COMPILER_JUMP_PLACEHOLDER (-1)
+    /* Placeholder value for a jump location we don't yet know,
+    specifically, the end of the current block.
+    Should be filled in by fus_compiler_block_finish. */
+
+
 void fus_compiler_block_cleanup(fus_compiler_block_t *block){
     free(block->label_name);
 }
@@ -30,17 +37,10 @@ int fus_compiler_block_init(fus_compiler_block_t *block, int type,
     ){
         ARRAY_PUSH(fus_opcode_t, code->opcodes,
             FUS_SYMCODE_CONTROL_JUMPIFNOT)
-        err = fus_code_push_int(code, 0);
+        err = fus_code_push_int(code, FUS_COMPILER_JUMP_PLACEHOLDER);
         if(err)return err;
     }
     return 0;
-}
-
-static bool opcode_is_jump(fus_opcode_t opcode){
-    return
-        opcode == FUS_SYMCODE_CONTROL_JUMP ||
-        opcode == FUS_SYMCODE_CONTROL_JUMPIF ||
-        opcode == FUS_SYMCODE_CONTROL_JUMPIFNOT;
 }
 
 int fus_compiler_block_finish(fus_compiler_block_t *block,
@@ -50,24 +50,36 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
     int type = block->type;
     fus_code_t *code = block->code;
 
+    int opcode_i0 = block->opcode_i;
+
+    bool is_jump =
+        type == FUS_COMPILER_BLOCK_TYPE_IF ||
+        type == FUS_COMPILER_BLOCK_TYPE_IFELSE_A ||
+        type == FUS_COMPILER_BLOCK_TYPE_IFELSE_B;
+
+    bool is_do =
+        type == FUS_COMPILER_BLOCK_TYPE_DO;
+
     if(type == FUS_COMPILER_BLOCK_TYPE_IFELSE_A){
-        /* Set up the jump to end of B block (but we don't know
-        the jump value, so use temporary 0). */
+        /* Set up the jump to end of B block */
         ARRAY_PUSH(fus_opcode_t, code->opcodes,
             FUS_SYMCODE_CONTROL_JUMP)
-        err = fus_code_push_int(code, 0);
+        err = fus_code_push_int(code, FUS_COMPILER_JUMP_PLACEHOLDER);
+        if(err)return err;
+    }else if(type == FUS_COMPILER_BLOCK_TYPE_DO){
+        ARRAY_PUSH(fus_opcode_t, code->opcodes,
+            FUS_SYMCODE_CONTROL_JUMP)
+        err = fus_code_push_int(code, opcode_i0);
         if(err)return err;
     }
 
-    int opcode_i0 = block->opcode_i;
     int opcode_i1 = code->opcodes_len;
     int opcode_i_A = opcode_i0 - 1 - FUS_CODE_OPCODES_PER_INT;
 
     if(type == FUS_COMPILER_BLOCK_TYPE_IFELSE_B){
         /* Reach back into end of A block, set the jump value to end
         of B block (now that we know it). */
-        fus_code_set_int(code, opcode_i_A + 1,
-            opcode_i1 - opcode_i_A);
+        fus_code_set_int(code, opcode_i_A + 1, opcode_i1);
     }
 
 #ifdef FUS_DEBUG_COMPILER_BLOCKS
@@ -81,14 +93,32 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
         fus_opcode_t opcode = code->opcodes[i];
         fus_sym_t *opcode_sym = fus_symtable_get(symtable, opcode);
 
-        bool is_jump = opcode_is_jump(opcode);
-        if(is_jump && fus_code_get_int(code, i + 1) == 0){
-            fus_code_set_int(code, i + 1, opcode_i1 - i);
+        if(is_jump){
+            if(
+                opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_JUMP && (
+                    fus_code_get_int(code, i + 1)
+                    == FUS_COMPILER_JUMP_PLACEHOLDER
+                )
+            )fus_code_set_int(code, i + 1, opcode_i1);
+        }else if(is_do){
+            fus_opcode_t new_opcode = opcode;
+            if(opcode == FUS_SYMCODE_CONTROL_NEXT){
+                new_opcode = FUS_SYMCODE_CONTROL_JUMP;
+                fus_code_set_int(code, i + 1, opcode_i0);
+            }else if(opcode == FUS_SYMCODE_CONTROL_BREAK){
+                new_opcode = FUS_SYMCODE_CONTROL_JUMP;
+                fus_code_set_int(code, i + 1, opcode_i1);
+            }
+            if(new_opcode != opcode){
+                opcode = new_opcode;
+                code->opcodes[i] = opcode;
+                opcode_sym = fus_symtable_get(symtable, opcode);
+            }
         }
 
 #ifdef FUS_DEBUG_COMPILER_BLOCKS
         for(int i = 0; i < block->depth; i++)printf("  ");
-        printf("  %s", is_jump? "*": "");
+        printf("  ");
         fus_code_print_opcode_at(code, i, symtable, stdout);
         printf("\n");
 #endif
@@ -96,12 +126,6 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
         i += fus_symcode_argtype_get_size(opcode_sym->argtype);
     }
 
-    if(type == FUS_COMPILER_BLOCK_TYPE_DO){
-        ARRAY_PUSH(fus_opcode_t, code->opcodes,
-            FUS_SYMCODE_CONTROL_JUMP)
-        err = fus_code_push_int(code, opcode_i0 - opcode_i1);
-        if(err)return err;
-    }
     return 0;
 }
 

@@ -58,6 +58,9 @@ void fus_code_print_opcode_at(fus_code_t *code, int opcode_i,
         }else{
             fprintf(f, " %s", sym->token);
         }
+    }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_JUMP){
+        int ii = fus_code_get_int(code, opcode_i + 1);
+        fprintf(f, " %i (%+i)", ii, ii - opcode_i);
     }
 }
 

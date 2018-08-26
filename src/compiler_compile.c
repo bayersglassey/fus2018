@@ -90,6 +90,20 @@ static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
     return 0;
 }
 
+static int fus_compiler_blocks_find(fus_compiler_block_t *blocks,
+    int blocks_len, const char *token, int token_len
+){
+    for(int i = 0; i < blocks_len; i++){
+        fus_compiler_block_t *block = &blocks[i];
+        if(strlen(block->label_name) == token_len
+            && !strncmp(block->label_name, token, token_len)
+        ){
+            return i;
+        }
+    }
+    return -1;
+}
+
 static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer, char *name, bool is_module, int depth,
     fus_compiler_frame_t **frame_ptr
@@ -150,6 +164,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     bool got_module = false;
     bool got_fun = false;
     bool got_call = false;
+    bool got_next = false;
     while(1){
         if(fus_lexer_done(lexer)){
             break;
@@ -182,6 +197,28 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             FUS_COMPILER_PUSH_BLOCK(DO, label_name)
             err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+        }else if(
+            (got_next=fus_lexer_got(lexer, "next")) ||
+            fus_lexer_got(lexer, "break")
+        ){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            int block_i = fus_compiler_blocks_find(blocks, blocks_len,
+                lexer->token, lexer->token_len);
+            if(block_i < 0){
+                ERR_INFO();
+                fprintf(stderr, "Block label not found: %.*s\n",
+                    lexer->token_len, lexer->token);
+                return 2;
+            }
+            ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
+                got_next?
+                    FUS_SYMCODE_CONTROL_NEXT:
+                    FUS_SYMCODE_CONTROL_BREAK)
+            err = fus_code_push_int(&frame->data.def.code, block_i);
+            if(err)return err;
+            err = fus_lexer_next(lexer);
             if(err)return err;
         }else if(fus_lexer_got(lexer, "if")){
             err = fus_lexer_next(lexer);
