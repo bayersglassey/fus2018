@@ -110,6 +110,9 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
             }else if(opcode == FUS_SYMCODE_CONTROL_BREAK){
                 new_opcode = FUS_SYMCODE_CONTROL_JUMP;
                 fus_code_set_int(code, i + 1, opcode_i1);
+            }else if(opcode == FUS_SYMCODE_CONTROL_WHILE){
+                new_opcode = FUS_SYMCODE_CONTROL_JUMPIFNOT;
+                fus_code_set_int(code, i + 1, opcode_i1);
             }
             if(new_opcode != opcode){
                 opcode = new_opcode;

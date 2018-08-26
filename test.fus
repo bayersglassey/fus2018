@@ -1,7 +1,4 @@
 
-(arr 1, 2, 3, 4,) 2 split join
-    lpop 1 == assert
-    lpop 2 == assert
-    lpop 3 == assert
-    lpop 4 == assert
-len 0 == assert
+0 3 do loop:
+    over over < while loop
+    swap dup p 1 + swap

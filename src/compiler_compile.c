@@ -165,6 +165,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     bool got_fun = false;
     bool got_call = false;
     bool got_next = false;
+    bool got_break = false;
     while(1){
         if(fus_lexer_done(lexer))break;
 
@@ -201,7 +202,8 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
         }else if(
             (got_next=fus_lexer_got(lexer, "next")) ||
-            fus_lexer_got(lexer, "break")
+            (got_break=fus_lexer_got(lexer, "break")) ||
+            fus_lexer_got(lexer, "while")
         ){
             err = fus_lexer_next(lexer);
             if(err)return err;
@@ -214,9 +216,9 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 return 2;
             }
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
-                got_next?
-                    FUS_SYMCODE_CONTROL_NEXT:
-                    FUS_SYMCODE_CONTROL_BREAK)
+                got_next? FUS_SYMCODE_CONTROL_NEXT:
+                got_break? FUS_SYMCODE_CONTROL_BREAK:
+                FUS_SYMCODE_CONTROL_WHILE)
             err = fus_code_push_int(&frame->data.def.code, block_i);
             if(err)return err;
             err = fus_lexer_next(lexer);

@@ -119,10 +119,10 @@ stack len 0 == assert
 "Loops" p
 arr ='a
 0 3 do loop:
-    over over < not if: break loop
+    over over < while loop
     swap 1 + swap
     1 2 do loop:
-        over over <= not if: break loop
+        over over <= while loop
         swap
             ''a over, ='a
         1 + swap
