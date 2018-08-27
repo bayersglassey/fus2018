@@ -16,6 +16,20 @@ int fus_stack_len(fus_stack_t *stack);
 int fus_stack_push(fus_stack_t *stack, fus_value_t value);
 int fus_stack_pop(fus_stack_t *stack, fus_value_t *value_ptr);
 
+#define FUS_STACK_SET_TOS(s, x) { \
+    fus_value_t value = (x); \
+    fus_value_detach((s).tos); \
+    (s).tos = value; \
+    fus_value_attach(value); \
+}
+
+#define FUS_STACK_SET_NOS(s, x) { \
+    fus_value_t value = (x); \
+    fus_value_detach((s).nos); \
+    (s).nos = value; \
+    fus_value_attach(value); \
+}
+
 #define FUS_STACK_PUSH(s, x) { \
     int err = fus_stack_push(&(s), (x)); \
     if(err)return err; \

@@ -33,7 +33,7 @@
 
 # int
 
-    0 + - / * neg mod < > <= >= == !=
+    0 + - / * neg mod < > <= >= == != int_tostr
 
 # str
 

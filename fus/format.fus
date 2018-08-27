@@ -2,6 +2,16 @@
 sig format: a -> s
 sig tostr: x -> s
 
+
+arr
+    "Thing ",
+    2,
+    ": ",
+    (obj 1 =.x 2 =.y),
+    "!",
+@format p
+
+
 def format format:
     "" ='s
     do loop:
@@ -18,14 +28,14 @@ def tostr tostr:
         fun tostr() =.str
         fun tostr(sym_tostr) =.sym
         fun tostr(drop "<fun>") =.fun
-        fun &obj_tostr =.obj
-        fun &arr_tostr =.arr
+        &obj_tostr =.obj
+        &arr_tostr =.arr
     over typeof get call tostr
 
 def obj_tostr tostr:
     ='o
 
-    "(" ='s
+    "{" ='s
     y ='first
 
     'o keys do loop:
@@ -41,12 +51,12 @@ def obj_tostr tostr:
         ='s
     drop
 
-    ''s ")" str_join
+    ''s "}" str_join
 
 def arr_tostr tostr:
     ='a
 
-    "(" ='s
+    "[" ='s
     y ='first
 
     0 'a len do loop:
@@ -59,4 +69,4 @@ def arr_tostr tostr:
         ='s
     drop drop
 
-    ''s ")" str_join
+    ''s "]" str_join

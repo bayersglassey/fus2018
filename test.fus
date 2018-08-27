@@ -1,11 +1,6 @@
 
-def f const: 3
-
-module M:
-    def g const: @f @f +
-
-@(M g) p
-
-
-
-sig const: -> x
+"ab" ='x "cd" ='y
+'x 'y str_join ='z
+'x p
+'y p
+'z p

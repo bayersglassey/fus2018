@@ -10,6 +10,9 @@
 int int_min(int x, int y);
 int int_max(int x, int y);
 int linear_interpolation(int x0, int x1, int t, int t_max);
+int strlen_of_int(int i);
+void strncpy_of_int(char *s, int i, int i_len);
+char *strcpy_int(int i);
 int getln(char buf[], int buf_len);
 char *load_file(const char *filename);
 bool streq(const char *s1, const char *s2);

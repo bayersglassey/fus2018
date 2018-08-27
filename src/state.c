@@ -407,6 +407,15 @@ start: ;
         stack->tos = fus_value_bool(
             stack->tos.data.i != popped_value.data.i);
         break;}
+    case FUS_SYMCODE_INT_TOSTR: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_INT)
+        int i = stack->tos.data.i;
+        char *text = strcpy_int(i);
+        if(text == NULL)return 1;
+        fus_str_t *s = fus_str(text);
+        if(s == NULL)return 1;
+        FUS_STACK_SET_TOS(*stack, fus_value_str(s))
+        break;}
     case FUS_SYMCODE_STR_LEN: {
         FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
         int len = fus_str_len(stack->tos.data.s);
@@ -419,6 +428,27 @@ start: ;
         FUS_STACK_POP(*stack, popped_value)
         stack->tos = fus_value_bool(fus_str_eq(
             stack->tos.data.s, popped_value.data.s));
+        break;}
+    case FUS_SYMCODE_STR_JOIN: {
+        FUS_STATE_ASSERT_STACK2(FUS_TYPE_STR, FUS_TYPE_STR)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        fus_str_t *s2 = popped_value.data.s;
+        fus_str_t *s = stack->tos.data.s;
+        int s_len = fus_str_len(s);
+        int s2_len = fus_str_len(s2);
+        int new_text_len = s_len + s2_len;
+        char *new_text = malloc(sizeof(*new_text) * (new_text_len + 1));
+        if(new_text == NULL)return 1;
+        new_text[new_text_len] = '\0';
+        strncpy(new_text, s->text, s->text_len);
+        strncpy(new_text + s->text_len, s2->text, s2->text_len);
+        fus_str_t *new_s = fus_str(new_text);
+        if(new_s == NULL)return 1;
+        fus_value_detach(stack->tos);
+        stack->tos = fus_value_str(new_s);
+        fus_value_attach(stack->tos);
+        fus_value_detach(popped_value);
         break;}
     case FUS_SYMCODE_SYM_EQ: {
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_SYM, FUS_TYPE_SYM)
@@ -433,7 +463,7 @@ start: ;
             state->compiler->symtable, stack->tos.data.i);
         fus_str_t *s = fus_str(strdup(token));
         if(s == NULL)return 1;
-        stack->tos = fus_value_str(s);
+        FUS_STACK_SET_TOS(*stack, fus_value_str(s))
         break;}
     case FUS_SYMCODE_OBJ: {
         FUS_STACK_PUSH(*stack, fus_value_obj(NULL))
