@@ -1,13 +1,18 @@
 
-import: format format
+sig format: x -> s
+import def format: format format
 
 module iter:
+
+    sig new: -> it
     sig iter: x -> it
     sig next: it -> it value ok
 
+
+
     def next next: dup .next call next
 
-    def new(-> it):
+    def new new:
         obj
             0 =.i
             fun next(null n) =.next
@@ -29,7 +34,7 @@ module iter:
                 : null n
             =.next
 
-    def iter_int(i -> it):
+    def iter_int iter:
         @new
             swap =.end
             fun next:

@@ -1,14 +1,38 @@
 
-module heap:
+sig new: -> heap
+sig add: heap value -> heap key
+sig has: heap key -> bool
+sig get: heap key -> value
+sig set: heap value key -> heap
+sig del: heap key -> heap
 
-  import: simple new
-  import: simple add
-  import: simple has
-  import: simple get
-  import: simple set
-  import: simple del
 
-  module simple:
+@test
+
+def test(->):
+    @new ='h
+    ''h "Lawl" @add ='k1 ='h
+    ''h "Rawr" @add ='k2 ='h
+    ''h "Rofl" 'k1 @set ='h
+
+    'h 'k1 @get "Rofl" str_eq assert
+    'h 'k2 @get "Rawr" str_eq assert
+
+    'h 'k1 @has assert
+    ''h 'k1 @del ='h
+    'h 'k1 @has not assert
+
+
+
+
+import def new new: simple new
+import def add add: simple add
+import def has has: simple has
+import def get get: simple get
+import def set set: simple set
+import def del del: simple del
+
+module simple:
     # SIMPLE HEAP IMPLEMENTATION:
     #
     # Keys are integers, key-value pairs are stored in a big array,
@@ -16,19 +40,22 @@ module heap:
     # An improved heap would e.g. use a binary tree instead of an
     # array.
 
-    def new(-> h):
+    sig find: heap key -> index
+
+
+    def new new:
         obj
             0 =.next_key
             arr =.entries
 
-    def add(h v -> h k):
+    def add add:
         ='v ='h
         ''h
             ..next_key dup ='k 1 + =.next_key
             ..entries obj 'k =.key 'v =.value push =.entries
         'k
 
-    def find(h k -> i):
+    def find find:
         ='k ='h
         'h .entries ='entries
         0 'entries len do loop:
@@ -38,38 +65,23 @@ module heap:
         drop drop
         'i
 
-    def has(h k -> has):
+    def has has:
         @find is null not
 
-    def get(h k -> v):
+    def get get:
         over ='h
         @find ='i
         'h .entries 'i .$ .value
 
-    def set(h v k -> h):
+    def set set:
         swap ='v
         over ='h
         @find ='i
         ''h
             ..entries 'i ..$ 'v =.value 'i =.$ =.entries
 
-    def del(h k -> h):
+    def del del:
         over ='h
         @find ='i
         ''h
             ..entries 'i split lpop drop join =.entries
-
-    def test(->):
-        @new ='h
-        ''h "Lawl" @add ='k1 ='h
-        ''h "Rawr" @add ='k2 ='h
-        ''h "Rofl" 'k1 @set ='h
-
-        'h 'k1 @get "Rofl" str_eq assert
-        'h 'k2 @get "Rawr" str_eq assert
-
-        'h 'k1 @has assert
-        ''h 'k1 @del ='h
-        'h 'k1 @has not assert
-
-@(heap simple test)
