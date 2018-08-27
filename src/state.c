@@ -488,9 +488,10 @@ start: ;
             FUS_STACK_PUSH(*stack, entry->value)
             entry->value = fus_value_null();
         }else{
+            fus_value_t value = entry->value;
+            fus_value_attach(value);
             fus_value_detach(stack->tos);
-            stack->tos = entry->value;
-            fus_value_attach(stack->tos);
+            stack->tos = value;
         }
         break;}
     case FUS_SYMCODE_OBJ_SET: case FUS_SYMCODE_OBJ_DYNAMIC_SET: {
