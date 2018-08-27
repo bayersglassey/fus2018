@@ -341,51 +341,59 @@ int fus_compiler_pop_frame_def(fus_compiler_t *compiler){
         return 2;
     }
     if(frame->data.def.is_module){
-        fus_compiler_frame_t *module = compiler->cur_module;
-        for(int i = 0; i < compiler->frames_len; i++){
-            fus_compiler_frame_t *frame = compiler->frames[i];
-            if(frame->module != module)continue;
-            if(frame->type != FUS_COMPILER_FRAME_TYPE_REF
-                && !frame->compiled
-            ){
-                if(module == NULL){
-                    /* Can't leave anything undefined at toplevel */
-                    ERR_INFO();
-                    fprintf(stderr,
-                        "Frame declared but not compiled: %i (%s)\n",
-                        frame->i, frame->name);
-                    return 2;
-                }else{
-                    /* At end of module, for all frames still not compiled,
-                    find_or_add in parent module for frame->name, and turn
-                    uncompiled frame into a ref to that. */
-                    fus_compiler_frame_t *other_frame = NULL;
-                    if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF){
-                        err = fus_compiler_find_or_add_frame_def(compiler,
-                            module->module, frame->name, strlen(frame->name),
-                            frame->data.def.is_module, &other_frame);
-                        if(err)return err;
-                    }else if(frame->type == FUS_COMPILER_FRAME_TYPE_SIG){
-                        err = fus_compiler_find_or_add_frame_sig(compiler,
-                            module->module, frame->name, strlen(frame->name),
-                            &other_frame);
-                        if(err)return err;
-                    }else{
-                        ERR_INFO();
-                        fprintf(stderr,
-                            "Dunno how to handle frame type: %s\n",
-                            fus_compiler_frame_type_to_s(frame));
-                        return 2;
-                    }
-                    err = fus_compiler_frame_to_ref(frame, other_frame);
-                    if(err)return err;
-                }
-            }
-        }
-
+        err = fus_compiler_finish_module(compiler, frame);
+        if(err)return err;
         compiler->cur_module = frame->parent;
     }
     compiler->cur_frame = frame->parent;
+    return 0;
+}
+
+int fus_compiler_finish_module(fus_compiler_t *compiler,
+    fus_compiler_frame_t *module
+){
+    /* NOTE: module is allowed to be NULL */
+    int err;
+    for(int i = 0; i < compiler->frames_len; i++){
+        fus_compiler_frame_t *frame = compiler->frames[i];
+        if(frame->module != module)continue;
+        if(frame->type != FUS_COMPILER_FRAME_TYPE_REF
+            && !frame->compiled
+        ){
+            if(module == NULL){
+                /* Can't leave anything undefined at toplevel */
+                ERR_INFO();
+                fprintf(stderr,
+                    "Frame declared but not compiled: %i (%s)\n",
+                    frame->i, frame->name);
+                return 2;
+            }else{
+                /* At end of module, for all frames still not compiled,
+                find_or_add in parent module for frame->name, and turn
+                uncompiled frame into a ref to that. */
+                fus_compiler_frame_t *other_frame = NULL;
+                if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF){
+                    err = fus_compiler_find_or_add_frame_def(compiler,
+                        module->module, frame->name, strlen(frame->name),
+                        frame->data.def.is_module, &other_frame);
+                    if(err)return err;
+                }else if(frame->type == FUS_COMPILER_FRAME_TYPE_SIG){
+                    err = fus_compiler_find_or_add_frame_sig(compiler,
+                        module->module, frame->name, strlen(frame->name),
+                        &other_frame);
+                    if(err)return err;
+                }else{
+                    ERR_INFO();
+                    fprintf(stderr,
+                        "Dunno how to handle frame type: %s\n",
+                        fus_compiler_frame_type_to_s(frame));
+                    return 2;
+                }
+                err = fus_compiler_frame_to_ref(frame, other_frame);
+                if(err)return err;
+            }
+        }
+    }
     return 0;
 }
 

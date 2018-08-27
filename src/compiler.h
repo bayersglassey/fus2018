@@ -112,6 +112,8 @@ int fus_compiler_add_frame_sig(fus_compiler_t *compiler,
 int fus_compiler_push_frame_def(fus_compiler_t *compiler,
     fus_compiler_frame_t *frame);
 int fus_compiler_pop_frame_def(fus_compiler_t *compiler);
+int fus_compiler_finish_module(fus_compiler_t *compiler,
+    fus_compiler_frame_t *module);
 
 int fus_compiler_find_frame(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,

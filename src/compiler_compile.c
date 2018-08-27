@@ -500,7 +500,12 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
     err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
         strdup(lexer->filename), true, 0, NULL);
     if(err)return err;
+
+    err = fus_compiler_finish_module(compiler, NULL);
+    if(err)return err;
+
     compiler->root_frame = compiler->frames[0];
+
 #ifdef FUS_DEBUG_COMPILER_FRAMES
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
