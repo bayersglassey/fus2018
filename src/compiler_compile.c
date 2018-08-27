@@ -501,14 +501,26 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
         strdup(lexer->filename), true, 0, NULL);
     if(err)return err;
     compiler->root_frame = compiler->frames[0];
+#ifdef FUS_DEBUG_COMPILER_FRAMES
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
-        if(!frame->compiled){
-            ERR_INFO();
-            fprintf(stderr, "Frame declared but not compiled: %i (%s)\n",
-                frame->i, frame->name);
-            return 2;
+        if(frame->module != NULL){
+            printf("IN MOD %i: ", frame->module->i);
+        }else{
+            printf("IN MOD -: ");
         }
+        printf("%s %i (%s)",
+            fus_compiler_frame_type_to_s(frame), i, frame->name);
+        if(frame->type == FUS_COMPILER_FRAME_TYPE_REF){
+            fus_compiler_frame_t *other_frame = frame->data.ref;
+            printf(" -> %s %i (%s)",
+                fus_compiler_frame_type_to_s(other_frame),
+                other_frame->i, other_frame->name);
+        }else if(frame->compiled){
+            printf(" [compiled]");
+        }
+        printf("\n");
     }
+#endif
     return 0;
 }

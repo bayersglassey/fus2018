@@ -1,4 +1,11 @@
 
-0 3 do loop:
-    over over < while loop
-    swap dup p 1 + swap
+def f const: 3
+
+module M:
+    def g const: @f @f +
+
+@(M g) p
+
+
+
+sig const: -> x

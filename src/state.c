@@ -161,7 +161,8 @@ start: ;
         int def_i = -1;
         FUS_STATE_CODE_GET_INT(def_i)
         fus_compiler_frame_t *frame = NULL;
-        err = fus_compiler_get_frame(state->compiler, def_i, &frame);
+        err = fus_compiler_get_frame(state->compiler, def_i, true,
+            &frame);
         if(err)return err;
         err = fus_state_push_frame(state, &frame->data.def.code);
         if(err)return err;
@@ -638,7 +639,8 @@ start: ;
         int frame_i = -1;
         FUS_STATE_CODE_GET_INT(frame_i)
         fus_compiler_frame_t *frame = NULL;
-        err = fus_compiler_get_frame(state->compiler, frame_i, &frame);
+        err = fus_compiler_get_frame(state->compiler, frame_i, true,
+            &frame);
         if(err)return err;
         FUS_STACK_PUSH(*stack, fus_value_fun(&frame->data.def.code))
         break;}
@@ -649,7 +651,7 @@ start: ;
 
         fus_compiler_frame_t *sig_frame = NULL;
         err = fus_compiler_get_frame(state->compiler,
-            sig_frame_i, &sig_frame);
+            sig_frame_i, true, &sig_frame);
         if(err)return err;
         /* TODO: Check that signature of sig_frame matches that
         of popped_value.data.f

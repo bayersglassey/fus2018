@@ -42,6 +42,8 @@ enum {
     FUS_COMPILER_FRAME_TYPES
 };
 
+#define FUS_COMPILER_FRAME_TYPE_ANY (-1)
+
 typedef struct fus_compiler_frame {
     int i;
     struct fus_compiler_frame *module;
@@ -70,6 +72,11 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
 int fus_compiler_frame_init_def(fus_compiler_frame_t *frame, bool is_module);
 int fus_compiler_frame_init_sig(fus_compiler_frame_t *frame);
 
+int fus_compiler_frame_to_ref(fus_compiler_frame_t *frame,
+    fus_compiler_frame_t *other_frame);
+
+const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame);
+
 
 
 /************
@@ -90,7 +97,7 @@ int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable);
 int fus_compiler_get_root_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t **frame_ptr);
 int fus_compiler_get_frame(fus_compiler_t *compiler, int i,
-    fus_compiler_frame_t **frame_ptr);
+    bool follow_refs, fus_compiler_frame_t **frame_ptr);
 
 int fus_compiler_add_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t *module, char *name,
@@ -109,7 +116,7 @@ int fus_compiler_pop_frame_def(fus_compiler_t *compiler);
 int fus_compiler_find_frame(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
     const char *token, int token_len,
-    fus_compiler_frame_t **frame_ptr);
+    int type, fus_compiler_frame_t **frame_ptr);
 int fus_compiler_find_frame_def(
     fus_compiler_t *compiler, fus_compiler_frame_t *module,
     const char *token, int token_len,
