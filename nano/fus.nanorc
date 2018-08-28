@@ -1,0 +1,49 @@
+syntax "Functious" "\.fusb?$"
+
+# Syntax Errors
+color red "."
+
+# Names
+color white "\<[[:alpha:]_][[:alnum:]_]*\>"
+
+# Ops
+color brightblue "(`|,|\+\+|--|\+|-|\*|/|%|<|<=|>|>=|==|!=|\?\??|&|=|\^)"
+
+# Vars
+#color brightblue "(=|'|)'[[:alpha:]_][[:alnum:]_]*\>"
+color brightblue "(=|'|)'"
+
+# Obj Get/Rip/Set
+color blue "((=|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
+#color brightblue "(=|\.|)\."
+
+# Arr Get/Rip/Set
+color brightblue "(=|\.|)\.\$"
+
+# Arrays
+color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*\("
+color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*:"
+color brightmagenta "\(|\)"
+color brightmagenta ":"
+
+# Def Calls
+#color brightred "@[[:alpha:]_][[:alnum:]_]*"
+color brightblue "@"
+
+# Integers
+color yellow "(-|\<)[0-9]+\>"
+
+# Strings
+color green "\"(\\\\|\\"|[^"])*\""
+
+# Comments
+color brightblack "(^|[[:space:]])#.*$"
+
+# Block Strings
+color green ";;.*$"
+
+# Trailing whitespace
+color ,red "[[:space:]]+$"
+
+# TAB CHARACTERS
+color ,red "	"
