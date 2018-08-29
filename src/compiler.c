@@ -159,6 +159,7 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
     frame->i = i;
     frame->module = module;
     frame->parent = parent;
+    frame->file = parent == NULL? NULL: parent->file;
     frame->depth = parent == NULL? 0: parent->depth + 1;
     frame->name = name;
     frame->compiled = false;

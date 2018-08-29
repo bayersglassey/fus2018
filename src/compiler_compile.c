@@ -105,8 +105,8 @@ static int fus_compiler_blocks_find(fus_compiler_block_t *blocks,
 }
 
 static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
-    fus_lexer_t *lexer, char *name, bool is_module, int depth,
-    fus_compiler_frame_t **frame_ptr
+    fus_lexer_t *lexer, compiler_file_t *file, char *name, bool is_module,
+    int depth, fus_compiler_frame_t **frame_ptr
 ){
     int err;
     fus_compiler_frame_t *frame = NULL;
@@ -316,7 +316,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             fus_compiler_frame_t *new_frame = NULL;
             err = fus_compiler_compile_frame_from_lexer(
-                compiler, lexer, def_name, got_module, depth + 1,
+                compiler, lexer, file, def_name, got_module, depth + 1,
                 &new_frame);
             if(err)return err;
             new_frame->data.def.sig_frame = sig_frame;
@@ -497,8 +497,14 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer
 ){
     int err;
+
+    fus_compiler_file_t *file = NULL;
+    err = fus_compiler_find_or_add_file(compiler,
+        lexer->filename, strlen(lexer->filename), &file);
+    if(err)return err;
+
     err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
-        strdup(lexer->filename), true, 0, NULL);
+        file, strdup("<root>"), true, 0, NULL);
     if(err)return err;
 
     err = fus_compiler_finish_module(compiler, NULL);

@@ -30,6 +30,15 @@ int fus_compiler_block_finish(fus_compiler_block_t *block,
     fus_symtable_t *symtable);
 
 
+/*****************
+ * COMPILER FILE *
+ *****************/
+
+typedef struct fus_compiler_file {
+    char *filename;
+} fus_compiler_file_t;
+
+
 /******************
  * COMPILER FRAME *
  ******************/
@@ -48,6 +57,7 @@ typedef struct fus_compiler_frame {
     int i;
     struct fus_compiler_frame *module;
     struct fus_compiler_frame *parent;
+    struct fus_compiler_file *file;
     int depth;
     char *name;
     bool compiled;

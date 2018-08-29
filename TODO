@@ -9,3 +9,16 @@ Implementing "do" blocks:
     
 
 
+Aug 27, 2018:
+-------------
+
+COMPILER FILES:
+
+    push/pop file?
+    so, compiler->cur_file?
+    ...yes.
+
+
+
+
+
