@@ -29,3 +29,22 @@ a filename:
 That can be replaced later with a different interface, like having
 "import format" look for format.fus or whatever.
 
+
+Aug 29, 2018:
+-------------
+
+IMPORTS!
+
+    load module: X Y Z
+
+...this looks up through current file's folders until folder X is found
+(or a root folder is found), then goes to folder Y, then Z.fus, which is
+loaded as a module.
+NOTE: Folders are never modules!.. they're just part of a module's "path".
+Root folders are like "classpath" or "pythonpath" or whatever...
+Every loaded fus file should show up underneath a root folder.
+How do we look up through folder hierarchy in C?..
+-> chdir("..")
+
+
+

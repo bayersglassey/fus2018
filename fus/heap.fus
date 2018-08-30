@@ -25,12 +25,12 @@ def test(->):
 
 
 
-import def new new: simple new
-import def add add: simple add
-import def has has: simple has
-import def get get: simple get
-import def set set: simple set
-import def del del: simple del
+use def: simple new
+use def: simple add
+use def: simple has
+use def: simple get
+use def: simple set
+use def: simple del
 
 module simple:
     # SIMPLE HEAP IMPLEMENTATION:

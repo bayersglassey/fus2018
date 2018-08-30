@@ -1,6 +1,6 @@
 
-sig format: x -> s
-import def format: format format
+load module: fus format
+use def: format format
 
 module iter:
 

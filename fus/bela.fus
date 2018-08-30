@@ -1,8 +1,9 @@
 
-import def square(vol add1 add2 len opts -> sound): ^ music square
-import def triangle(vol len1 len2 opts -> sound): ^ music triangle
-import def noise(vol len opts -> sound): ^ music noise
-import def apply_sounds(pattern sounds -> pattern): ^ music apply_sounds
+load module: fus music
+use def: music square
+use def: music triangle
+use def: music noise
+use def: music apply_sounds
 
 
 250 ='beat
