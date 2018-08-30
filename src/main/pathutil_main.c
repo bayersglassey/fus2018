@@ -1,10 +1,5 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "pathutil.h"
+#include "../includes.h"
 
 
 /* Where the hell is PATH_MAX? */
@@ -18,7 +13,7 @@ static void usage(){
 }
 
 
-int pathutil_main(int n_args, char *args[]){
+int main(int n_args, char *args[]){
     int err;
     if(n_args != 3){
         usage();
