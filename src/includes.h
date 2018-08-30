@@ -19,6 +19,8 @@
 #endif
 
 
+#include "pathutil.h"
+
 #include "array.h"
 #include "lexer.h"
 #include "write.h"
