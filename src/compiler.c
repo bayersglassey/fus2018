@@ -161,6 +161,7 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
     frame->name = name;
+    frame->load_path = NULL;
     frame->compiled = false;
     if(frame->name == NULL)return 1;
     return 0;

@@ -50,6 +50,7 @@ typedef struct fus_compiler_frame {
     struct fus_compiler_frame *parent;
     int depth;
     char *name;
+    char *load_path;
     bool compiled;
     int type;
     union {

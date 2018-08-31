@@ -329,8 +329,90 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 err = fus_code_push_int(&frame->data.def.code, new_frame->i);
                 if(err)return err;
             }
+        }else if(fus_lexer_got(lexer, "load")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+            err = fus_lexer_get(lexer, "module");
+            if(err)return err;
+            err = fus_lexer_get(lexer, "(");
+            if(err)return err;
+
+            const char *last_part = NULL;
+            int last_part_len = 0;
+            bool first = true;
+            fus_path_t path;
+            err = fus_path_init(&path);
+            while(1){
+                if(fus_lexer_got(lexer, ")")){
+                    if(first)return fus_lexer_unexpected(lexer, "name");
+
+                    err = fus_lexer_next(lexer);
+                    if(err)return err;
+                    break;
+                }else if(fus_lexer_got(lexer, "=")){
+                    if(first)return fus_lexer_unexpected(lexer, "name");
+
+                    err = fus_lexer_next(lexer);
+                    if(err)return err;
+                    if(!fus_lexer_got_name(lexer)){
+                        return fus_lexer_unexpected(lexer, "name");
+                    }
+
+                    last_part = lexer->token;
+                    last_part_len = lexer->token_len;
+
+                    err = fus_lexer_next(lexer);
+                    if(err)return err;
+                    err = fus_lexer_get(lexer, ")");
+                    if(err)return err;
+                    break;
+                }else if(!fus_lexer_got_name(lexer)){
+                    return fus_lexer_unexpected(lexer, "name");
+                }
+
+                last_part = lexer->token;
+                last_part_len = lexer->token_len;
+
+                if(first)first = false;
+                else{
+                    err = fus_path_add_separator(&path);
+                    if(err)return err;
+                }
+                err = fus_path_add(&path, lexer->token, lexer->token_len);
+                if(err)return err;
+                err = fus_lexer_next(lexer);
+                if(err)return err;
+            }
+
+            const char *ext = ".fus";
+            err = fus_path_add(&path, ext, strlen(ext));
+            if(err)return err;
+
+            fus_compiler_frame_t *module = NULL;
+            err = fus_compiler_find_or_add_frame_def(compiler,
+                compiler->cur_module, last_part, last_part_len, true,
+                &module);
+            if(err)return err;
+
+            if(module->compiled){
+                ERR_INFO();
+                fprintf(stderr, "Module %s is already compiled!\n",
+                    module->name);
+                return 2;
+            }else if(module->load_path != NULL){
+                ERR_INFO();
+                fprintf(stderr, "Module %s is already loaded! "
+                    "(From: \"%s\")\n",
+                    module->name, module->load_path);
+                return 2;
+            }
+
+            module->load_path = strdup(path.path);
+            if(module->load_path == NULL)return 1;
+
+            fus_path_cleanup(&path);
         }else if(fus_lexer_got(lexer, "(")){
-            int err = fus_lexer_next(lexer);
+            err = fus_lexer_next(lexer);
             if(err)return err;
             FUS_COMPILER_PUSH_BLOCK(PAREN, NULL)
             depth++;
@@ -432,7 +514,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(opcode_sym_i >= 0){
                 fus_sym_t *opcode_sym = fus_symtable_get(compiler->symtable,
                     opcode_sym_i);
-                int err = fus_lexer_next(lexer);
+                err = fus_lexer_next(lexer);
                 if(err)return err;
 
                 if(!opcode_sym->autocompile){
@@ -445,7 +527,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         opcode_sym_i)
                 }else if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_INT){
                     int i = 0;
-                    int err = fus_lexer_get_int(lexer, &i);
+                    err = fus_lexer_get_int(lexer, &i);
                     if(err)return err;
                     ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                         opcode_sym_i)
@@ -464,7 +546,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         opcode_sym_i)
                     err = fus_code_push_int(&frame->data.def.code, sym_i);
                     if(err)return err;
-                    int err = fus_lexer_next(lexer);
+                    err = fus_lexer_next(lexer);
                     if(err)return err;
                 }else{
                     ERR_INFO();
@@ -523,6 +605,9 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
                 other_frame->i, other_frame->name);
         }else if(frame->compiled){
             printf(" [compiled]");
+        }
+        if(frame->load_path != NULL){
+            printf(" [file:%s]", frame->load_path);
         }
         printf("\n");
     }

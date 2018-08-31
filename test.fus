@@ -1,6 +1,11 @@
 
-"ab" ='x "cd" ='y
-'x 'y str_join ='z
-'x p
-'y p
-'z p
+load module: fus format =foo
+
+arr
+    "Item ",
+    3,
+    ": ",
+    (obj 1 =.x 2 =.y),
+    " (OK)",
+@(format format)
+
