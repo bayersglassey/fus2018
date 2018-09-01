@@ -72,7 +72,7 @@ static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
     fus_compiler_frame_t *sig_frame = NULL;
     if(fus_lexer_got_name(lexer)){
         err = fus_compiler_find_or_add_frame_sig(compiler,
-            compiler->cur_module,
+            compiler->cur_frame,
             lexer->token, lexer->token_len, &sig_frame);
         if(err)return err;
         err = fus_lexer_next(lexer);
@@ -80,7 +80,7 @@ static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
     }else{
         const char *name = "<sig>";
         err = fus_compiler_add_frame_sig(compiler,
-            compiler->cur_module, strdup(name), &sig_frame);
+            compiler->cur_frame, strdup(name), &sig_frame);
         if(err)return err;
         err = fus_lexer_get_sig(lexer, &sig_frame->data.sig);
         if(err)return err;
@@ -132,7 +132,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     int err;
     fus_compiler_frame_t *frame = *frame_ptr;
     if(frame == NULL){
-        err = fus_compiler_find_or_add_frame_def(compiler, compiler->cur_module,
+        err = fus_compiler_find_or_add_frame_def(compiler, compiler->cur_frame,
             name, strlen(name), is_module, &frame);
         if(err)return err;
     }
@@ -267,7 +267,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             fus_compiler_frame_t *sig_frame = NULL;
             err = fus_compiler_find_or_add_frame_sig(compiler,
-                compiler->cur_module, lexer->token, lexer->token_len,
+                compiler->cur_frame, lexer->token, lexer->token_len,
                 &sig_frame);
             if(err)return err;
 
@@ -288,7 +288,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             fus_compiler_frame_t *frame = NULL;
             err = fus_compiler_find_or_add_frame_sig(compiler,
-                compiler->cur_module, lexer->token, lexer->token_len,
+                compiler->cur_frame, lexer->token, lexer->token_len,
                 &frame);
             if(err)return err;
             if(frame->compiled){
@@ -413,7 +413,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             fus_compiler_frame_t *module = NULL;
             err = fus_compiler_find_or_add_frame_def(compiler,
-                compiler->cur_module, last_part, last_part_len, true,
+                compiler->cur_frame, last_part, last_part_len, true,
                 &module);
             if(err)return err;
 
@@ -495,7 +495,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             fus_compiler_frame_t *def = NULL;
             if(fus_lexer_got(lexer, "(")){
-                fus_compiler_frame_t *module = compiler->cur_module;
+                fus_compiler_frame_t *parent = compiler->cur_frame;
                 err = fus_lexer_next(lexer);
                 if(err)return err;
                 while(1){
@@ -505,7 +505,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     if(err)return err;
                     if(fus_lexer_got(lexer, ")")){
                         err = fus_compiler_find_or_add_frame_def(compiler,
-                            module, token, token_len, false, &def);
+                            parent, token, token_len, false, &def);
                         if(err)return err;
                         break;
                     }else{
@@ -513,7 +513,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                             return fus_lexer_unexpected(lexer, "name");
                         }
                         err = fus_compiler_find_or_add_frame_def(compiler,
-                            module, token, token_len, true, &module);
+                            parent, token, token_len, true, &parent);
                         if(err)return err;
                     }
                 }
@@ -522,7 +522,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     return fus_lexer_unexpected(lexer, "name");
                 }
                 err = fus_compiler_find_or_add_frame_def(compiler,
-                    compiler->cur_module,
+                    compiler->cur_frame,
                     lexer->token, lexer->token_len, false, &def);
                 if(err)return err;
             }
@@ -606,10 +606,12 @@ static void fus_compiler_debug_frames(fus_compiler_t *compiler){
     printf("%i FRAMES:\n", compiler->frames_len);
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
-        if(frame->module != NULL){
-            printf("IN MOD %i: ", frame->module->i);
+        if(frame->parent != NULL){
+            printf("IN %s %i: ",
+                fus_compiler_frame_type_to_s(frame->parent),
+                frame->parent->i);
         }else{
-            printf("IN MOD -: ");
+            printf("IN <ROOT>: ");
         }
         printf("%s %i (%s)",
             fus_compiler_frame_type_to_s(frame), i, frame->name);
@@ -635,7 +637,7 @@ int fus_compiler_finish(fus_compiler_t *compiler){
 
     bool finished = false;
     while(!finished){
-        err = fus_compiler_finish_module(compiler, NULL);
+        err = fus_compiler_finish_def(compiler, NULL);
         if(err)return err;
 
 #ifdef FUS_DEBUG_COMPILER_FRAMES
