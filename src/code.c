@@ -28,8 +28,11 @@ void fus_code_cleanup(fus_code_t *code){
     ARRAY_FREE_BYVAL(fus_value_t, code->literals, fus_value_detach)
 }
 
-int fus_code_init(fus_code_t *code){
+int fus_code_init(fus_code_t *code,
+    struct fus_compiler_frame *compiler_frame
+){
     int err;
+    code->compiler_frame = compiler_frame;
     ARRAY_INIT(code->opcodes)
     ARRAY_INIT(code->literals)
     return 0;

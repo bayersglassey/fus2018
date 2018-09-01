@@ -150,13 +150,16 @@ void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame){
 }
 
 int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
-    fus_compiler_frame_t *parent, char *name
+    fus_compiler_frame_t *parent, char *name, int pos, int row, int col
 ){
     int err;
     frame->type = FUS_COMPILER_FRAME_TYPE_NONE;
     frame->i = i;
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
+    frame->pos = pos;
+    frame->row = row;
+    frame->col = col;
     frame->name = name;
     frame->compiled = false;
     if(frame->name == NULL)return 1;
@@ -169,7 +172,7 @@ int fus_compiler_frame_init_def(fus_compiler_frame_t *frame, bool is_module){
     frame->data.def.load_path = NULL;
     frame->data.def.is_module = is_module;
     frame->data.def.sig_frame = NULL;
-    err = fus_code_init(&frame->data.def.code);
+    err = fus_code_init(&frame->data.def.code, frame);
     if(err)return err;
     return 0;
 }
@@ -227,6 +230,7 @@ void fus_compiler_cleanup(fus_compiler_t *compiler){
 
 int fus_compiler_init(fus_compiler_t *compiler, fus_symtable_t *symtable){
     compiler->symtable = symtable;
+    compiler->lexer = NULL;
     compiler->cur_frame = NULL;
     compiler->root_frame = NULL;
     ARRAY_INIT(compiler->frames)
@@ -279,8 +283,19 @@ int fus_compiler_add_frame(fus_compiler_t *compiler,
     int err;
     fus_compiler_frame_t *new_frame = malloc(sizeof(*new_frame));
     if(new_frame == NULL)return 1;
+
+    int pos=0, row=0, col=0;
+    if(compiler->lexer != NULL){
+        pos = compiler->lexer->pos;
+        row = compiler->lexer->row;
+        col = compiler->lexer->col;
+    }else{
+        ERR_INFO();
+        fprintf(stderr, "WARNING: compiler->lexer == NULL\n");
+    }
+
     err = fus_compiler_frame_init(new_frame, compiler->frames_len,
-        parent, name);
+        parent, name, pos, row, col);
     if(err)return err;
     ARRAY_PUSH(fus_compiler_frame_t*, compiler->frames, new_frame)
     *frame_ptr = new_frame;

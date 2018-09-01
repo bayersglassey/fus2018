@@ -68,24 +68,13 @@ int fus_state_run(fus_state_t *state){
     return 0;
 }
 
-int fus_state_step(fus_state_t *state, bool *done_ptr){
-start: ;
-    int err;
 
-    fus_state_frame_t *frame = fus_state_get_cur_frame(state);
-    if(frame == NULL){
-        *done_ptr = true;
-        return 0;
-    }
+
+static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
+    int err;
 
     fus_coderef_t *coderef = &frame->coderef;
     fus_code_t *code = coderef->code;
-    if(coderef->opcode_i >= code->opcodes_len){
-        err = fus_state_pop_frame(state);
-        if(err)return err;
-        goto start;
-    }
-
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     fus_stack_t *stack = &state->stack;
 
@@ -103,9 +92,7 @@ start: ;
         ERR_INFO(); \
         fus_sym_t *opcode_sym = fus_symtable_get( \
             state->compiler->symtable, opcode); \
-        fprintf(stderr, "Executing opcode %s: " \
-            "Expected (%c) on stack, found (%c)\n", \
-            fus_symtable_get_token(state->compiler->symtable, opcode), \
+        fprintf(stderr, "Expected (%c) on stack, found (%c)\n", \
             fus_type_to_c(T), fus_type_to_c(stack->tos.type)); \
         return 2; \
     }
@@ -117,9 +104,7 @@ start: ;
         ERR_INFO(); \
         fus_sym_t *opcode_sym = fus_symtable_get( \
             state->compiler->symtable, opcode); \
-        fprintf(stderr, "Executing opcode %s: " \
-            "Expected (%c %c) on stack, found (%c %c)\n", \
-            fus_symtable_get_token(state->compiler->symtable, opcode), \
+        fprintf(stderr, "Expected (%c %c) on stack, found (%c %c)\n", \
             fus_type_to_c(T1), fus_type_to_c(T2), \
             fus_type_to_c(stack->nos.type), \
             fus_type_to_c(stack->tos.type)); \
@@ -701,7 +686,7 @@ start: ;
         fus_sym_t *opcode_sym = fus_symtable_get(
             state->compiler->symtable, opcode);
         ERR_INFO();
-        fprintf(stderr, "Executing opcode %i (%s): ", opcode,
+        fprintf(stderr, "Bad opcode %i (%s): ", opcode,
             fus_symtable_get_token(state->compiler->symtable, opcode));
         if(opcode_sym->argtype == FUS_SYMCODE_ARGTYPE_NOT_OPCODE){
             fprintf(stderr, "Not an opcode\n");
@@ -711,5 +696,43 @@ start: ;
         return 2;}
     }
     return 0;
+}
+
+int fus_state_step(fus_state_t *state, bool *done_ptr){
+start: ;
+    int err;
+
+    fus_state_frame_t *frame = fus_state_get_cur_frame(state);
+    if(frame == NULL){
+        *done_ptr = true;
+        return 0;
+    }
+
+    fus_coderef_t *coderef = &frame->coderef;
+    fus_code_t *code = coderef->code;
+    if(coderef->opcode_i >= code->opcodes_len){
+        err = fus_state_pop_frame(state);
+        if(err)return err;
+        goto start;
+    }
+
+    int opcode_i = coderef->opcode_i;
+    fus_opcode_t opcode = code->opcodes[opcode_i];
+
+    err = _fus_state_step(state, frame);
+    if(err){
+        fprintf(stderr, "  Executing opcode %s at byte %i\n",
+            fus_symtable_get_token(state->compiler->symtable, opcode),
+            opcode_i);
+        fus_compiler_frame_t *compiler_frame = code->compiler_frame;
+        while(compiler_frame != NULL){
+            fprintf(stderr, "  In %s %i (%s) @(row=%i, col=%i)\n",
+                fus_compiler_frame_type_to_s(compiler_frame),
+                compiler_frame->i, compiler_frame->name,
+                compiler_frame->row, compiler_frame->col);
+            compiler_frame = compiler_frame->parent;
+        }
+    }
+    return err;
 }
 

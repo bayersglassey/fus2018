@@ -48,6 +48,10 @@ typedef struct fus_compiler_frame {
     int i;
     struct fus_compiler_frame *parent;
     int depth;
+    int pos;
+    int row;
+    int col;
+
     char *name;
     bool compiled;
     int type;
@@ -66,7 +70,7 @@ typedef struct fus_compiler_frame {
 
 void fus_compiler_frame_cleanup(fus_compiler_frame_t *frame);
 int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
-    fus_compiler_frame_t *parent, char *name);
+    fus_compiler_frame_t *parent, char *name, int pos, int row, int col);
 int fus_compiler_frame_init_def(fus_compiler_frame_t *frame, bool is_module);
 int fus_compiler_frame_init_sig(fus_compiler_frame_t *frame);
 
@@ -83,6 +87,7 @@ const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame);
 
 typedef struct fus_compiler {
     fus_symtable_t *symtable;
+    fus_lexer_t *lexer;
     fus_compiler_frame_t *cur_frame;
     fus_compiler_frame_t *root_frame;
     ARRAY_DECL(fus_compiler_frame_t*, frames)

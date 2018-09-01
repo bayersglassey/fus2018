@@ -1,11 +1,4 @@
 
-Aug 23, 2018:
--------------
-
-Need better debugging for compiler_t and state_t.
-(row, col, pos etc)
-
-
 Sep 1, 2018:
 ------------
 

@@ -66,9 +66,10 @@ static int fus_parse_quote(fus_symtable_t *symtable, fus_lexer_t *lexer,
 }
 
 static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
-    fus_lexer_t *lexer, fus_compiler_frame_t **sig_frame_ptr
+    fus_compiler_frame_t **sig_frame_ptr
 ){
     int err;
+    fus_lexer_t *lexer = compiler->lexer;
     fus_compiler_frame_t *sig_frame = NULL;
     if(fus_lexer_got_name(lexer)){
         err = fus_compiler_find_or_add_frame_sig(compiler,
@@ -130,6 +131,11 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     fus_compiler_frame_t **frame_ptr
 ){
     int err;
+
+    /* Save previous lexer!.. */
+    fus_lexer_t *old_lexer = compiler->lexer;
+    compiler->lexer = lexer;
+
     fus_compiler_frame_t *frame = *frame_ptr;
     if(frame == NULL){
         err = fus_compiler_find_or_add_frame_def(compiler, compiler->cur_frame,
@@ -322,8 +328,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             fus_compiler_frame_t *sig_frame = NULL;
             if(!got_module){
-                err = fus_compiler_parse_sig_frame(compiler, lexer,
-                    &sig_frame);
+                err = fus_compiler_parse_sig_frame(compiler, &sig_frame);
                 if(err)return err;
             }
 
@@ -595,6 +600,9 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
     ARRAY_FREE(fus_compiler_block_t, blocks,
         fus_compiler_block_cleanup)
+
+    /* Restore previous lexer!.. */
+    compiler->lexer = old_lexer;
 
     return 0;
 }
