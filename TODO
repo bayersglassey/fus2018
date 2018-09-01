@@ -6,45 +6,11 @@ Need better debugging for compiler_t and state_t.
 (row, col, pos etc)
 
 
-Aug 28, 2018:
--------------
+Sep 1, 2018:
+------------
 
-Implement "import" within a single file!
-Then you can worry about imports between files.
-
-And once import within single file works, easiest way to allow between
-files is probably to have toplevel module names be filenames
-(which is actually already the case!), and allow imports to specify
-a filename:
-
-    import def tostr(x -> s): "fus/format.fus" tostr
-    import def format(a -> s): "fus/format.fus" format
-
-...or:
-
-    import module Format: "fus/format.fus"
-    import def tostr(x -> s): Format tostr
-    import def format(a -> s): Format format
-
-That can be replaced later with a different interface, like having
-"import format" look for format.fus or whatever.
-
-
-Aug 29, 2018:
--------------
-
-IMPORTS!
-
-    load module: X Y Z
-
-...this looks up through current file's folders until folder X is found
-(or a root folder is found), then goes to folder Y, then Z.fus, which is
-loaded as a module.
-NOTE: Folders are never modules!.. they're just part of a module's "path".
-Root folders are like "classpath" or "pythonpath" or whatever...
-Every loaded fus file should show up underneath a root folder.
-How do we look up through folder hierarchy in C?..
--> chdir("..")
-
-
+def vs module:
+    def has code, module doesn't.
+    both are "scopes" in the same way, that is, we should get rid of
+    frame->module and just use frame->parent.
 
