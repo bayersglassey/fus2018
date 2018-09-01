@@ -1,5 +1,5 @@
 
-load module: fus format =foo
+load module: fus format =F
 
 arr
     "Item ",
@@ -7,5 +7,5 @@ arr
     ": ",
     (obj 1 =.x 2 =.y),
     " (OK)",
-@(format format)
+@(F format) p
 

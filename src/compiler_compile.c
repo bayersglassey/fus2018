@@ -78,7 +78,7 @@ static int fus_compiler_parse_sig_frame(fus_compiler_t *compiler,
         err = fus_lexer_next(lexer);
         if(err)return err;
     }else{
-        const char *name = "<anon-sig>";
+        const char *name = "<sig>";
         err = fus_compiler_add_frame_sig(compiler,
             compiler->cur_module, strdup(name), &sig_frame);
         if(err)return err;
@@ -104,15 +104,38 @@ static int fus_compiler_blocks_find(fus_compiler_block_t *blocks,
     return -1;
 }
 
-static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
+int fus_compiler_compile_frame_from_path(fus_compiler_t *compiler,
+    const char *path, char *name, bool is_module, int depth,
+    fus_compiler_frame_t **frame_ptr
+){
+    int err;
+
+    char *buffer = load_file(path);
+    if(buffer == NULL)return 2;
+
+    fus_lexer_t lexer;
+    err = fus_lexer_init(&lexer, buffer, path);
+    if(err)return err;
+
+    err = fus_compiler_compile_frame_from_lexer(compiler, &lexer,
+        name, is_module, depth, frame_ptr);
+
+    fus_lexer_cleanup(&lexer);
+    free(buffer);
+    return 0;
+}
+
+int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer, char *name, bool is_module, int depth,
     fus_compiler_frame_t **frame_ptr
 ){
     int err;
-    fus_compiler_frame_t *frame = NULL;
-    err = fus_compiler_find_or_add_frame_def(compiler, compiler->cur_module,
-        name, strlen(name), is_module, &frame);
-    if(err)return err;
+    fus_compiler_frame_t *frame = *frame_ptr;
+    if(frame == NULL){
+        err = fus_compiler_find_or_add_frame_def(compiler, compiler->cur_module,
+            name, strlen(name), is_module, &frame);
+        if(err)return err;
+    }
 
     if(frame->compiled){
         ERR_INFO();
@@ -291,7 +314,7 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             char *def_name = NULL;
             if(got_fun){
-                def_name = strdup("<anon-def>");
+                def_name = strdup("<fun>");
             }else{
                 err = fus_lexer_get_name(lexer, &def_name);
                 if(err)return err;
@@ -399,16 +422,17 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 fprintf(stderr, "Module %s is already compiled!\n",
                     module->name);
                 return 2;
-            }else if(module->load_path != NULL){
+            }else if(module->data.def.load_path != NULL){
                 ERR_INFO();
                 fprintf(stderr, "Module %s is already loaded! "
                     "(From: \"%s\")\n",
-                    module->name, module->load_path);
+                    module->name, module->data.def.load_path);
                 return 2;
             }
 
-            module->load_path = strdup(path.path);
-            if(module->load_path == NULL)return 1;
+            char *load_path = strdup(path.path);
+            if(load_path == NULL)return 1;
+            module->data.def.load_path = load_path;
 
             fus_path_cleanup(&path);
         }else if(fus_lexer_got(lexer, "(")){
@@ -575,20 +599,11 @@ static int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     return 0;
 }
 
-int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
-    fus_lexer_t *lexer
-){
-    int err;
-    err = fus_compiler_compile_frame_from_lexer(compiler, lexer,
-        strdup(lexer->filename), true, 0, NULL);
-    if(err)return err;
 
-    err = fus_compiler_finish_module(compiler, NULL);
-    if(err)return err;
 
-    compiler->root_frame = compiler->frames[0];
 
-#ifdef FUS_DEBUG_COMPILER_FRAMES
+static void fus_compiler_debug_frames(fus_compiler_t *compiler){
+    printf("%i FRAMES:\n", compiler->frames_len);
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
         if(frame->module != NULL){
@@ -598,6 +613,11 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
         }
         printf("%s %i (%s)",
             fus_compiler_frame_type_to_s(frame), i, frame->name);
+        if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF
+            && frame->data.def.load_path != NULL
+        ){
+            printf(" [file:%s]", frame->data.def.load_path);
+        }
         if(frame->type == FUS_COMPILER_FRAME_TYPE_REF){
             fus_compiler_frame_t *other_frame = frame->data.ref;
             printf(" -> %s %i (%s)",
@@ -606,11 +626,37 @@ int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
         }else if(frame->compiled){
             printf(" [compiled]");
         }
-        if(frame->load_path != NULL){
-            printf(" [file:%s]", frame->load_path);
-        }
         printf("\n");
     }
+}
+
+int fus_compiler_finish(fus_compiler_t *compiler){
+    int err;
+
+    bool finished = false;
+    while(!finished){
+        err = fus_compiler_finish_module(compiler, NULL);
+        if(err)return err;
+
+#ifdef FUS_DEBUG_COMPILER_FRAMES
+        fus_compiler_debug_frames(compiler);
 #endif
+
+        finished = true;
+        for(int i = 0; i < compiler->frames_len; i++){
+            fus_compiler_frame_t *frame = compiler->frames[i];
+            if(frame->type != FUS_COMPILER_FRAME_TYPE_DEF)continue;
+            if(frame->data.def.load_path != NULL && !frame->compiled){
+                err = fus_compiler_compile_frame_from_path(compiler,
+                    frame->data.def.load_path,
+                    frame->name, true, 0, &frame);
+                if(err)return err;
+
+                finished = false;
+                break;
+            }
+        }
+    }
+
     return 0;
 }

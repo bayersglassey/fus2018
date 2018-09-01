@@ -161,7 +161,6 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
     frame->parent = parent;
     frame->depth = parent == NULL? 0: parent->depth + 1;
     frame->name = name;
-    frame->load_path = NULL;
     frame->compiled = false;
     if(frame->name == NULL)return 1;
     return 0;
@@ -170,6 +169,7 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
 int fus_compiler_frame_init_def(fus_compiler_frame_t *frame, bool is_module){
     int err;
     frame->type = FUS_COMPILER_FRAME_TYPE_DEF;
+    frame->data.def.load_path = NULL;
     frame->data.def.is_module = is_module;
     frame->data.def.sig_frame = NULL;
     err = fus_code_init(&frame->data.def.code);
@@ -361,8 +361,12 @@ int fus_compiler_finish_module(fus_compiler_t *compiler,
         if(frame->type != FUS_COMPILER_FRAME_TYPE_REF
             && !frame->compiled
         ){
-            if(module == NULL){
-                /* Can't leave anything undefined at toplevel */
+            if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF
+                && frame->data.def.load_path != NULL
+            ){
+                /* Don't worry about it, gonna get compiled from
+                file later */
+            }else if(module == NULL){
                 ERR_INFO();
                 fprintf(stderr,
                     "Frame declared but not compiled: %i (%s)\n",

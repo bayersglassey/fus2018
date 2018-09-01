@@ -6,11 +6,16 @@
 int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     int err;
 
-    err = fus_compiler_compile_from_lexer(compiler, lexer);
+    fus_compiler_frame_t *frame = NULL;
+    err = fus_compiler_compile_frame_from_lexer(compiler, lexer, "<root>",
+        true, 0, &frame);
     if(err)return err;
 
-    fus_compiler_frame_t *frame = NULL;
-    err = fus_compiler_get_root_frame(compiler, &frame);
+    char *load_path = strdup(lexer->filename);
+    if(load_path == NULL)return 1;
+    frame->data.def.load_path = load_path;
+
+    err = fus_compiler_finish(compiler);
     if(err)return err;
 
 #ifdef FUS_FRAME_DEBUG
@@ -21,6 +26,7 @@ int compile(fus_compiler_t *compiler, fus_lexer_t *lexer){
     if(err)return err;
 #endif
 
+    compiler->root_frame = frame;
     return 0;
 }
 
@@ -46,7 +52,7 @@ int main(int n_args, char *args[]){
 #endif
 
     char *buffer = NULL;
-    const char *filename = "./test.fus";
+    const char *filename = "test.fus";
 
     for(int i = 1; i < n_args; i++){
         char *arg = args[i];

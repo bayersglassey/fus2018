@@ -50,11 +50,11 @@ typedef struct fus_compiler_frame {
     struct fus_compiler_frame *parent;
     int depth;
     char *name;
-    char *load_path;
     bool compiled;
     int type;
     union {
         struct {
+            char *load_path;
             bool is_module;
             fus_code_t code;
             struct fus_compiler_frame *sig_frame;
@@ -139,8 +139,10 @@ int fus_compiler_find_or_add_frame_sig(
     fus_compiler_frame_t **frame_ptr);
 
 
-int fus_compiler_compile_from_lexer(fus_compiler_t *compiler,
-    fus_lexer_t *lexer);
+int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
+    fus_lexer_t *lexer, char *name, bool is_module, int depth,
+    fus_compiler_frame_t **frame_ptr);
+int fus_compiler_finish(fus_compiler_t *compiler);
 
 
 #endif
