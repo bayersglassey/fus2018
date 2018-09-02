@@ -2,7 +2,7 @@
 #include "includes.h"
 
 
-static int fus_parse_quote(fus_symtable_t *symtable, fus_lexer_t *lexer,
+static int fus_parse_data(fus_symtable_t *symtable, fus_lexer_t *lexer,
     fus_arr_t **arr_ptr
 ){
     int err;
@@ -481,13 +481,13 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             err = fus_lexer_get(lexer, ")");
             if(err)return err;
-        }else if(fus_lexer_got(lexer, "quote")){
+        }else if(fus_lexer_got(lexer, "data")){
             err = fus_lexer_next(lexer);
             if(err)return err;
             err = fus_lexer_get(lexer, "(");
             if(err)return err;
             fus_arr_t *a = NULL;
-            err = fus_parse_quote(compiler->symtable, lexer, &a);
+            err = fus_parse_data(compiler->symtable, lexer, &a);
             if(err)return err;
             err = fus_lexer_get(lexer, ")");
             if(err)return err;

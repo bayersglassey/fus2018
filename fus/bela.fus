@@ -38,14 +38,14 @@ obj
     1500 10000 obj -10 =.volinc 1000 =.limit y =.wacky @noise =.cymb1
 ='drum_sounds
 
-quote:
+data:
     drum1,, drum2,, drum3,,
     drum1,, drum2,, drum3,,
     cymb1,,      ,, drum1,,
     cymb1,, cymb1,, drum2,,
 'drum_sounds @apply_sounds ='drums1
 
-quote:
+data:
     drum1,, drum2,, drum3,,
     cymb1,,      ,,      ,,
     drum1,,      ,,      ,,
@@ -60,7 +60,7 @@ obj
     7500 1000 15000 obj -1 =.addinc1 y =.wacky @triangle =.bass4
 ='bass_sounds
 
-quote:
+data:
     bass1 ,, ,, ,,
     bass2 ,, ,, ,,
     bass1 ,, ,, ,,
@@ -73,11 +73,11 @@ quote:
 'bass_sounds @apply_sounds ='bass
 
 
-quote: @loop 4: @loop 4: ,, ,, ,,
+data: @loop 4: @loop 4: ,, ,, ,,
 obj @apply_sounds ='verse
 #
 # OR:
-#quote: ,, ,, ,,
+#data: ,, ,, ,,
 #obj @apply_sounds 4 @loop 4 @loop ='verse
 
 
@@ -89,7 +89,7 @@ obj
     'jazz_scale .a2 =.v1e
 ='blues1_scale
 
-quote:
+data:
     v1e,,    ,, v1e,,
        ,,    ,, v1e,,
     v1b,, v1c,, v1d,,
@@ -122,7 +122,7 @@ obj
 ='blues2_scale
 
 
-quote:
+data:
     v2g,, v2f,, v2e,,
     v2f,, v2e,, v2d,,
     v2e,, v2d,, v2c,,
@@ -152,7 +152,7 @@ def add_song_part(song_parts new_part name -> song_parts):
 
 obj from_vars: drums1 drums2 bass melody1 melody2
 :
-    quote:
+    data:
         drums1
         drums1
 
@@ -161,18 +161,18 @@ obj from_vars: drums1 drums2 bass melody1 melody2
         drums1
     `intro @add_song_part
 
-    quote:
+    data:
         : @loop 4: drums1
         : @loop 2: bass
         melody1
     `verse1 @add_song_part
 
-    quote:
+    data:
         : @loop 4: drums2
         melody2
     `verse2 @add_song_part
 
-    quote:
+    data:
         : @loop 4: drums1
         : @loop 2: bass
 
@@ -181,7 +181,7 @@ obj from_vars: drums1 drums2 bass melody1 melody2
     `verse3 @add_song_part
 
 
-    quote:
+    data:
         intro
         @loop 2: verse1
         @loop 2: verse2

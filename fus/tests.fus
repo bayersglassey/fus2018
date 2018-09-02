@@ -140,6 +140,36 @@ len 0 == assert
 
 stack len 0 == assert
 
+"Data" p
+data:
+    1 2 do loop:
+        over over <= while loop
+        swap dup p 1 + swap
+    drop drop
+lpop 1 == assert
+lpop 2 == assert
+lpop `do sym_eq assert
+lpop `loop sym_eq assert
+lpop
+    lpop `over sym_eq assert
+    lpop `over sym_eq assert
+    lpop ` <= sym_eq assert
+    lpop `while sym_eq assert
+    lpop `loop sym_eq assert
+    lpop `swap sym_eq assert
+    lpop `dup sym_eq assert
+    lpop `p sym_eq assert
+    lpop 1 == assert
+    lpop ` + sym_eq assert
+    lpop `swap sym_eq assert
+len 0 == assert
+lpop `drop sym_eq assert
+lpop `drop sym_eq assert
+len 0 == assert
+"ok" p
+
+stack len 0 == assert
+
 "Modules & Functions" p
 module ModuleTest:
     sig F: -> i

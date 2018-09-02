@@ -1,7 +1,7 @@
 
 # modules
 
-    module def sig import @ &
+    module def sig use @ &
 
 # stack
 
@@ -53,7 +53,7 @@
 # arr
 
     arr len , push pop lpush lpop split join repeat .$ ..$ =.$ ?.$
-    quote(...)
+    data(...)
 
 # fun
 

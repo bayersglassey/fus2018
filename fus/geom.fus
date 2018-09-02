@@ -53,7 +53,7 @@ module geom:
 
 @(Prend new)
 
-    `vert quote:
+    `vert data:
         # ++
         # +X
         images:
@@ -62,14 +62,14 @@ module geom:
             (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0)
     @(Prismel parse) swap @(Prend add_prismel)
 
-    `edge quote:
+    `edge data:
         # an edge (invisible line)
         images:
             () () () () () () () () () () () ()
             () () () () () () () () () () () ()
     @(Prismel parse) swap @(Prend add_prismel)
 
-    `sq quote:
+    `sq data:
 
         # +---+
         # |   |
