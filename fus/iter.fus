@@ -1,67 +1,64 @@
 
 load module: fus format
-use def: format format
 
-module iter:
 
-    sig new: -> it
-    sig iter: x -> it
-    sig next: it -> it value ok
+sig new: -> it
+sig iter: x -> it
+sig next: it -> it value ok
 
 
 
-    def next next: dup .next call next
+def next next: dup .next call next
 
-    def new new:
-        obj
-            0 =.i
-            fun next(null n) =.next
+def new new:
+    obj
+        0 =.i
+        fun next(null n) =.next
 
-    def iter iter:
-        obj
-            &iter_arr =.arr
-            &iter_int =.int
-        over typeof get call iter
+def iter iter:
+    obj
+        &iter_arr =.arr
+        &iter_int =.int
+    over typeof get call iter
 
-    def iter_arr iter:
-        @new
-            swap =.a
-            fun next:
-                dup .a len 0 > ifelse:
-                    ..i 1 + =.i
-                    ..a lpop ='value =.a
-                    ''value y
-                : null n
-            =.next
+def iter_arr iter:
+    @new
+        swap =.a
+        fun next:
+            dup .a len 0 > ifelse:
+                ..i 1 + =.i
+                ..a lpop ='value =.a
+                ''value y
+            : null n
+        =.next
 
-    def iter_int iter:
-        @new
-            swap =.end
-            fun next:
-                dup .i over .end < ifelse:
-                    ..i dup ='i 1 + =.i
-                    ''i y
-                : null n
-            =.next
+def iter_int iter:
+    @new
+        swap =.end
+        fun next:
+            dup .i over .end < ifelse:
+                ..i dup ='i 1 + =.i
+                ''i y
+            : null n
+        =.next
 
-    def test(->):
-        arr 1, 2, 3, ='a
+def test(->):
+    arr 1, 2, 3, ='a
 
-        'a @iter do loop:
-            dup .i ='i
-            @next while loop ='value
+    'a @iter do loop:
+        dup .i ='i
+        @next while loop ='value
 
-            arr
-                "Step ",
-                ''i,
-                ": ",
-                ''value,
-            @format p
-        drop drop
+        arr
+            "Step ",
+            ''i,
+            ": ",
+            ''value,
+        @(format format) p
+    drop drop
 
-        'a @iter
-            @next assert 1 == assert
-            @next assert 2 == assert
-            @next assert 3 == assert
-        @next not assert drop drop
-
+    'a @iter
+        @next assert 1 == assert
+        @next assert 2 == assert
+        @next assert 3 == assert
+    @next not assert drop drop

@@ -35,23 +35,21 @@ module Cycle:
             300 =.label
             &A =.link
 
-    def test(->):
-        # The links of A, B, C form a cycle.
-        # We follow the links by unboxing them.
-        # The compiler should be smart enough to cache
-        # the values of defs with signature (-> x),
-        # so even if we form a really big directed graph
-        # structure, there should be no cost to following
-        # its links.
+def test(->):
+    # The links of A, B, C form a cycle.
+    # We follow the links by unboxing them.
+    # The compiler should be smart enough to cache
+    # the values of defs with signature (-> x),
+    # so even if we form a really big directed graph
+    # structure, there should be no cost to following
+    # its links.
 
-        @A
-            dup .label 100 == assert
-            .link @unbox
-            dup .label 200 == assert
-            .link @unbox
-            dup .label 300 == assert
-            .link @unbox
-            dup .label 100 == assert
-        drop
-
-@(Cycle test)
+    @(Cycle A)
+        dup .label 100 == assert
+        .link @unbox
+        dup .label 200 == assert
+        .link @unbox
+        dup .label 300 == assert
+        .link @unbox
+        dup .label 100 == assert
+    drop

@@ -53,24 +53,23 @@ def sub binop: `sub @method_binop_call
 def eq binop: `eq @method_binop_call
 def ne binop: @eq not
 
-#
-
-        1 @int_new
-        2 @int_new
-    @add
-    3 @int_new
-@eq assert
-
+def test(->):
 
             1 @int_new
             2 @int_new
-        @point_new
-            3 @int_new
+        @add
+        3 @int_new
+    @eq assert
+
+                1 @int_new
+                2 @int_new
+            @point_new
+                3 @int_new
+                4 @int_new
+            @point_new
+        @add
             4 @int_new
+            6 @int_new
         @point_new
-    @add
-        4 @int_new
-        6 @int_new
-    @point_new
-@eq assert
+    @eq assert
 

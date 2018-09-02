@@ -159,3 +159,31 @@ module ModuleTest:
 "ok" p
 
 stack len 0 == assert
+
+"Class" p
+load module: fus class
+@(class test)
+"ok" p
+
+stack len 0 == assert
+
+"Format" p
+load module: fus format
+@(format test)
+"ok" p
+
+stack len 0 == assert
+
+"Iter" p
+load module: fus iter
+@(iter test)
+"ok" p
+
+stack len 0 == assert
+
+"Cycle" p
+load module: fus cycle
+@(cycle test)
+"ok" p
+
+stack len 0 == assert

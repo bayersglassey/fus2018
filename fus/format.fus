@@ -3,13 +3,14 @@ sig format: a -> s
 sig tostr: x -> s
 
 
-arr
-    "Thing ",
-    2,
-    ": ",
-    (obj 1 =.x 2 =.y),
-    "!",
-@format p
+def test(->):
+    arr
+        "Thing ",
+        2,
+        ": ",
+        (obj 1 =.x 2 =.y),
+        "!",
+    @format "Thing 2: {x: 1, y: 2}!" str_eq assert
 
 
 def format format:
