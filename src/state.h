@@ -22,6 +22,8 @@ void fus_state_cleanup(fus_state_t *state);
 int fus_state_init(fus_state_t *state, fus_compiler_t *compiler);
 
 int fus_state_push_frame(fus_state_t *state, fus_code_t *code);
+int fus_state_pop_frame(fus_state_t *state);
+fus_state_frame_t *fus_state_get_cur_frame(fus_state_t *state);
 int fus_state_run(fus_state_t *state);
 int fus_state_step(fus_state_t *state, bool *done_ptr);
 
