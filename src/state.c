@@ -11,6 +11,7 @@ void fus_state_frame_cleanup(fus_state_frame_t *frame){
 int fus_state_frame_init(fus_state_frame_t *frame, fus_code_t *code){
     fus_obj_init(&frame->vars);
     fus_coderef_init(&frame->coderef, code);
+    frame->last_executed_opcode_i = 0;
     return 0;
 }
 
@@ -77,6 +78,8 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
     fus_code_t *code = coderef->code;
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     fus_stack_t *stack = &state->stack;
+
+    frame->last_executed_opcode_i = coderef->opcode_i;
 
 #ifdef FUS_STATE_DEBUG
     printf("STATE STEP INNER: OPCODE %i: %i (",
@@ -702,12 +705,14 @@ int fus_state_step(fus_state_t *state, bool *done_ptr){
 start: ;
     int err;
 
+    /* Get currently executing frame, or if none, report done execution */
     fus_state_frame_t *frame = fus_state_get_cur_frame(state);
     if(frame == NULL){
         *done_ptr = true;
         return 0;
     }
 
+    /* If at end of frame's code, pop it & start over */
     fus_coderef_t *coderef = &frame->coderef;
     fus_code_t *code = coderef->code;
     if(coderef->opcode_i >= code->opcodes_len){
@@ -716,23 +721,26 @@ start: ;
         goto start;
     }
 
-    int opcode_i = coderef->opcode_i;
-    fus_opcode_t opcode = code->opcodes[opcode_i];
-
+    /* Do the stuff */
     err = _fus_state_step(state, frame);
+
+    /* Show debug info if there was an error */
     if(err){
-        fprintf(stderr, "  Executing opcode %s at byte %i\n",
-            fus_symtable_get_token(state->compiler->symtable, opcode),
-            opcode_i);
-        fus_compiler_frame_t *compiler_frame = code->compiler_frame;
-        while(compiler_frame != NULL){
-            fprintf(stderr, "  In %s %i (%s) @(row=%i, col=%i)\n",
-                fus_compiler_frame_type_to_s(compiler_frame),
-                compiler_frame->i, compiler_frame->name,
-                compiler_frame->row, compiler_frame->col);
-            compiler_frame = compiler_frame->parent;
+        for(int i = state->frames_len - 1; i >= 0; i--){
+            fus_state_frame_t *frame = state->frames[i];
+            fus_coderef_t *coderef = &frame->coderef;
+            fus_code_t *code = coderef->code;
+            int opcode_i = frame->last_executed_opcode_i;
+            fus_opcode_t opcode = code->opcodes[opcode_i];
+
+            fprintf(stderr, "  Executing opcode %s at byte %i\n",
+                fus_symtable_get_token(state->compiler->symtable, opcode),
+                opcode_i);
+            fus_compiler_frame_debug_info(code->compiler_frame,
+                stderr, 4);
         }
     }
+
     return err;
 }
 

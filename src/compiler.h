@@ -78,6 +78,8 @@ int fus_compiler_frame_to_ref(fus_compiler_frame_t *frame,
     fus_compiler_frame_t *other_frame);
 
 const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame);
+void fus_compiler_frame_debug_info(fus_compiler_frame_t *frame, FILE *f,
+    int depth);
 
 
 

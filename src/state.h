@@ -5,6 +5,7 @@
 typedef struct fus_state_frame {
     fus_obj_t vars;
     fus_coderef_t coderef;
+    int last_executed_opcode_i;
 } fus_state_frame_t;
 
 typedef struct fus_state {

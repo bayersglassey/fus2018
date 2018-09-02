@@ -217,6 +217,29 @@ const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame){
     return "<UNKNOWN>";
 }
 
+void fus_compiler_frame_debug_info(fus_compiler_frame_t *frame, FILE *f,
+    int depth
+){
+    while(frame != NULL){
+        for(int i = 0; i < depth; i++)fprintf(f, " ");
+        fprintf(f, "In %s %i (%s)",
+            fus_compiler_frame_type_to_s(frame),
+            frame->i, frame->name);
+        fprintf(f, " @(row=%i, col=%i)",
+            frame->row, frame->col);
+        if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF
+            && frame->data.def.load_path != NULL
+        ){
+            fprintf(f, " [file:%s]",
+                frame->data.def.load_path);
+        }
+        fprintf(f, "\n");
+
+        frame = frame->parent;
+    }
+}
+
+
 
 
 /************
