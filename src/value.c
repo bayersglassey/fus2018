@@ -497,7 +497,7 @@ void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
     if(value.type == FUS_TYPE_NULL){
         fprintf(f, "null");
     }else if(value.type == FUS_TYPE_BOOL){
-        fprintf(f, "%c", value.data.b? 'y': 'n');
+        fprintf(f, "%c", value.data.b? 't': 'f');
     }else if(value.type == FUS_TYPE_INT){
         fprintf(f, "%i", value.data.i);
     }else if(value.type == FUS_TYPE_BIGINT){
