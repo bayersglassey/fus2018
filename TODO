@@ -15,3 +15,11 @@ Sep 2, 2018:
 Need better debugging of compiler, similar to how state has nice error messages now
 
 Implement signatures...
+
+
+Our current approach to name resolution, where we try to do evreything as soon as
+possible and convert things to refs as needed, is overcomplicated.
+Much easier to first generate the complete tree of frames, *then* resolve all
+references.
+We still need TYPE_REF, for "use" -- maybe *only* for "use"?..
+

@@ -186,28 +186,6 @@ int fus_compiler_frame_init_sig(fus_compiler_frame_t *frame){
 }
 
 
-int fus_compiler_frame_to_ref(fus_compiler_frame_t *frame,
-    fus_compiler_frame_t *other_frame
-){
-    int err;
-    if(frame->type != other_frame->type){
-        /* Caller is responsible for making sure this never happens */
-        ERR_INFO();
-        fprintf(stderr, "Frame type mismatch: %s != %s\n",
-            fus_compiler_frame_type_to_s(frame),
-            fus_compiler_frame_type_to_s(other_frame));
-        return 2;
-    }else if(frame->compiled){
-        /* Caller is responsible for making sure this never happens */
-        ERR_INFO();
-        fprintf(stderr, "Frame is already compiled\n");
-        return 2;
-    }
-    frame->type = FUS_COMPILER_FRAME_TYPE_REF;
-    frame->data.ref = other_frame;
-    return 0;
-}
-
 const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame){
     if(frame->type == FUS_COMPILER_FRAME_TYPE_SIG)return "SIG";
     if(frame->type == FUS_COMPILER_FRAME_TYPE_REF)return "REF";
@@ -398,7 +376,9 @@ int fus_compiler_pop_frame_def(fus_compiler_t *compiler){
 int fus_compiler_finish_def(fus_compiler_t *compiler,
     fus_compiler_frame_t *def
 ){
-    /* NOTE: def is allowed to be NULL */
+    /* NOTE: def is allowed to be NULL.
+    This function searches through its children and essentially
+    transforms various kinds of "forward declaration" into refs. */
     int err;
     for(int i = 0; i < compiler->frames_len; i++){
         fus_compiler_frame_t *frame = compiler->frames[i];
@@ -439,7 +419,8 @@ int fus_compiler_finish_def(fus_compiler_t *compiler,
                         fus_compiler_frame_type_to_s(frame));
                     return 2;
                 }
-                err = fus_compiler_frame_to_ref(frame, other_frame);
+                err = fus_compiler_convert_frame_to_ref(compiler,
+                    frame, other_frame);
                 if(err)return err;
             }
         }
@@ -557,3 +538,60 @@ int fus_compiler_find_or_add_frame_sig(
     return 0;
 }
 
+
+int fus_compiler_convert_frame_to_ref(fus_compiler_t *compiler,
+    fus_compiler_frame_t *frame, fus_compiler_frame_t *other_frame
+){
+    int err;
+    if(frame->type != other_frame->type){
+        /* Caller is responsible for making sure this never happens */
+        ERR_INFO();
+        fprintf(stderr, "Frame type mismatch: %s != %s\n",
+            fus_compiler_frame_type_to_s(frame),
+            fus_compiler_frame_type_to_s(other_frame));
+        return 2;
+    }else if(frame->compiled){
+        /* Caller is responsible for making sure this never happens */
+        ERR_INFO();
+        fprintf(stderr, "Frame is already compiled\n");
+        return 2;
+    }
+    frame->type = FUS_COMPILER_FRAME_TYPE_REF;
+    frame->data.ref = other_frame;
+
+    /* Turn ref's children into refs too */
+    for(int i = 0; i < compiler->frames_len; i++){
+        fus_compiler_frame_t *child = compiler->frames[i];
+        if(child->parent != frame)continue;
+        if(child->type == FUS_COMPILER_FRAME_TYPE_REF)continue;
+
+        /* TODO: This whole system is getting a bit gross.
+        Let's change it so we first generate the entire frame tree,
+        then go through and resolve names once, without all these temporary
+        uncompiled things which get transformed into refs... */
+
+        fus_compiler_frame_t *other_child = NULL;
+        if(child->type == FUS_COMPILER_FRAME_TYPE_DEF){
+            err = fus_compiler_find_or_add_frame_def(compiler,
+                other_frame, child->name, strlen(child->name),
+                child->data.def.is_module, &other_child);
+            if(err)return err;
+        }else if(child->type == FUS_COMPILER_FRAME_TYPE_SIG){
+            err = fus_compiler_find_or_add_frame_sig(compiler,
+                other_frame, child->name, strlen(child->name),
+                &other_child);
+            if(err)return err;
+        }else{
+            ERR_INFO();
+            fprintf(stderr, "Unknown frame type: %i\n", child->type);
+            return 2;
+        }
+
+        /* Turn child into a ref! Recuuuuursion */
+        err = fus_compiler_convert_frame_to_ref(compiler,
+            child, other_child);
+        if(err)return err;
+    }
+
+    return 0;
+}

@@ -1,12 +1,12 @@
 
-load module: fus format =F
-use def: F format
+# ./compile -DFUS_DEBUG_COMPILER_FRAMES && ./main
 
-arr
-    "Item ",
-    3,
-    ": ",
-    (obj 1 =.x 2 =.y),
-    " (OK)",
-@format str_p
-"\n" str_p
+
+module M:
+    def f(x -> y):
+        10 +
+
+def g(->):
+    3 @(M f) p
+
+@g

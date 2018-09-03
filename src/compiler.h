@@ -74,9 +74,6 @@ int fus_compiler_frame_init(fus_compiler_frame_t *frame, int i,
 int fus_compiler_frame_init_def(fus_compiler_frame_t *frame, bool is_module);
 int fus_compiler_frame_init_sig(fus_compiler_frame_t *frame);
 
-int fus_compiler_frame_to_ref(fus_compiler_frame_t *frame,
-    fus_compiler_frame_t *other_frame);
-
 const char *fus_compiler_frame_type_to_s(fus_compiler_frame_t *frame);
 void fus_compiler_frame_debug_info(fus_compiler_frame_t *frame, FILE *f,
     int depth);
@@ -150,6 +147,9 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
     fus_lexer_t *lexer, char *name, bool is_module, int depth,
     fus_compiler_frame_t **frame_ptr);
 int fus_compiler_finish(fus_compiler_t *compiler);
+
+int fus_compiler_convert_frame_to_ref(fus_compiler_t *compiler,
+    fus_compiler_frame_t *frame, fus_compiler_frame_t *other_frame);
 
 
 #endif
