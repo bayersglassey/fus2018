@@ -7,3 +7,11 @@ def vs module:
     both are "scopes" in the same way, that is, we should get rid of
     frame->module and just use frame->parent.
 
+
+
+Sep 2, 2018:
+------------
+
+Need better debugging of compiler, similar to how state has nice error messages now
+
+Implement signatures...

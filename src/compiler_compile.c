@@ -192,6 +192,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
     bool got_module = false;
     bool got_fun = false;
+    bool got_use = false;
     bool got_call = false;
     bool got_next = false;
     bool got_break = false;
@@ -365,8 +366,8 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_get(lexer, "(");
             if(err)return err;
 
-            const char *last_part = NULL;
-            int last_part_len = 0;
+            const char *name = NULL;
+            int name_len = 0;
             bool first = true;
             fus_path_t path;
             err = fus_path_init(&path);
@@ -386,8 +387,8 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         return fus_lexer_unexpected(lexer, "name");
                     }
 
-                    last_part = lexer->token;
-                    last_part_len = lexer->token_len;
+                    name = lexer->token;
+                    name_len = lexer->token_len;
 
                     err = fus_lexer_next(lexer);
                     if(err)return err;
@@ -398,8 +399,8 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     return fus_lexer_unexpected(lexer, "name");
                 }
 
-                last_part = lexer->token;
-                last_part_len = lexer->token_len;
+                name = lexer->token;
+                name_len = lexer->token_len;
 
                 if(first)first = false;
                 else{
@@ -418,7 +419,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             fus_compiler_frame_t *module = NULL;
             err = fus_compiler_find_or_add_frame_def(compiler,
-                compiler->cur_frame, last_part, last_part_len, true,
+                compiler->cur_frame, name, name_len, true,
                 &module);
             if(err)return err;
 
@@ -493,12 +494,32 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             if(err)return err;
             FUS_COMPILER_PUSH_LITERAL(fus_value_arr(a))
         }else if(
+            (got_use=fus_lexer_got(lexer, "use")) ||
             (got_call=fus_lexer_got(lexer, "@")) ||
             fus_lexer_got(lexer, "&")
         ){
             err = fus_lexer_next(lexer);
             if(err)return err;
+
+            int use_what = -1; /* 0=module 1=def 2=sig */
+            if(got_use){
+                if(fus_lexer_got(lexer, "module")){
+                    use_what = 0;
+                }else if(fus_lexer_got(lexer, "def")){
+                    use_what = 1;
+                }else if(fus_lexer_got(lexer, "sig")){
+                    use_what = 2;
+                }else{
+                    return fus_lexer_unexpected(lexer,
+                        "module or def or sig");
+                }
+                err = fus_lexer_next(lexer);
+                if(err)return err;
+            }
+
             fus_compiler_frame_t *def = NULL;
+            const char *use_name = NULL;
+            int use_name_len = 0;
             if(fus_lexer_got(lexer, "(")){
                 fus_compiler_frame_t *parent = compiler->cur_frame;
                 err = fus_lexer_next(lexer);
@@ -512,6 +533,23 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         err = fus_compiler_find_or_add_frame_def(compiler,
                             parent, token, token_len, false, &def);
                         if(err)return err;
+                        use_name = token;
+                        use_name_len = token_len;
+                        err = fus_lexer_next(lexer);
+                        if(err)return err;
+                        break;
+                    }else if(got_use && fus_lexer_got(lexer, "=")){
+                        err = fus_lexer_next(lexer);
+                        if(err)return err;
+                        if(!fus_lexer_got_name(lexer)){
+                            return fus_lexer_unexpected(lexer, "name");
+                        }
+                        use_name = lexer->token;
+                        use_name_len = lexer->token_len;
+                        err = fus_lexer_next(lexer);
+                        if(err)return err;
+                        err = fus_lexer_get(lexer, ")");
+                        if(err)return err;
                         break;
                     }else{
                         if(!fus_lexer_got_name(lexer)){
@@ -523,20 +561,52 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     }
                 }
             }else{
+                if(got_use){
+                    return fus_lexer_unexpected(lexer, "(");}
                 if(!fus_lexer_got_name(lexer)){
-                    return fus_lexer_unexpected(lexer, "name");
-                }
+                    return fus_lexer_unexpected(lexer, "name");}
                 err = fus_compiler_find_or_add_frame_def(compiler,
                     compiler->cur_frame,
                     lexer->token, lexer->token_len, false, &def);
                 if(err)return err;
+                err = fus_lexer_next(lexer);
+                if(err)return err;
             }
-            err = fus_lexer_next(lexer);
-            if(err)return err;
-            ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
-                got_call? FUS_SYMCODE_FRAMES_CALL: FUS_SYMCODE_FUN_LITERAL)
-            err = fus_code_push_int(&frame->data.def.code, def->i);
-            if(err)return err;
+
+            if(got_use){
+                fus_compiler_frame_t *new_frame = NULL;
+                if(use_what == 2){
+                    err = fus_compiler_find_frame_sig(compiler,
+                        compiler->cur_frame, use_name, use_name_len,
+                        &new_frame);
+                    if(err)return err;
+                }else{
+                    bool is_module = use_what == 0;
+                    err = fus_compiler_find_frame_def(compiler,
+                        compiler->cur_frame, use_name, use_name_len,
+                        is_module, &new_frame);
+                    if(err)return err;
+                }
+                if(new_frame != NULL){
+                    ERR_INFO();
+                    fprintf(stderr,
+                        "Attempted redefinition of %s %i (%s)\n",
+                        fus_compiler_frame_type_to_s(new_frame),
+                        new_frame->i, new_frame->name);
+                    return 2;
+                }
+                err = fus_compiler_add_frame_ref(compiler,
+                    compiler->cur_frame,
+                    strndup(use_name, use_name_len), def,
+                    &new_frame);
+                if(err)return err;
+            }else{
+                ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
+                    got_call? FUS_SYMCODE_FRAMES_CALL:
+                        FUS_SYMCODE_FUN_LITERAL)
+                err = fus_code_push_int(&frame->data.def.code, def->i);
+                if(err)return err;
+            }
         }else{
             int opcode_sym_i = fus_symtable_find(compiler->symtable,
                 lexer->token, lexer->token_len);
@@ -623,10 +693,14 @@ static void fus_compiler_debug_frames(fus_compiler_t *compiler){
         }
         printf("%s %i (%s)",
             fus_compiler_frame_type_to_s(frame), i, frame->name);
-        if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF
-            && frame->data.def.load_path != NULL
-        ){
-            printf(" [file:%s]", frame->data.def.load_path);
+        if(frame->type == FUS_COMPILER_FRAME_TYPE_DEF){
+            fus_compiler_frame_t *sig_frame = frame->data.def.sig_frame;
+            if(sig_frame != NULL){
+                printf(" [sig:%i]", sig_frame->i);
+            }
+            if(frame->data.def.load_path != NULL){
+                printf(" [file:%s]", frame->data.def.load_path);
+            }
         }
         if(frame->type == FUS_COMPILER_FRAME_TYPE_REF){
             fus_compiler_frame_t *other_frame = frame->data.ref;

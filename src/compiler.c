@@ -353,6 +353,21 @@ int fus_compiler_add_frame_sig(fus_compiler_t *compiler,
     return 0;
 }
 
+int fus_compiler_add_frame_ref(fus_compiler_t *compiler,
+    fus_compiler_frame_t *parent, char *name,
+    fus_compiler_frame_t *other_frame,
+    fus_compiler_frame_t **frame_ptr
+){
+    int err;
+    fus_compiler_frame_t *new_frame = NULL;
+    err = fus_compiler_add_frame(compiler, parent, name, &new_frame);
+    if(err)return err;
+    new_frame->type = FUS_COMPILER_FRAME_TYPE_REF;
+    new_frame->data.ref = other_frame;
+    *frame_ptr = new_frame;
+    return 0;
+}
+
 
 
 /* COMPILER PUSH AND POP FRAME */

@@ -112,6 +112,10 @@ int fus_compiler_add_frame_def(fus_compiler_t *compiler,
 int fus_compiler_add_frame_sig(fus_compiler_t *compiler,
     fus_compiler_frame_t *parent, char *name,
     fus_compiler_frame_t **frame_ptr);
+int fus_compiler_add_frame_ref(fus_compiler_t *compiler,
+    fus_compiler_frame_t *parent, char *name,
+    fus_compiler_frame_t *other_frame,
+    fus_compiler_frame_t **frame_ptr);
 
 int fus_compiler_push_frame_def(fus_compiler_t *compiler,
     fus_compiler_frame_t *frame);

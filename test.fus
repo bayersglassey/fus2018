@@ -1,5 +1,6 @@
 
 load module: fus format =F
+use def: F format
 
 arr
     "Item ",
@@ -7,5 +8,5 @@ arr
     ": ",
     (obj 1 =.x 2 =.y),
     " (OK)",
-@(F format) str_p
+@format str_p
 "\n" str_p
