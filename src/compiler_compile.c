@@ -96,6 +96,7 @@ static int fus_compiler_blocks_find(fus_compiler_block_t *blocks,
 ){
     for(int i = 0; i < blocks_len; i++){
         fus_compiler_block_t *block = &blocks[i];
+        if(block->type != FUS_COMPILER_BLOCK_TYPE_DO)continue;
         if(strlen(block->label_name) == token_len
             && !strncmp(block->label_name, token, token_len)
         ){

@@ -657,9 +657,7 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
             err = fus_arr_push(a, value);
             if(err)return err;
         }
-        fus_value_detach(value);
-        stack->tos = fus_value_arr(a);
-        fus_value_detach(stack->tos);
+        FUS_STACK_SET_TOS(*stack, fus_value_arr(a))
         break;}
     case FUS_SYMCODE_FUN_LITERAL: {
         int frame_i = -1;

@@ -12,7 +12,8 @@ def vs module:
 Sep 2, 2018:
 ------------
 
-Need better debugging of compiler, similar to how state has nice error messages now
+Need better debugging of compiler, similar to how state has nicer error messages now
+(But even state's debug info is lacking -- should tell you row & col of an error!..)
 
 Implement signatures...
 
