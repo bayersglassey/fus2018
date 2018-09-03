@@ -120,6 +120,7 @@ int fus_compiler_compile_frame_from_path(fus_compiler_t *compiler,
 
     err = fus_compiler_compile_frame_from_lexer(compiler, &lexer,
         name, is_module, depth, frame_ptr);
+    if(err)return err;
 
     fus_lexer_cleanup(&lexer);
     free(buffer);
@@ -427,12 +428,6 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 ERR_INFO();
                 fprintf(stderr, "Module %s is already compiled!\n",
                     module->name);
-                return 2;
-            }else if(module->data.def.load_path != NULL){
-                ERR_INFO();
-                fprintf(stderr, "Module %s is already loaded! "
-                    "(From: \"%s\")\n",
-                    module->name, module->data.def.load_path);
                 return 2;
             }
 

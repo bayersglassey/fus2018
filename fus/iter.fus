@@ -1,5 +1,6 @@
 
-load module: fus format
+load module: fus format =Format
+use def: Format format
 
 
 sig new: -> it
@@ -54,7 +55,7 @@ def test(->):
             ''i,
             ": ",
             ''value,
-        @(format format) p
+        @format str_p "\n" str_p
     drop drop
 
     'a @iter
