@@ -62,7 +62,8 @@ def arr_tostr tostr:
 
     0 'a len do loop:
         over over < while loop
-        over 'a swap .$ ='val
+        swap dup ='i 1 + swap
+        'a 'i .$ ='val
         ''s
             'first ifelse: n ='first
             : ", " str_join
