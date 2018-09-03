@@ -24,7 +24,7 @@ def format format:
 def tostr tostr:
     obj
         fun tostr(drop "null") =.null
-        fun tostr(ifelse("y")("n")) =.bool
+        fun tostr(ifelse("t")("f")) =.bool
         fun tostr(int_tostr) =.int
         fun tostr() =.str
         fun tostr(sym_tostr) =.sym
@@ -37,14 +37,14 @@ def obj_tostr tostr:
     ='o
 
     "{" ='s
-    y ='first
+    t ='first
 
     'o keys do loop:
         dup len 0 > while loop
         lpop ='key
         'o 'key get ='val
         ''s
-            'first ifelse: n ='first
+            'first ifelse: f ='first
             : ", " str_join
             'key sym_tostr str_join
             ": " str_join
@@ -58,14 +58,14 @@ def arr_tostr tostr:
     ='a
 
     "[" ='s
-    y ='first
+    t ='first
 
     0 'a len do loop:
         over over < while loop
         swap dup ='i 1 + swap
         'a 'i .$ ='val
         ''s
-            'first ifelse: n ='first
+            'first ifelse: f ='first
             : ", " str_join
             'val @tostr str_join
         ='s

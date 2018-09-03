@@ -27,7 +27,7 @@ module geom:
                 lpop ='images_data
             len 0 == assert
 
-            n ='DO_LOTS_OF_VERIFICATION
+            f ='DO_LOTS_OF_VERIFICATION
             'DO_LOTS_OF_VERIFICATION if:
                 # If we want to go crazy with verification...
                 'images_data len @N_IMAGES == assert

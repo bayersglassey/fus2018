@@ -7,5 +7,5 @@ arr
     ": ",
     (obj 1 =.x 2 =.y),
     " (OK)",
-@(F format) p
-
+@(F format) str_p
+"\n" str_p

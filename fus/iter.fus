@@ -13,7 +13,7 @@ def next next: dup .next call next
 def new new:
     obj
         0 =.i
-        fun next(null n) =.next
+        fun next(null f) =.next
 
 def iter iter:
     obj
@@ -28,8 +28,8 @@ def iter_arr iter:
             dup .a len 0 > ifelse:
                 ..i 1 + =.i
                 ..a lpop ='value =.a
-                ''value y
-            : null n
+                ''value t
+            : null f
         =.next
 
 def iter_int iter:
@@ -38,8 +38,8 @@ def iter_int iter:
         fun next:
             dup .i over .end < ifelse:
                 ..i dup ='i 1 + =.i
-                ''i y
-            : null n
+                ''i t
+            : null f
         =.next
 
 def test(->):

@@ -7,8 +7,6 @@ sig set: heap value key -> heap
 sig del: heap key -> heap
 
 
-@test
-
 def test(->):
     @new ='h
     ''h "Lawl" @add ='k1 ='h
@@ -24,64 +22,55 @@ def test(->):
 
 
 
+# SIMPLE HEAP IMPLEMENTATION:
+#
+# Keys are integers, key-value pairs are stored in a big array,
+# search algorithm is linear.
+# An improved heap would e.g. use a binary tree instead of an
+# array.
 
-use def: simple new
-use def: simple add
-use def: simple has
-use def: simple get
-use def: simple set
-use def: simple del
-
-module simple:
-    # SIMPLE HEAP IMPLEMENTATION:
-    #
-    # Keys are integers, key-value pairs are stored in a big array,
-    # search algorithm is linear.
-    # An improved heap would e.g. use a binary tree instead of an
-    # array.
-
-    sig find: heap key -> index
+sig find: heap key -> index
 
 
-    def new new:
-        obj
-            0 =.next_key
-            arr =.entries
+def new new:
+    obj
+        0 =.next_key
+        arr =.entries
 
-    def add add:
-        ='v ='h
-        ''h
-            ..next_key dup ='k 1 + =.next_key
-            ..entries obj 'k =.key 'v =.value push =.entries
-        'k
+def add add:
+    ='v ='h
+    ''h
+        ..next_key dup ='k 1 + =.next_key
+        ..entries obj 'k =.key 'v =.value push =.entries
+    'k
 
-    def find find:
-        ='k ='h
-        'h .entries ='entries
-        0 'entries len do loop:
-            over over >= if: null ='i break loop
-            swap dup ='i 1 + swap
-            'entries 'i .$ .key 'k == if: break loop
-        drop drop
-        'i
+def find find:
+    ='k ='h
+    'h .entries ='entries
+    0 'entries len do loop:
+        over over >= if: null ='i break loop
+        swap dup ='i 1 + swap
+        'entries 'i .$ .key 'k == if: break loop
+    drop drop
+    'i
 
-    def has has:
-        @find is null not
+def has has:
+    @find is null not
 
-    def get get:
-        over ='h
-        @find ='i
-        'h .entries 'i .$ .value
+def get get:
+    over ='h
+    @find ='i
+    'h .entries 'i .$ .value
 
-    def set set:
-        swap ='v
-        over ='h
-        @find ='i
-        ''h
-            ..entries 'i ..$ 'v =.value 'i =.$ =.entries
+def set set:
+    swap ='v
+    over ='h
+    @find ='i
+    ''h
+        ..entries 'i ..$ 'v =.value 'i =.$ =.entries
 
-    def del del:
-        over ='h
-        @find ='i
-        ''h
-            ..entries 'i split lpop drop join =.entries
+def del del:
+    over ='h
+    @find ='i
+    ''h
+        ..entries 'i split lpop drop join =.entries

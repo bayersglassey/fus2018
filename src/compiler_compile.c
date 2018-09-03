@@ -534,7 +534,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_next(lexer);
             if(err)return err;
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
-                got_call? FUS_SYMCODE_CALL: FUS_SYMCODE_FUN_LITERAL)
+                got_call? FUS_SYMCODE_FRAMES_CALL: FUS_SYMCODE_FUN_LITERAL)
             err = fus_code_push_int(&frame->data.def.code, def->i);
             if(err)return err;
         }else{
