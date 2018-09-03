@@ -14,19 +14,23 @@ def jazz_scale(-> scale):
     # ...until we can fix it
 
     obj ='scale
+
     arr
         `a0, `b0, `c0, `d0, `e0, `f0, `g0,
         `a1, `b1, `c1, `d1, `e1, `f1, `g1,
         `a2, `b2, `c2, `d2, `e2, `f2, `g2,
         `a3, `b3, `c3, `d3, `e3, `f3, `g3,
     ='keys
-    0 'keys do loop:
-        over over len < while loop
-        over ='i
+
+    0 'keys len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+
         'keys 'i .$ ='key
         500 (29 'i -) 1 6000 obj -5 =.volinc @square
-        ''scale swap 'key set
+        ''scale swap 'key set ='scale
     drop drop
+
     ''scale
 @jazz_scale ='jazz_scale
 
@@ -150,7 +154,12 @@ def add_song_part(song_parts new_part name -> song_parts):
     ='name ='new_part ='song_parts
     ''new_part 'song_parts @apply_sounds ''song_parts swap 'name set
 
-obj from_vars: drums1 drums2 bass melody1 melody2
+obj
+    'drums1 =.drums1
+    'drums1 =.drums2
+    'drums1 =.bass
+    'drums1 =.melody1
+    'drums1 =.melody2
 :
     data:
         drums1

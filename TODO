@@ -23,3 +23,16 @@ Much easier to first generate the complete tree of frames, *then* resolve all
 references.
 We still need TYPE_REF, for "use" -- maybe *only* for "use"?..
 
+
+Sep 3, 2018:
+------------
+
+Review compiler frame->row, frame->col stuff...
+I had the following happen:
+
+  Executing opcode < at byte 23/224
+    In DEF 8 (apply_sounds) at row=8, col=0
+    In MOD 1 (music) at row=2, col=3 [file:fus/music.fus]
+
+...when apply_sounds should have been row=44, col=1.
+For that matter, should col=0 ever be possible??

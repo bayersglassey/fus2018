@@ -1,0 +1,70 @@
+
+load module: fus objtools
+use def: objtools dget
+
+
+def square(vol add1 add2 len opts -> sound):
+    obj
+        `square =.type
+        swap ='opts
+        swap =.len
+        swap =.add2
+        swap =.add1
+        swap =.vol
+
+        'opts `volinc 0 @dget =.volinc
+
+
+def triangle(vol1 vol2 len opts -> sound):
+    obj
+        `triangle =.type
+        swap ='opts
+        swap =.len
+        swap =.vol2
+        swap =.vol1
+
+        'opts `limit 0 @dget =.limit
+        'opts `addinc1 0 @dget =.addinc1
+        'opts `addinc2 0 @dget =.addinc2
+        'opts `wacky f @dget =.wacky
+
+
+def noise(vol len opts -> sound):
+    obj
+        `noise =.type
+        swap ='opts
+        swap =.len
+        swap =.vol
+
+        'opts `volinc 0 @dget =.volinc
+        'opts `limit 0 @dget =.limit
+        'opts `step 0 @dget =.step
+        'opts `wacky f @dget =.wacky
+
+def apply_sounds(pattern sounds -> pattern):
+    ='sounds
+    ='pat
+
+    0 'pat len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+
+        ''pat 'i ..$ ='part ='pat
+
+        'part is sym ifelse:
+            'part (` @) sym_eq ifelse:
+                # ummmm?.. e.g.:
+                #     data: @loop 4
+            :
+                'sounds 'part has if:
+                    'sounds 'part get ='part
+        :
+            'part is arr ifelse:
+                ''part 'sounds @apply_sounds ='part
+            :
+
+        ''pat ''part 'i =.$ ='pat
+
+    drop drop
+
+    ''pat
