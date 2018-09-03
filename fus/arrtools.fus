@@ -1,0 +1,31 @@
+
+
+def range(x0 x1 add -> xs):
+    # Example: 0 3 1 @range -> arr 0, 1, 2,
+    ='add
+    arr ='a
+    do loop:
+        # (x0 x1)
+        over over != while loop
+        swap
+            # (x1 x0)
+            dup ''a swap push ='a
+            # (x1 x0)
+            'add +
+        swap
+    drop drop
+    ''a
+
+def test(->):
+    0 3 1 @range
+    lpop 0 == assert
+    lpop 1 == assert
+    lpop 2 == assert
+    len 0 == assert
+
+    12 10 -1 @range
+    lpop 12 == assert
+    lpop 11 == assert
+    len 0 == assert
+
+

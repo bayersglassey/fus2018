@@ -231,3 +231,10 @@ load module: fus objtools
 "ok" p
 
 stack len 0 == assert
+
+"Arrtools" p
+load module: fus arrtools
+@(arrtools test)
+"ok" p
+
+stack len 0 == assert

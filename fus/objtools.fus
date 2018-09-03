@@ -7,9 +7,34 @@ def dget(obj key default -> value):
 def get(obj key -> value): null @dget
 
 
+
+def add_prefix(obj str -> obj):
+    # Example:
+    #     (obj 1 =.x 2 =.y) "la" @obj_add_prefix -> (obj 1 =.lax 2 =.lay)
+
+    ='prefix ='o0
+    obj ='o1
+
+    ('o0 keys) do loop:
+        dup len 0 > while loop
+        lpop ='key0
+        'key0 sym_tostr 'prefix swap str_join str_tosym ='key1
+        ''o1 'o0 'key0 get 'key1 set ='o1
+    drop
+
+    ''o1
+
+
+
 def test(->):
     obj 1 =.x 2 =.y ='o
     'o `x @get 1 == assert
     'o `z @get is null assert
     'o `z "LOL" @dget "LOL" str_eq assert
+
+    'o "__" @add_prefix ='o2
+    'o2 ?.x not assert
+    'o2 ?.__x assert
+    'o2 ?.y not assert
+    'o2 ?.__y assert
 

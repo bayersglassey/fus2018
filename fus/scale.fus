@@ -1,19 +1,10 @@
 
-def range(x0 x1 add -> xs):
-    # Example: 0 3 range -> arr 0, 1, 2,
-    ='add
-    arr ='a
-    do loop:
-        # (x0 x1)
-        over over < while loop
-        swap
-            # (x1 x0)
-            dup ''a swap push ='a
-            # (x1 x0)
-            'add +
-        swap
-    drop drop
-    ''a
+load module: fus objtools
+use def: objtools add_prefix
+
+load module: fus arrtools
+use def: arrtools range
+
 
 
 def get_scale(-> o):
@@ -23,10 +14,10 @@ def get_scale(-> o):
 
     def label_next(o -> o):
         ='label
-        label .let "g" str_eq ifelse:
+        'label .let "g" str_eq ifelse:
             ''label "a" =.let ..num 1 + =.num ='label
         :
-            ''label ..let 0 str_tocode 1 + str_fromcode =.let ='label
+            ''label ..let str_tocode 1 + str_fromcode =.let ='label
         ''label
 
     def label_tostr(o -> s):
@@ -39,34 +30,19 @@ def get_scale(-> o):
     @label_new ='label
     obj ='scale
 
-    0 (29 1 -1 @range) do loop:
-        over over len < while loop
-        over over swap .$ ='i
-        ''scale
-            obj 500 =.len 'i =.y 6000 =.ummm -5 =.volinc
-            'label @label_tostr str_tosym obj_set
-        ='scale
+    (29 1 -1 @range) do loop:
+        dup len 0 > while loop
+        lpop ='i
+
+        'label @label_tostr str_tosym ='key
+        (obj 500 =.len 'i =.y 6000 =.ummm -5 =.volinc) ='val
+
+        ''scale 'val 'key set ='scale
         ''label @label_next ='label
     drop drop
 
     ''scale
 
 
-def obj_add_prefix(o s -> o):
-    # Example:
-    #     (obj 1 =.x 2 =.y) "la" @obj_add_prefix -> (obj 1 =.lax 2 =.lay)
-
-    ='prefix ='o0
-    obj ='o1
-
-    ('o0 keys) do loop:
-        dup len 0 > while loop
-        lpop ='key0
-        'key0 sym_tostr 'prefix swap str_join str_tosym ='key1
-        ''o1 'o0 'key0 obj_get 'key1 obj_set ='o1
-    drop
-
-    ''o1
-
-@get_scale "s" @obj_add_prefix ='scale
+@get_scale "s" @add_prefix p
 
