@@ -1,0 +1,23 @@
+
+# The if-elif-else pattern doesn't work 
+
+def f(x->):
+    # Lexed correctly
+
+    ='x
+    'x 0 == ifelse: "A" p
+    :
+        'x 1 == ifelse: "B" p
+        : "C" p
+
+ignore: def f(x->):
+    # Not lexed correctly
+
+    ='x
+    'x 0 == ifelse: "A" p
+    : 'x 1 == ifelse: "B" p
+    : "C" p
+
+0 @f
+1 @f
+2 @f
