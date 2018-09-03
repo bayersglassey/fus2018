@@ -386,6 +386,58 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
         fus_value_attach(stack->tos);
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_STR_TOSYM: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
+        fus_str_t *s = stack->tos.data.s;
+        if(s == NULL || s->text_len == 0){
+            ERR_INFO();
+            fprintf(stderr, "String is empty\n");
+            return 2;
+        }
+        for(int i = 0; i < s->text_len; i++){
+            char c = s->text[i];
+            if(c != '_' && (
+                (i == 0 && !isalpha(c)) ||
+                (i != 0 && !isalnum(c))
+            )){
+                ERR_INFO();
+                fprintf(stderr, "String does not form a name: %s\n",
+                    s->text);
+                return 2;
+            }
+        }
+        int sym_i = fus_symtable_find_or_add(state->compiler->symtable,
+            s->text, s->text_len);
+        if(sym_i < 0)return 1;
+        FUS_STACK_SET_TOS(*stack, fus_value_sym(sym_i))
+        break;}
+    case FUS_SYMCODE_STR_TOCODE: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
+        fus_str_t *s = stack->tos.data.s;
+        if(s == NULL || s->text_len == 0){
+            ERR_INFO();
+            fprintf(stderr, "String is empty\n");
+            return 2;
+        }
+        int i = s->text[0];
+        FUS_STACK_SET_TOS(*stack, fus_value_int(i))
+        break;}
+    case FUS_SYMCODE_STR_FROMCODE: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_INT)
+        int code = stack->tos.data.i;
+        /* TODO: add a new value type CHAR which acts like STR but just
+        stores a single char under the hood */
+        /* MAYBE TODO: instead of to/from code, do get/set code.
+        The former transform between str and int, whereas the latter just
+        change the character at a given position?.. */
+        char *text = malloc(sizeof(*text) * 2);
+        if(text == NULL)return 1;
+        text[0] = code;
+        text[1] = '\0';
+        fus_str_t *s = fus_str(text);
+        if(s == NULL)return 1;
+        FUS_STACK_SET_TOS(*stack, fus_value_str(s))
+        break;}
     case FUS_SYMCODE_STR_PRINT: {
         FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
         fus_value_t popped_value;

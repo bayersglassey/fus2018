@@ -264,7 +264,7 @@ static void fus_lexer_parse_op(fus_lexer_t *lexer){
     fus_lexer_start_token(lexer);
     while(lexer->pos < lexer->text_len){
         char c = lexer->text[lexer->pos];
-        if(c == '(' || c == ')' || c == ':'
+        if(c == '(' || c == ')' || c == ':' || c == '_'
             || !isgraph(c) || isalnum(c))break;
         fus_lexer_eat(lexer);
     }

@@ -13,12 +13,12 @@ color brightblue "(`|,|\+\+|--|\+|-|\*|/|%|<|<=|>|>=|==|!=|\?\??|&|=|\^)"
 #color brightblue "(=|'|)'[[:alpha:]_][[:alnum:]_]*\>"
 color brightblue "(=|'|)'"
 
-# Obj Get/Rip/Set
-color blue "((=|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
+# Obj Get/Rip/Set/Has
+color blue "((=|\?|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
 #color brightblue "(=|\.|)\."
 
-# Arr Get/Rip/Set
-color brightblue "(=|\.|)\.\$"
+# Arr Get/Rip/Set/Has
+color brightblue "(=|\?|\.|)\.\$"
 
 # Arrays
 color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*\("
