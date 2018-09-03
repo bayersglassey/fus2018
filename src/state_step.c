@@ -10,7 +10,24 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
     fus_opcode_t opcode = code->opcodes[coderef->opcode_i];
     fus_stack_t *stack = &state->stack;
 
+    /* Update debug info */
+    state->steps++;
     frame->last_executed_opcode_i = coderef->opcode_i;
+
+    /* Die if we suspect infinite loop */
+    if(state->max_steps > 0 && state->steps > state->max_steps){
+        ERR_INFO();
+        fprintf(stderr, "Exceeded max # of execution steps (%i). "
+            "Presumably hit an infinite loop!\n",
+            state->max_steps);
+        return 2;
+    }else if(state->max_frames > 0 && state->frames_len > state->max_frames){
+        ERR_INFO();
+        fprintf(stderr, "Exceeded max # of execution frames (%i). "
+            "Presumably hit an infinite loop!\n",
+            state->max_frames);
+        return 2;
+    }
 
 #ifdef FUS_STATE_DEBUG
     printf("STATE STEP INNER: OPCODE %i: %i (",

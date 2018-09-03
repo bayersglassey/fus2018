@@ -9,6 +9,9 @@ typedef struct fus_state_frame {
 } fus_state_frame_t;
 
 typedef struct fus_state {
+    int steps;
+    int max_steps;
+    int max_frames;
     fus_compiler_t *compiler;
     fus_stack_t stack;
     ARRAY_DECL(fus_state_frame_t*, frames)

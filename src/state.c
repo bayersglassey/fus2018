@@ -1,6 +1,14 @@
 
 #include "includes.h"
 
+#ifndef FUS_STATE_MAX_STEPS
+    #define FUS_STATE_MAX_STEPS 100000
+#endif
+
+#ifndef FUS_STATE_MAX_FRAMES
+    #define FUS_STATE_MAX_FRAMES 50
+#endif
+
 
 
 void fus_state_frame_cleanup(fus_state_frame_t *frame){
@@ -24,6 +32,9 @@ void fus_state_cleanup(fus_state_t *state){
 
 int fus_state_init(fus_state_t *state, fus_compiler_t *compiler){
     int err;
+    state->steps = 0;
+    state->max_steps = FUS_STATE_MAX_STEPS;
+    state->max_frames = FUS_STATE_MAX_FRAMES;
     state->compiler = compiler;
     err = fus_stack_init(&state->stack);
     if(err)return err;
