@@ -2,7 +2,7 @@
 #include "includes.h"
 
 #ifndef FUS_STATE_MAX_STEPS
-    #define FUS_STATE_MAX_STEPS 100000
+    #define FUS_STATE_MAX_STEPS 1000000
 #endif
 
 #ifndef FUS_STATE_MAX_FRAMES

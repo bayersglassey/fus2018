@@ -68,3 +68,16 @@ def apply_sounds(pattern sounds -> pattern):
     drop drop
 
     ''pat
+
+
+def loop(pattern n -> pattern):
+    ='n ='pat
+    'pat ='pat0
+
+    ''n do loop:
+        dup 0 >= while loop
+        1 -
+
+        ''pat ='pat0 join ='pat
+    drop
+    ''pat
