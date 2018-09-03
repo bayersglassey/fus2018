@@ -369,6 +369,13 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
         fus_value_attach(stack->tos);
         fus_value_detach(popped_value);
         break;}
+    case FUS_SYMCODE_STR_PRINT: {
+        FUS_STATE_ASSERT_STACK(FUS_TYPE_STR)
+        fus_value_t popped_value;
+        FUS_STACK_POP(*stack, popped_value)
+        fus_str_t *s = popped_value.data.s;
+        if(s != NULL && s->text != NULL)printf(s->text);
+        break;}
     case FUS_SYMCODE_SYM_EQ: {
         FUS_STATE_ASSERT_STACK2(FUS_TYPE_SYM, FUS_TYPE_SYM)
         fus_value_t popped_value;

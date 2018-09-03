@@ -39,7 +39,7 @@
 
     "abc"
     str_eq str_indexof str_len str_get str_set str_split str_join
-    str_toarr
+    str_toarr str_p
 
 # sym
 
