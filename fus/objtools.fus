@@ -1,0 +1,15 @@
+
+def dget(obj key default -> value):
+    ='d ='k ='o
+    'o 'k has ifelse: 'o 'k get
+    : 'd
+
+def get(obj key -> value): null @dget
+
+
+def test(->):
+    obj 1 =.x 2 =.y ='o
+    'o `x @get 1 == assert
+    'o `z @get is null assert
+    'o `z "LOL" @dget "LOL" str_eq assert
+

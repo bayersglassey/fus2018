@@ -224,3 +224,10 @@ load module: fus cycle
 "ok" p
 
 stack len 0 == assert
+
+"Objtools" p
+load module: fus objtools
+@(objtools test)
+"ok" p
+
+stack len 0 == assert
