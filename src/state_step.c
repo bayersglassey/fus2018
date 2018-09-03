@@ -691,9 +691,9 @@ start: ;
             int opcode_i = frame->last_executed_opcode_i;
             fus_opcode_t opcode = code->opcodes[opcode_i];
 
-            fprintf(stderr, "  Executing opcode %s at byte %i\n",
+            fprintf(stderr, "  Executing opcode %s at byte %i/%i\n",
                 fus_symtable_get_token(state->compiler->symtable, opcode),
-                opcode_i);
+                opcode_i, code->opcodes_len);
             fus_compiler_frame_debug_info(code->compiler_frame,
                 stderr, 4);
         }
