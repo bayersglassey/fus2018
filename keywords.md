@@ -1,59 +1,61 @@
 
-# frames
+# FUS keywords
+
+Modules & Functions
 
     module def sig load use @ &
 
-# general
+General
 
-    data(...) typeof is
+    data typeof is
 
-# stack
+Stack
 
     dup drop swap nip over
 
-# vars
+Vars
 
     'x ''x ='x
 
-# control
+Control
 
     if ifelse do next break while
 
-# debug
+Debug
 
     p stack vars assert error ignore
 
-# null
+Null
 
     null
 
-# bool
+Bool
 
     t f not and or bool_eq
 
-# int
+Int
 
-    0 + - * / mod neg < > <= >= == != int_tostr
+    123 + - * / mod neg < > <= >= == != int_tostr
 
-# str
+Str
 
     "abc"
     str_eq str_len str_split str_join str_indexof str_get str_set
     str_toarr str_tosym str_tocode str_fromcode str_p
 
-# sym
+Sym
 
     `x sym_eq sym_tostr
 
-# obj
+Obj
 
     obj .x ..x =.x ?.x get rip set has keys
 
-# arr
+Arr
 
     arr len , push pop lpush lpop split join repeat .$ ..$ =.$ ?.$
 
-# fun
+Fun
 
-    fun(...)(...) call(...)
+    fun call
 
