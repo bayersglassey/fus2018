@@ -191,49 +191,49 @@ module ModuleTest:
 stack len 0 == assert
 
 "Class" p
-load module: fus class
+load: fus class
 @(class test)
 "ok" p
 
 stack len 0 == assert
 
 "Format" p
-load module: fus format
+load: fus format
 @(format test)
 "ok" p
 
 stack len 0 == assert
 
 "Iter" p
-load module: fus iter
+load: fus iter
 @(iter test)
 "ok" p
 
 stack len 0 == assert
 
 "Heap" p
-load module: fus heap
+load: fus heap
 @(heap test)
 "ok" p
 
 stack len 0 == assert
 
 "Cycle" p
-load module: fus cycle
+load: fus cycle
 @(cycle test)
 "ok" p
 
 stack len 0 == assert
 
 "Objtools" p
-load module: fus objtools
+load: fus objtools
 @(objtools test)
 "ok" p
 
 stack len 0 == assert
 
 "Arrtools" p
-load module: fus arrtools
+load: fus arrtools
 @(arrtools test)
 "ok" p
 

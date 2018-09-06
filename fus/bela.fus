@@ -1,5 +1,5 @@
 
-load module: fus music
+load: fus music
 use def: music square
 use def: music triangle
 use def: music noise
@@ -219,7 +219,7 @@ def song song:
 
 
 def print_song(song ->):
-    load module: fus format
+    load: fus format
 
     ='song
     'song keys do loop:

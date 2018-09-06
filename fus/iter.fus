@@ -1,5 +1,5 @@
 
-load module: fus format =Format
+load: fus format =Format
 use def: Format format
 
 

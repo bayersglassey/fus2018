@@ -363,8 +363,6 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         }else if(fus_lexer_got(lexer, "load")){
             err = fus_lexer_next(lexer);
             if(err)return err;
-            err = fus_lexer_get(lexer, "module");
-            if(err)return err;
             err = fus_lexer_get(lexer, "(");
             if(err)return err;
 
