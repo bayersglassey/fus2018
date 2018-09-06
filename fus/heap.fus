@@ -8,17 +8,17 @@ sig del: heap key -> heap
 
 
 def test(->):
-    @new ='h
-    ''h "Lawl" @add ='k1 ='h
-    ''h "Rawr" @add ='k2 ='h
-    ''h "Rofl" 'k1 @set ='h
+    @new ='heap
+    ''heap "Lawl" @add ='key1 ='heap
+    ''heap "Rawr" @add ='key2 ='heap
+    ''heap "Rofl" 'key1 @set ='heap
 
-    'h 'k1 @get "Rofl" str_eq assert
-    'h 'k2 @get "Rawr" str_eq assert
+    'heap 'key1 @get "Rofl" str_eq assert
+    'heap 'key2 @get "Rawr" str_eq assert
 
-    'h 'k1 @has assert
-    ''h 'k1 @del ='h
-    'h 'k1 @has not assert
+    'heap 'key1 @has assert
+    ''heap 'key1 @del ='heap
+    'heap 'key1 @has not assert
 
 
 
@@ -38,19 +38,19 @@ def new new:
         arr =.entries
 
 def add add:
-    ='v ='h
-    ''h
-        ..next_key dup ='k 1 + =.next_key
-        ..entries obj 'k =.key 'v =.value push =.entries
-    'k
+    ='value ='heap
+    ''heap
+        ..next_key dup ='key 1 + =.next_key
+        ..entries (obj 'key =.key 'value =.value), =.entries
+    'key
 
 def find find:
-    ='k ='h
-    'h .entries ='entries
+    ='key ='heap
+    'heap .entries ='entries
     0 'entries len do loop:
         over over >= if: null ='i break loop
         swap dup ='i 1 + swap
-        'entries 'i .$ .key 'k == if: break loop
+        'entries 'i .$ .key 'key == if: break loop
     drop drop
     'i
 
@@ -58,19 +58,19 @@ def has has:
     @find is null not
 
 def get get:
-    over ='h
+    over ='heap
     @find ='i
-    'h .entries 'i .$ .value
+    'heap .entries 'i .$ .value
 
 def set set:
-    swap ='v
-    over ='h
+    swap ='value
+    over ='heap
     @find ='i
-    ''h
-        ..entries 'i ..$ 'v =.value 'i =.$ =.entries
+    ''heap
+        ..entries 'i ..$ 'value =.value 'i =.$ =.entries
 
 def del del:
-    over ='h
+    over ='heap
     @find ='i
-    ''h
+    ''heap
         ..entries 'i split lpop drop join =.entries
