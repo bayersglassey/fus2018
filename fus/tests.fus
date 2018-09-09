@@ -186,6 +186,11 @@ module ModuleTest:
 
         t
 @(ModuleTest test) assert
+use module: ModuleTest =MT
+@(MT test) assert
+use def: ModuleTest test =module_test
+@module_test assert
+
 "ok" p
 
 stack len 0 == assert

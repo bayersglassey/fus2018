@@ -495,13 +495,18 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_next(lexer);
             if(err)return err;
 
-            int use_what = -1; /* 0=module 1=def 2=sig */
+            int use_what = -1; /* -1=N/A 0=module 1=def 2=sig */
             if(got_use){
                 if(fus_lexer_got(lexer, "module")){
                     use_what = 0;
                 }else if(fus_lexer_got(lexer, "def")){
                     use_what = 1;
                 }else if(fus_lexer_got(lexer, "sig")){
+                    /* TODO */
+                    ERR_INFO();
+                    fprintf(stderr, "Not yet implemented\n");
+                    return 2;
+
                     use_what = 2;
                 }else{
                     return fus_lexer_unexpected(lexer,
@@ -510,6 +515,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 err = fus_lexer_next(lexer);
                 if(err)return err;
             }
+            bool is_module = use_what == 0;
 
             fus_compiler_frame_t *def = NULL;
             const char *use_name = NULL;
@@ -525,7 +531,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     if(err)return err;
                     if(fus_lexer_got(lexer, ")")){
                         err = fus_compiler_find_or_add_frame_def(compiler,
-                            parent, token, token_len, false, &def);
+                            parent, token, token_len, is_module, &def);
                         if(err)return err;
                         use_name = token;
                         use_name_len = token_len;
@@ -561,7 +567,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                     return fus_lexer_unexpected(lexer, "name");}
                 err = fus_compiler_find_or_add_frame_def(compiler,
                     compiler->cur_frame,
-                    lexer->token, lexer->token_len, false, &def);
+                    lexer->token, lexer->token_len, is_module, &def);
                 if(err)return err;
                 err = fus_lexer_next(lexer);
                 if(err)return err;
@@ -575,7 +581,6 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                         &new_frame);
                     if(err)return err;
                 }else{
-                    bool is_module = use_what == 0;
                     err = fus_compiler_find_frame_def(compiler,
                         compiler->cur_frame, use_name, use_name_len,
                         is_module, &new_frame);
