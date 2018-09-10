@@ -29,7 +29,7 @@ int fus_stack_len(fus_stack_t *stack){
 }
 
 int fus_stack_push(fus_stack_t *stack, fus_value_t value){
-    if(stack->nos.type != FUS_TYPE_NULL){
+    if(stack->tail_len > 0 || stack->nos.type != FUS_TYPE_NULL){
         ARRAY_PUSH(fus_value_t, stack->tail, stack->nos)
     }
     stack->nos = stack->tos;

@@ -250,3 +250,10 @@ load: fus arrtools
 "ok" p
 
 stack len 0 == assert
+
+"Eq" p
+load: fus eq
+@(eq test)
+"ok" p
+
+stack len 0 == assert

@@ -1,0 +1,97 @@
+
+sig eq: x y -> bool
+
+
+def eq eq: do return:
+    ='y ='x
+    'x typeof 'y typeof sym_eq not if: f break return
+
+    obj
+        fun eq(drop drop t) =.null
+        fun eq(bool_eq) =.bool
+        fun eq(==) =.int
+        fun eq(str_eq) =.str
+        fun eq(sym_eq) =.sym
+        fun eq("Can't compare functions!" error) =.fun
+        &obj_eq =.obj
+        &arr_eq =.arr
+    'x typeof get ='f
+
+    'x 'y 'f call eq break return
+
+
+def obj_eq eq: do return:
+    ='y ='x
+    'x keys 'y keys @arr_eq not if: f break return
+
+    t ='result
+    'x keys ='keys
+    0 'keys len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+        'keys 'i .$ ='key
+        ('x 'key get) ('y 'key get) @eq not if: f ='result break loop
+    drop drop
+
+    'result break return
+
+
+def arr_eq eq: do return:
+    ='ys ='xs
+    'xs len 'ys len != if: f break return
+
+    t ='result
+    0 'xs len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break loop
+    drop drop
+
+    'result break return
+
+
+def test(->):
+    arr
+        null,
+        1,
+        "ASD",
+        t,
+        (arr 1, 2, 3,),
+        (obj 1 =.x 2 =.y),
+    ='x
+
+    "eq success" p
+    'x 'x @eq assert
+    "ok" p
+
+    "eq failure - bad type" p
+    'x 3 @eq not assert
+    "ok" p
+
+    "eq failure - bad type in recursive call" p
+    'x ('x 2 0 =.$) @eq not assert
+    "ok" p
+
+    "eq failure - int" p
+    'x ('x 2 1 =.$) @eq not assert
+    "ok" p
+
+    "eq failure - str" p
+    'x ('x "ASX" 2 =.$) @eq not assert
+    "ok" p
+
+    "eq failure - bool" p
+    'x ('x f 3 =.$) @eq not assert
+    "ok" p
+
+    "eq failure - arr" p
+    'x ('x arr 4 =.$) @eq not assert
+    'x ('x (arr "la", "wee",) 4 =.$) @eq not assert
+    "ok" p
+
+    "eq failure - obj" p
+    'x ('x obj 5 =.$) @eq not assert
+    'x ('x (obj 2 =.x 3 =.y) 5 =.$) @eq not assert
+    'x ('x (obj 1 =.x 2 =.y 3 =.z) 5 =.$) @eq not assert
+    "ok" p
+

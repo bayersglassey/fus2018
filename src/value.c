@@ -488,7 +488,9 @@ void fus_fun_print(fus_code_t *code, fus_symtable_t *symtable, FILE *f,
     int indent, int depth
 ){
     /* Ummmm. */
-    fprintf(f, "(fun ...)");
+    fus_compiler_frame_t *frame = code? code->compiler_frame: NULL;
+    const char *name = frame? frame->name: "<NULL>";
+    fprintf(f, "(fun [%s])", name);
 }
 
 void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
