@@ -1,0 +1,15 @@
+
+
+def min(x y -> z):
+    ='y ='x
+    'x 'y < ifelse('x)('y)
+
+def max(x y -> z):
+    ='y ='x
+    'x 'y > ifelse('x)('y)
+
+
+def test(->):
+    1 2 @min 1 == assert
+    1 2 @max 2 == assert
+
