@@ -257,3 +257,10 @@ load: fus eq
 "ok" p
 
 stack len 0 == assert
+
+"Array" p
+load: fus array
+@(array test)
+"ok" p
+
+stack len 0 == assert

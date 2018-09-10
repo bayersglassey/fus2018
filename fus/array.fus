@@ -1,0 +1,75 @@
+
+# Multidimensional array class
+
+
+load: fus arrtools
+use def: arrtools resize
+use def: arrtools map
+use def: arrtools all
+use def: arrtools prod
+
+
+module Array:
+
+    def new(dims -> Array):
+        ='dims
+        'dims fun(x -> b)(is int) @map @all assert
+        (obj arr =.dims arr =.data) 'dims @redim
+
+    def redim(Array dims -> Array):
+        ='new_dims
+        'new_dims =.dims
+        ..data ('new_dims @prod) @resize =.data
+
+    def get_i(Array v -> i):
+        # transform v (an arr of int indices for individual dimensions) into i
+        # (an int index into a data arr)
+        ='v ='array
+        'array .dims ='dims
+        0 ='i
+
+        0 'v len do loop:
+            over over < while loop
+            swap dup ='v_i 1 + swap
+
+            ''i
+                'dims 'v_i .$ *
+                'v 'v_i .$ +
+            ='i
+        drop drop
+
+        ''i
+
+    def get(Array v -> value):
+        ='v ='array
+        'array 'v @get_i ='i
+        'array .data 'i .$
+
+    def set(Array value v -> Array):
+        ='v ='value ='array
+        'array 'v @get_i ='i
+        ''array ..data 'value 'i =.$ =.data
+
+    def rip(Array v -> Array value):
+        ='v ='array
+        'array 'v @get_i ='i
+        'array .data 'i ..$ ='value =.data
+        ''value
+
+    def test(->):
+        (arr 2, 3,) @new
+            dup (arr 0, 0,) @get is null assert
+
+            "HA" (arr 0, 0,) @set
+            "HO" (arr 1, 0,) @set
+            "HI" (arr 0, 1,) @set
+
+            dup (arr 0, 0,) @get "HA" str_eq assert
+            dup (arr 1, 0,) @get "HO" str_eq assert
+            dup (arr 0, 1,) @get "HI" str_eq assert
+
+            dup (arr 0, 0,) @rip "HA" str_eq assert
+                dup (arr 0, 0,) @get is null assert
+            drop
+        drop
+
