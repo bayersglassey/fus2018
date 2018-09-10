@@ -1,0 +1,51 @@
+
+def map(xs f -> xs):
+    ='f ='xs
+    0 'xs len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+        ''xs 'i ..$ 'f call(x -> y) 'i =.$ ='xs
+    drop drop
+    ''xs
+
+def fold(xs x f -> x):
+    ='f ='x ='xs
+    0 'xs len do loop:
+        over over < while loop
+        swap dup ='i 1 + swap
+        ''x ('xs 'i .$) 'f call(x y -> z) ='x
+    drop drop
+    ''x
+
+def all(xs -> bool):
+    t fun(x y -> z)(and) @fold
+
+def any(xs -> bool):
+    f fun(x y -> z)(or) @fold
+
+def sum(xs -> bool):
+    0 fun(x y -> z)(+) @fold
+
+def prod(xs -> bool):
+    1 fun(x y -> z)(*) @fold
+
+
+
+def test(->):
+
+    (arr 1, 2, 3,) fun(x->y)(10 *) @map
+        lpop 10 == assert
+        lpop 20 == assert
+        lpop 30 == assert
+    len 0 == assert
+
+    (arr t, t, t,) @all assert
+    (arr t, f, t,) @all not assert
+
+    (arr t, f, t,) @any assert
+    (arr f, f, f,) @any not assert
+
+    (arr 1, 2, 3, 4,) @sum 10 == assert
+    (arr 1, 2, 3, 4,) @prod 24 == assert
+
+

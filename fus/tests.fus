@@ -251,6 +251,13 @@ load: fus arrtools
 
 stack len 0 == assert
 
+"Funtools" p
+load: fus funtools
+@(funtools test)
+"ok" p
+
+stack len 0 == assert
+
 "Eq" p
 load: fus eq
 @(eq test)
@@ -260,7 +267,7 @@ stack len 0 == assert
 
 "Array" p
 load: fus array
-@(array test)
+@(array Array test)
 "ok" p
 
 stack len 0 == assert

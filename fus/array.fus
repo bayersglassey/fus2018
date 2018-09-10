@@ -3,10 +3,11 @@
 
 
 load: fus arrtools
+load: fus funtools
 use def: arrtools resize
-use def: arrtools map
-use def: arrtools all
-use def: arrtools prod
+use def: funtools map
+use def: funtools all
+use def: funtools prod
 
 
 module Array:
