@@ -34,6 +34,19 @@ def resize(xs len -> xs):
     ''new_xs
 
 
+
+sig step: arr state val i -> arr state
+
+def for(arr state step -> arr state):
+    ='step
+    0 ='i
+    do loop:
+        over len 'i > while loop
+        over 'i .$ 'i
+        'step call step
+        ''i 1 + ='i
+
+
 def test(->):
     0 3 1 @range
     lpop 0 == assert
@@ -57,3 +70,14 @@ def test(->):
         lpop 1 == assert
         lpop 2 == assert
     len 0 == assert
+
+    arr 20, 30, 40,
+    obj 0 =.sum 1 =.prod
+    fun step:
+        drop ='val
+        ..sum 'val + =.sum
+        ..prod 'val * =.prod
+    @for nip
+        dup .sum 90 == assert
+        dup .prod 24000 == assert
+    drop
