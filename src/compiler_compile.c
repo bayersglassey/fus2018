@@ -270,22 +270,14 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         }else if(fus_lexer_got(lexer, "call")){
             err = fus_lexer_next(lexer);
             if(err)return err;
-            if(!fus_lexer_got_name(lexer)){
-                return fus_lexer_unexpected(lexer, "name");
-            }
 
             fus_compiler_frame_t *sig_frame = NULL;
-            err = fus_compiler_find_or_add_frame_sig(compiler,
-                compiler->cur_frame, lexer->token, lexer->token_len,
-                &sig_frame);
+            err = fus_compiler_parse_sig_frame(compiler, &sig_frame);
             if(err)return err;
 
             ARRAY_PUSH(fus_opcode_t, frame->data.def.code.opcodes,
                 FUS_SYMCODE_FUN_CALL)
             err = fus_code_push_int(&frame->data.def.code, sig_frame->i);
-            if(err)return err;
-
-            err = fus_lexer_next(lexer);
             if(err)return err;
         }else if(fus_lexer_got(lexer, "sig")){
             err = fus_lexer_next(lexer);

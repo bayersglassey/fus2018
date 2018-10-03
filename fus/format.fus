@@ -4,12 +4,7 @@ sig tostr: x -> s
 
 
 def test(->):
-    arr
-        "Thing ",
-        2,
-        ": ",
-        (obj 1 =.x 2 =.y),
-        "!",
+    arr "Thing ", 2, ": ", (obj 1 =.x 2 =.y), "!",
     @format "Thing 2: {x: 1, y: 2}!" str_eq assert
 
 
