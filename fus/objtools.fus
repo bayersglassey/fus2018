@@ -1,14 +1,17 @@
 
-def dget(obj key default -> value):
+sig: obj key default -> value
+def dget:
     ='d ='k ='o
     'o 'k has ifelse: 'o 'k get
     : 'd
 
-def get(obj key -> value): null @dget
+sig: obj key -> value
+def get: null @dget
 
 
 
-def add_prefix(obj str -> obj):
+sig: obj str -> obj
+def add_prefix:
     # Example:
     #     (obj 1 =.x 2 =.y) "la" @obj_add_prefix -> (obj 1 =.lax 2 =.lay)
 
@@ -26,7 +29,8 @@ def add_prefix(obj str -> obj):
 
 
 
-def test(->):
+sig(->)
+def test:
     obj 1 =.x 2 =.y ='o
     'o `x @get 1 == assert
     'o `z @get is_null assert
