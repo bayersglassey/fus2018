@@ -1,9 +1,9 @@
 
 load: fus objtools
-use def: objtools add_prefix
+use: objtools add_prefix
 
 load: fus arrtools
-use def: arrtools range
+use: arrtools range
 
 
 

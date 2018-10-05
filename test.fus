@@ -3,10 +3,10 @@
 
 
 module M:
-    def f(x -> y):
-        10 +
+    sig: x -> y
+    def f: 10 +
 
-def g(->):
-    3 @(M f) p
+sig(->)
+def g: 3 @(M f) p
 
 @g

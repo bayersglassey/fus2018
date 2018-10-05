@@ -4,25 +4,28 @@
 
 load: fus arrtools
 load: fus funtools
-use def: arrtools resize
-use def: funtools map
-use def: funtools all
-use def: funtools prod
+use: arrtools resize
+use: funtools map
+use: funtools all
+use: funtools prod
 
 
 module Array:
 
-    def new(dims -> Array):
+    sig: dims -> Array
+    def new:
         ='dims
-        'dims fun(x -> b)(is int) @map @all assert
+        'dims fun(is_int) @map @all assert
         (obj arr =.dims arr =.data) 'dims @redim
 
-    def redim(Array dims -> Array):
+    sig: Array dims -> Array
+    def redim:
         ='new_dims
         'new_dims =.dims
         ..data ('new_dims @prod) @resize =.data
 
-    def get_i(Array v -> i):
+    sig: Array v -> i
+    def get_i:
         # transform v (an arr of int indices for individual dimensions) into i
         # (an int index into a data arr)
         ='v ='array
@@ -41,25 +44,29 @@ module Array:
 
         ''i
 
-    def get(Array v -> value):
+    sig: Array v -> value
+    def get:
         ='v ='array
         'array 'v @get_i ='i
         'array .data 'i .$
 
-    def set(Array value v -> Array):
+    sig: Array value v -> Array
+    def set:
         ='v ='value ='array
         'array 'v @get_i ='i
         ''array ..data 'value 'i =.$ =.data
 
-    def rip(Array v -> Array value):
+    sig: Array v -> Array value
+    def rip:
         ='v ='array
         'array 'v @get_i ='i
         'array .data 'i ..$ ='value =.data
         ''value
 
-    def test(->):
+    sig(->)
+    def test:
         (arr 2, 3,) @new
-            dup (arr 0, 0,) @get is null assert
+            dup (arr 0, 0,) @get is_null assert
 
             "HA" (arr 0, 0,) @set
             "HO" (arr 1, 0,) @set
@@ -70,7 +77,7 @@ module Array:
             dup (arr 0, 1,) @get "HI" str_eq assert
 
             dup (arr 0, 0,) @rip "HA" str_eq assert
-                dup (arr 0, 0,) @get is null assert
+                dup (arr 0, 0,) @get is_null assert
             drop
         drop
 

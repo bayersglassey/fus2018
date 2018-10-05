@@ -1,13 +1,13 @@
 
-sig new: -> heap
-sig add: heap value -> heap key
-sig has: heap key -> bool
-sig get: heap key -> value
-sig set: heap value key -> heap
-sig del: heap key -> heap
+defsig new: -> heap
+defsig add: heap value -> heap key
+defsig has: heap key -> bool
+defsig get: heap key -> value
+defsig set: heap value key -> heap
+defsig del: heap key -> heap
 
 
-def test(->):
+sig(->) def test:
     @new ='heap
     ''heap "Lawl" @add ='key1 ='heap
     ''heap "Rawr" @add ='key2 ='heap
@@ -29,22 +29,22 @@ def test(->):
 # An improved heap would e.g. use a binary tree instead of an
 # array.
 
-sig find: heap key -> index
+defsig find: heap key -> index
 
 
-def new new:
+sig new def new:
     obj
         0 =.next_key
         arr =.entries
 
-def add add:
+sig add def add:
     ='value ='heap
     ''heap
         ..next_key dup ='key 1 + =.next_key
         ..entries (obj 'key =.key 'value =.value), =.entries
     'key
 
-def find find:
+sig find def find:
     ='key ='heap
     'heap .entries ='entries
     0 'entries len do loop:
@@ -54,22 +54,22 @@ def find find:
     drop drop
     'i
 
-def has has:
+sig has def has:
     @find is null not
 
-def get get:
+sig get def get:
     over ='heap
     @find ='i
     'heap .entries 'i .$ .value
 
-def set set:
+sig set def set:
     swap ='value
     over ='heap
     @find ='i
     ''heap
         ..entries 'i ..$ 'value =.value 'i =.$ =.entries
 
-def del del:
+sig del def del:
     over ='heap
     @find ='i
     ''heap

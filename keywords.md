@@ -3,7 +3,7 @@
 
 Modules & Functions
 
-    module def sig load use @ &
+    def sig module load use @ &
 
 General
 

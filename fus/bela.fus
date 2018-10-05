@@ -1,23 +1,23 @@
 
 load: fus music
-use def: music square
-use def: music triangle
-use def: music noise
-use def: music apply_sounds
-use def: music loop
+use: music square
+use: music triangle
+use: music noise
+use: music apply_sounds
+use: music loop
 
 
-sig beat: -> beat
-sig scale: -> scale
-sig sounds: -> sounds
-sig pattern: -> pattern
-sig song: -> song
+defsig beat: -> beat
+defsig scale: -> scale
+defsig sounds: -> sounds
+defsig pattern: -> pattern
+defsig song: -> song
 
 
-def beat beat: 250
+sig beat def beat: 250
 
 
-def jazz_scale scale:
+sig scale def jazz_scale:
     # I'm gonna call this a "jazz scale" for now...
     # ...until we can fix it
 
@@ -42,7 +42,7 @@ def jazz_scale scale:
     ''scale
 
 
-def blues1_scale scale:
+sig scale def blues1_scale:
     @jazz_scale ='jazz_scale
     obj
         'jazz_scale .a0 =.v1a
@@ -52,7 +52,7 @@ def blues1_scale scale:
         'jazz_scale .a2 =.v1e
 
 
-def blues2_scale scale:
+sig scale def blues2_scale:
     @jazz_scale ='jazz_scale
     obj
         'jazz_scale .a2 =.v2a
@@ -64,14 +64,14 @@ def blues2_scale scale:
         'jazz_scale .a3 =.v2g
 
 
-def drum_sounds sounds:
+sig sounds def drum_sounds:
     obj
          500 10000 (obj -10 =.volinc 5000 =.limit 1 =.step t =.wacky) @noise =.drum1
          500 10000 (obj -10 =.volinc 5000 =.limit 2 =.step t =.wacky) @noise =.drum2
          500 10000 (obj -10 =.volinc 5000 =.limit 3 =.step t =.wacky) @noise =.drum3
         1500 10000 (obj -10 =.volinc 1000 =.limit t =.wacky) @noise =.cymb1
 
-def drums1 pattern:
+sig pattern def drums1:
     data:
         drum1,, drum2,, drum3,,
         drum1,, drum2,, drum3,,
@@ -79,7 +79,7 @@ def drums1 pattern:
         cymb1,, cymb1,, drum2,,
     @drum_sounds @apply_sounds
 
-def drums2 pattern:
+sig pattern def drums2:
     data:
         drum1,, drum2,, drum3,,
         cymb1,,      ,,      ,,
@@ -88,7 +88,7 @@ def drums2 pattern:
     @drum_sounds @apply_sounds
 
 
-def bass_sounds sounds:
+sig sounds def bass_sounds:
     obj
          500  500 10000 (obj 1000 =.limit t =.wacky) @triangle =.bass1
          500 1000  9000 (obj 0 =.limit t =.wacky) @triangle =.bass2
@@ -96,7 +96,7 @@ def bass_sounds sounds:
         7500 1000 15000 (obj -1 =.addinc1 t =.wacky) @triangle =.bass4
 
 
-def bass pattern:
+sig pattern def bass:
     data:
         bass1 ,, ,, ,,
         bass2 ,, ,, ,,
@@ -110,12 +110,12 @@ def bass pattern:
     @bass_sounds @apply_sounds
 
 
-def verse pattern:
+sig pattern def verse:
     data: ,, ,, ,,
     4 @loop 4 @loop
 
 
-def melody1 pattern:
+sig pattern def melody1:
     data:
         v1e,,    ,, v1e,,
            ,,    ,, v1e,,
@@ -139,7 +139,7 @@ def melody1 pattern:
     @blues1_scale @apply_sounds
 
 
-def melody2 pattern:
+sig pattern def melody2:
     data:
         v2g,, v2f,, v2e,,
         v2f,, v2e,, v2d,,
@@ -164,12 +164,13 @@ def melody2 pattern:
 
 
 
-def add_song_part(song_parts new_part name -> song_parts):
+sig: song_parts new_part name -> song_parts
+def add_song_part:
     ='name ='new_part ='song_parts
     ''new_part 'song_parts @apply_sounds ''song_parts swap 'name set
 
 
-def song song:
+sig song def song:
     obj
         @drums1 =.drums1
         @drums1 =.drums2
@@ -218,7 +219,8 @@ def song song:
     'song_parts
 
 
-def print_song(song ->):
+sig: song ->
+def print_song:
     load: fus format
 
     ='song

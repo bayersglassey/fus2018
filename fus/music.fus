@@ -1,6 +1,6 @@
 
 load: fus objtools
-use def: objtools dget
+use: objtools dget
 
 
 def square(vol add1 add2 len opts -> sound):

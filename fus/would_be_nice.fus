@@ -1,7 +1,7 @@
 
-# The if-elif-else pattern doesn't work 
+# The if-elif-else pattern doesn't work
 
-def f(x->):
+sig(x->) def f:
     # Lexed correctly
 
     ='x
@@ -10,7 +10,7 @@ def f(x->):
         'x 1 == ifelse: "B" p
         : "C" p
 
-ignore: def f(x->):
+ignore: sig(x->) def f:
     # Not lexed correctly
 
     ='x

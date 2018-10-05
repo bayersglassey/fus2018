@@ -1,24 +1,24 @@
 
-sig const: -> x
-def unbox(boxed -> unboxed): call const
+defsig const: -> x
+sig(boxed -> unboxed) def unbox: call const
 
 
 module Cycle:
 
-    def A const:
+    sig const def A:
         obj
             100 =.label
             &B =.link
-    def B const:
+    sig const def B:
         obj
             200 =.label
             &C =.link
-    def C const:
+    sig const def C:
         obj
             300 =.label
             &A =.link
 
-def test(->):
+sig(->) def test:
     # The links of A, B, C form a cycle.
     # We follow the links by unboxing them.
     # The compiler should be smart enough to cache

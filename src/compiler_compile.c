@@ -279,7 +279,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 FUS_SYMCODE_FUN_CALL)
             err = fus_code_push_int(&frame->data.def.code, sig_frame->i);
             if(err)return err;
-        }else if(fus_lexer_got(lexer, "sig")){
+        }else if(fus_lexer_got(lexer, "defsig")){
             err = fus_lexer_next(lexer);
             if(err)return err;
 
@@ -305,6 +305,17 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_get_sig(lexer, &frame->data.sig);
             if(err)return err;
             frame->compiled = true;
+        }else if(fus_lexer_got(lexer, "sig")){
+            err = fus_lexer_next(lexer);
+            if(err)return err;
+
+            fus_compiler_frame_t *sig_frame = NULL;
+            err = fus_compiler_parse_sig_frame(compiler, &sig_frame);
+            if(err)return err;
+
+            /* TODO: Only allow "def" or "fun" after "sig"...
+            ...and hold onto sig_frame somehow, so that "def" or "fun"
+            can make use of it */
         }else if(
             (got_module=fus_lexer_got(lexer, "module")) ||
             (got_fun=fus_lexer_got(lexer, "fun")) ||
@@ -312,6 +323,10 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
         ){
             err = fus_lexer_next(lexer);
             if(err)return err;
+
+            fus_compiler_frame_t *sig_frame = NULL;
+            /* TODO: sig_frame should be equal to something if we parsed
+            a "sig" before current "def" or "fun" */
 
             char *def_name = NULL;
             if(got_fun){
@@ -321,18 +336,15 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
                 if(err)return err;
             }
 
-            fus_compiler_frame_t *sig_frame = NULL;
-            if(!got_module){
-                err = fus_compiler_parse_sig_frame(compiler, &sig_frame);
-                if(err)return err;
-            }
-
 #ifdef FUS_DEBUG_COMPILER
             for(int i = 0; i < depth; i++)printf("  ");
-            printf("%s: %s (%i -> %i)\n",
-                got_module? "Module": "Def", def_name,
-                sig_frame->data.sig.n_args_in,
-                sig_frame->data.sig.n_args_out);
+            printf("%s: %s", got_module? "Module": "Def", def_name);
+            if(sig_frame != NULL){
+                printf(" (%i -> %i)",
+                    sig_frame->data.sig.n_args_in,
+                    sig_frame->data.sig.n_args_out);
+            }
+            printf("\n");
 #endif
 
             err = fus_lexer_get(lexer, "(");
@@ -487,27 +499,7 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
             err = fus_lexer_next(lexer);
             if(err)return err;
 
-            int use_what = -1; /* -1=N/A 0=module 1=def 2=sig */
-            if(got_use){
-                if(fus_lexer_got(lexer, "module")){
-                    use_what = 0;
-                }else if(fus_lexer_got(lexer, "def")){
-                    use_what = 1;
-                }else if(fus_lexer_got(lexer, "sig")){
-                    /* TODO */
-                    ERR_INFO();
-                    fprintf(stderr, "Not yet implemented\n");
-                    return 2;
-
-                    use_what = 2;
-                }else{
-                    return fus_lexer_unexpected(lexer,
-                        "module or def or sig");
-                }
-                err = fus_lexer_next(lexer);
-                if(err)return err;
-            }
-            bool is_module = use_what == 0;
+            bool is_module = false;
 
             fus_compiler_frame_t *def = NULL;
             const char *use_name = NULL;
@@ -567,17 +559,10 @@ int fus_compiler_compile_frame_from_lexer(fus_compiler_t *compiler,
 
             if(got_use){
                 fus_compiler_frame_t *new_frame = NULL;
-                if(use_what == 2){
-                    err = fus_compiler_find_frame_sig(compiler,
-                        compiler->cur_frame, use_name, use_name_len,
-                        &new_frame);
-                    if(err)return err;
-                }else{
-                    err = fus_compiler_find_frame_def(compiler,
-                        compiler->cur_frame, use_name, use_name_len,
-                        is_module, &new_frame);
-                    if(err)return err;
-                }
+                err = fus_compiler_find_frame_def(compiler,
+                    compiler->cur_frame, use_name, use_name_len,
+                    is_module, &new_frame);
+                if(err)return err;
                 if(new_frame != NULL){
                     ERR_INFO();
                     fprintf(stderr,

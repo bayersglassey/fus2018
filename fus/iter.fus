@@ -1,31 +1,31 @@
 
-load: fus format =Format
-use def: Format format
+load: fus format
+use: format format
 
 
-sig new: -> it
-sig iter: x -> it
-sig next: it -> it value ok
+defsig new: -> it
+defsig iter: x -> it
+defsig next: it -> it value ok
 
 
 
-def next next: dup .next call next
+sig next def next: dup .next call next
 
-def new new:
+sig new def new:
     obj
         0 =.i
-        fun next(null f) =.next
+        sig next fun(null f) =.next
 
-def iter iter:
+sig iter def iter:
     obj
         &iter_arr =.arr
         &iter_int =.int
     over typeof get call iter
 
-def iter_arr iter:
+sig iter def iter_arr:
     @new
         swap =.a
-        fun next:
+        sig next fun:
             dup .a len 0 > ifelse:
                 ..i 1 + =.i
                 ..a lpop ='value =.a
@@ -33,7 +33,7 @@ def iter_arr iter:
             : null f
         =.next
 
-def iter_int iter:
+sig iter def iter_int:
     @new
         swap =.end
         fun next:
@@ -43,19 +43,15 @@ def iter_int iter:
             : null f
         =.next
 
-def test(->):
+sig(->) def test:
     arr 1, 2, 3, ='a
 
     'a @iter do loop:
         dup .i ='i
         @next while loop ='value
 
-        arr
-            "Step ",
-            ''i,
-            ": ",
-            ''value,
-        @format str_p "\n" str_p
+        arr "Step ", ''i, ": ", ''value, "\n",
+        @format str_p
     drop drop
 
     'a @iter

@@ -1,56 +1,60 @@
 
-sig eq: x y -> bool
+defsig eq: x y -> bool
 
 
-def eq eq: do return:
+sig eq
+def eq:
     ='y ='x
-    'x typeof 'y typeof sym_eq not if: f break return
+    'x typeof 'y typeof sym_eq not if: f return
 
     obj
-        fun eq(drop drop t) =.null
-        fun eq(bool_eq) =.bool
-        fun eq(==) =.int
-        fun eq(str_eq) =.str
-        fun eq(sym_eq) =.sym
-        fun eq("Can't compare functions!" error) =.fun
+        fun(drop drop t) =.null
+        fun(bool_eq) =.bool
+        fun(==) =.int
+        fun(str_eq) =.str
+        fun(sym_eq) =.sym
+        fun("Can't compare functions!" error) =.fun
         &obj_eq =.obj
         &arr_eq =.arr
     'x typeof get ='f
 
-    'x 'y 'f call eq break return
+    'x 'y 'f call eq
 
 
-def obj_eq eq: do return:
+sig eq
+def obj_eq:
     ='y ='x
-    'x keys 'y keys @arr_eq not if: f break return
+    'x keys 'y keys @arr_eq not if: f return
 
     t ='result
     'x keys ='keys
-    0 'keys len do loop:
-        over over < while loop
+    0 'keys len do l:
+        over over < while l
         swap dup ='i 1 + swap
         'keys 'i .$ ='key
-        ('x 'key get) ('y 'key get) @eq not if: f ='result break loop
+        ('x 'key get) ('y 'key get) @eq not if: f ='result break l
     drop drop
 
-    'result break return
+    'result
 
 
-def arr_eq eq: do return:
+sig eq
+def arr_eq:
     ='ys ='xs
-    'xs len 'ys len != if: f break return
+    'xs len 'ys len != if: f return
 
     t ='result
-    0 'xs len do loop:
-        over over < while loop
+    0 'xs len do l:
+        over over < while l
         swap dup ='i 1 + swap
-        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break loop
+        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break l
     drop drop
 
-    'result break return
+    'result
 
 
-def test(->):
+sig(->)
+def test:
     arr
         null,
         1,

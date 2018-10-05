@@ -1,23 +1,25 @@
 
 module Prend:
-    def new(-> prend):
+    sig: -> prend
+    def new:
         obj
             arr =.prismels
             arr =.shapes
-    def add_prismel(prend prismel name -> prend):
+    sig: prend prismel name -> prend
+    def add_prismel:
         ='name ='prismel
         ''prismel 'name =.name ='prismel
         ..prismels 'prismel, =.prismels
 
 module Prismel:
-    def N_FLIP(-> i): 2
-    def N_ROT(-> i): 12
-    def N_IMAGES(-> i): @N_FLIP @N_ROT *
-    def new(-> prismel):
+    def N_FLIP: 2
+    def N_ROT: 12
+    def N_IMAGES: @N_FLIP @N_ROT *
+    sig(-> prismel) def new:
         obj
             null =.name
             arr @N_IMAGES repeat =.images
-    def parse(data -> prismel):
+    sig(data -> prismel) def parse:
         ='data
         @new ='prismel
 

@@ -1,59 +1,60 @@
 
-sig methods(-> o)
-sig new(-> o)
-sig binop(a b -> c)
+defsig methods(-> o)
+defsig new(-> o)
+defsig binop(a b -> c)
 
-def int_methods methods:
+sig methods def int_methods:
     obj
-        fun binop(.data swap .data swap + @int_new) =.add
-        fun binop(.data swap .data swap - @int_new) =.sub
-        fun binop(.data swap .data swap ==) =.eq
-def str_methods methods:
+        sig binop fun(.data swap .data swap + @int_new) =.add
+        sig binop fun(.data swap .data swap - @int_new) =.sub
+        sig binop fun(.data swap .data swap ==) =.eq
+sig methods def str_methods:
     obj
-        fun binop(.data swap .data swap str_join @str_new) =.add
-        fun binop("Can't subtract strings" error) =.sub
-        fun binop(.data swap .data swap str_eq) =.eq
-def point_methods methods:
+        sig binop fun(.data swap .data swap str_join @str_new) =.add
+        sig binop fun("Can't subtract strings" error) =.sub
+        sig binop fun(.data swap .data swap str_eq) =.eq
+sig methods def point_methods:
     obj
-        fun binop:
+        sig binop fun:
             ='b ='a
             ''a
                 ..x 'b .x @add =.x
                 ..y 'b .y @add =.y
         =.add
-        fun binop:
+        sig binop fun:
             ='b ='a
             ''a
                 ..x 'b .x @sub =.x
                 ..y 'b .y @sub =.y
         =.sub
-        fun binop:
+        sig binop fun:
             ='b ='a
             ('a .x 'b .x @eq) ('a .y 'b .y @eq) and
         =.eq
-def int_new new:
+sig new def int_new:
     obj
         swap =.data `int =.classname @int_methods =.methods
-def str_new new:
+sig new def str_new:
     obj
         swap =.data `str =.classname @str_methods =.methods
-def point_new new:
+sig new def point_new:
     ='y ='x
     obj
         'x =.x 'y =.y
         `point =.classname
         @point_methods =.methods
 
-def method_binop_call(a b sym -> c):
+sig(a b sym -> c) def method_binop_call:
     ='method_name ='b ='a
     'a .methods 'method_name get ='f
     ''a ''b ''f call binop
-def add binop: `add @method_binop_call
-def sub binop: `sub @method_binop_call
-def eq binop: `eq @method_binop_call
-def ne binop: @eq not
+sig binop def add: `add @method_binop_call
+sig binop def sub: `sub @method_binop_call
+sig binop def eq: `eq @method_binop_call
+sig binop def ne: @eq not
 
-def test(->):
+sig(->)
+def test:
 
             1 @int_new
             2 @int_new

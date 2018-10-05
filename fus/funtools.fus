@@ -1,5 +1,6 @@
 
-def map(xs f -> xs):
+sig: xs f -> xs
+def map:
     ='f ='xs
     0 'xs len do loop:
         over over < while loop
@@ -8,7 +9,8 @@ def map(xs f -> xs):
     drop drop
     ''xs
 
-def fold(xs x f -> x):
+sig: xs x f -> x
+def fold:
     ='f ='x ='xs
     0 'xs len do loop:
         over over < while loop
@@ -17,23 +19,23 @@ def fold(xs x f -> x):
     drop drop
     ''x
 
-def all(xs -> bool):
-    t fun(x y -> z)(and) @fold
+sig(xs -> bool) def all:
+    t fun(and) @fold
 
-def any(xs -> bool):
-    f fun(x y -> z)(or) @fold
+sig(xs -> bool) def any:
+    f fun(or) @fold
 
-def sum(xs -> bool):
-    0 fun(x y -> z)(+) @fold
+sig(xs -> int) def sum:
+    0 fun(+) @fold
 
-def prod(xs -> bool):
-    1 fun(x y -> z)(*) @fold
+sig(xs -> int) def prod:
+    1 fun(*) @fold
 
 
 
-def test(->):
+sig(->) def test:
 
-    (arr 1, 2, 3,) fun(x->y)(10 *) @map
+    (arr 1, 2, 3,) fun(10 *) @map
         lpop 10 == assert
         lpop 20 == assert
         lpop 30 == assert

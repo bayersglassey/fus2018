@@ -172,12 +172,12 @@ stack len 0 == assert
 
 "Modules & Functions" p
 module ModuleTest:
-    sig F: -> i
+    defsig F: -> i
 
-    def f F: 2
+    sig F def f: 2
 
     def test(-> bool):
-        fun F: 1
+        sig F fun: 1
         ='f
 
         @f 2 == assert
@@ -186,9 +186,9 @@ module ModuleTest:
 
         t
 @(ModuleTest test) assert
-use module: ModuleTest =MT
+use: ModuleTest =MT
 @(MT test) assert
-use def: ModuleTest test =module_test
+use: ModuleTest test =module_test
 @module_test assert
 
 "ok" p
