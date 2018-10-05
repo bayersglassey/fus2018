@@ -1,12 +1,92 @@
 
-sig: obj key default -> value
-def dget:
-    ='d ='k ='o
-    'o 'k has ifelse: 'o 'k get
-    : 'd
+
+sig: obj key -> bool
+def has:
+    dup is_arr ifelse:
+        # key is an arr of syms
+        ='keys ='obj
+        do l:
+            'keys len 0 == if: t ='bool break l
+            ''keys lpop ='key ='keys
+            'obj 'key has not if: f ='bool break l
+            ''obj 'key get ='obj
+        ''bool
+    :
+        # key is a sym
+        has
 
 sig: obj key -> value
 def get: null @dget
+
+sig: obj key default -> value
+def dget:
+    ='default
+    dup is_arr ifelse:
+        # key is an arr of syms
+        ='keys ='obj
+        do l:
+            'keys len 0 == if: 'obj ='value break l
+            ''keys lpop ='key ='keys
+            'obj 'key has not if: 'default ='value break l
+            ''obj 'key get ='obj
+        ''value
+    :
+        # key is a sym
+        ='key ='obj
+        'obj 'key has ifelse: 'obj 'key get
+        : 'default
+
+sig: obj key -> obj value
+def rip: null @drip
+
+sig: obj key default -> obj value
+def drip:
+    over is_arr ifelse:
+        # key is an arr of syms
+        @drip_keys
+
+        sig: obj keys default -> obj value
+        def drip_keys:
+            ='default ='keys ='obj
+            'keys len 0 > ifelse:
+                ''keys lpop ='key ='keys
+                'obj 'key has not ifelse: ''obj 'default
+                :
+                    ''obj 'key rip
+                        'keys 'default @drip_keys ='value
+                    'key set
+                    ''value
+            :
+                # This is kind of weird, but makes the recursion work out.
+                # Does it make any sense, conceptually?
+                # "Ripping with an empty array of keys rips the object
+                # out of null" ...or something
+                null 'obj
+    :
+        # key is a sym
+        ='default ='key ='obj
+        ''obj dup 'key has ifelse: 'key rip
+        : 'default
+
+sig: obj value key -> obj
+def set:
+    dup is_arr ifelse:
+        # key is an arr of syms
+        @set_keys
+
+        sig: obj value keys -> obj
+        def set_keys:
+            ='keys ='value ='obj
+            'keys len 0 > ifelse:
+                ''keys lpop ='key ='keys
+                ''obj 'key rip
+                    ''value ''keys @set_keys
+                'key set
+            :
+                ''value
+    :
+        # key is a sym
+        set
 
 
 
@@ -35,6 +115,19 @@ def test:
     'o `x @get 1 == assert
     'o `z @get is_null assert
     'o `z "LOL" @dget "LOL" str_eq assert
+
+    (obj 1 =.x (obj 2 =.x) =.child) ='parent
+    'parent (arr `x,) @get 1 == assert
+    'parent (arr `child, `x,) @has assert
+    'parent (arr `child, `y,) @has not assert
+    (arr `child, `x,) ='key
+    'parent 3 'key @set 'key @get 3 == assert
+    'parent 'key @get 2 == assert
+    'parent 'key @has assert
+
+    'parent 'key @rip
+        2 == assert
+    'key @get is_null assert
 
     'o "__" @add_prefix ='o2
     'o2 ?.x not assert
