@@ -39,7 +39,7 @@ module Prismel:
                 swap dup ='line_i 1 + swap
 
                 'image_data 'line_i .$ ='line_data
-                'line_data is int ifelse:
+                'line_data is_int ifelse:
                     'line_i 0 == assert
                     'line_data ='other_image_i
                     'other_image_i 'image_i < assert
@@ -48,9 +48,9 @@ module Prismel:
                     next image_loop
                 :
                     'line_data
-                        lpop is int assert
-                        lpop is int assert
-                        lpop is int assert
+                        lpop is_int assert
+                        lpop is_int assert
+                        lpop is_int assert
                     len 0 == assert
             drop drop
         drop drop

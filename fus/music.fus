@@ -51,7 +51,7 @@ def apply_sounds(pattern sounds -> pattern):
 
         ''pat 'i ..$ ='part ='pat
 
-        'part is sym ifelse:
+        'part is_sym ifelse:
             'part (` @) sym_eq ifelse:
                 # ummmm?.. e.g.:
                 #     data: @loop 4
@@ -59,7 +59,7 @@ def apply_sounds(pattern sounds -> pattern):
                 'sounds 'part has if:
                     'sounds 'part get ='part
         :
-            'part is arr ifelse:
+            'part is_arr ifelse:
                 ''part 'sounds @apply_sounds ='part
             :
 

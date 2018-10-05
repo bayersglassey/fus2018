@@ -7,7 +7,7 @@ Modules & Functions
 
 General
 
-    data typeof is
+    data typeof is_null is_bool is_int is_str is_sym is_obj is_arr is_fun
 
 Stack
 

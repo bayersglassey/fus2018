@@ -66,8 +66,8 @@ def test:
     (arr 1, 2,) 4 @resize
         lpop 1 == assert
         lpop 2 == assert
-        lpop is null assert
-        lpop is null assert
+        lpop is_null assert
+        lpop is_null assert
     len 0 == assert
 
     (arr 1, 2, 3, 4,) 2 @resize

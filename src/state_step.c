@@ -91,6 +91,13 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
         } \
     }
 
+    #define FUS_STATE_CASE_IS(T) case FUS_SYMCODE_GENERAL_IS_##T: { \
+        fus_type_t type = stack->tos.type; \
+        fus_value_detach(stack->tos); \
+        stack->tos = fus_value_bool(type == FUS_TYPE_##T); \
+        break; \
+    }
+
     coderef->opcode_i++;
     switch(opcode){
     case FUS_SYMCODE_FRAMES_CALL: {
@@ -114,14 +121,13 @@ static int _fus_state_step(fus_state_t *state, fus_state_frame_t *frame){
         fus_value_detach(stack->tos);
         stack->tos = fus_value_sym(sym_i);
         break;}
-    case FUS_SYMCODE_GENERAL_IS: {
-        int sym_i = -1;
-        FUS_STATE_CODE_GET_SYM(sym_i)
-        fus_type_t type = stack->tos.type;
-        fus_value_detach(stack->tos);
-        stack->tos = fus_value_bool(
-            sym_i == fus_type_get_sym_i(type));
-        break;}
+    FUS_STATE_CASE_IS(NULL)
+    FUS_STATE_CASE_IS(BOOL)
+    FUS_STATE_CASE_IS(INT)
+    FUS_STATE_CASE_IS(STR)
+    FUS_STATE_CASE_IS(OBJ)
+    FUS_STATE_CASE_IS(ARR)
+    FUS_STATE_CASE_IS(FUN)
     case FUS_SYMCODE_STACK_DUP: {
         /* x -> x x */
         FUS_STACK_PUSH(*stack, stack->tos)

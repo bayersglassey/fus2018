@@ -15,7 +15,7 @@ stack len 0 == assert
 1 ='x
 'x 1 == assert
 ''x 1 == assert
-'x is null assert
+'x is_null assert
 "ok" p
 
 stack len 0 == assert
@@ -110,7 +110,7 @@ obj 1 =.x 2 `y set
     dup ?.x assert
     dup ?.z not assert
     dup `x get 1 == assert
-    dup `y rip 2 == assert .y is null assert
+    dup `y rip 2 == assert .y is_null assert
 drop
 "ok" p
 

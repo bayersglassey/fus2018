@@ -29,7 +29,7 @@ def add_prefix(obj str -> obj):
 def test(->):
     obj 1 =.x 2 =.y ='o
     'o `x @get 1 == assert
-    'o `z @get is null assert
+    'o `z @get is_null assert
     'o `z "LOL" @dget "LOL" str_eq assert
 
     'o "__" @add_prefix ='o2

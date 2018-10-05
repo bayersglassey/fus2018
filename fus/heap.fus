@@ -55,7 +55,7 @@ sig find def find:
     'i
 
 sig has def has:
-    @find is null not
+    @find is_null not
 
 sig get def get:
     over ='heap
