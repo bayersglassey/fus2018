@@ -1,0 +1,3 @@
+gcc -g -std=c99 -Wall -Werror -Wno-unused \
+    -o main src/newvalues/*.c \
+    $@
