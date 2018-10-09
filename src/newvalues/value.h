@@ -4,14 +4,12 @@
 
 #include <limits.h>
 
-#define FUS_PRINT_ERRS_TO_STDERR
 
 
-
-#define FUS_TAG_PTR   0x0
-#define FUS_TAG_INT   0x1
-#define FUS_TAG_SYM   0x2
-#define FUS_TAG_OTHER 0x3
+#define FUS_TAG_COLLECTION 0x0
+#define FUS_TAG_INT        0x1
+#define FUS_TAG_SYM        0x2
+#define FUS_TAG_OTHER      0x3
 #define FUS_GET_TAG(x) ((x).i & ~0x3)
 #define FUS_GET_PAYLOAD(x) ((x).i >> 2)
 #define FUS_BUILD(tag, x) ((fus_value_t)( \
@@ -19,7 +17,7 @@
 ))
 
 
-#define FUS_VALUE_ERR   FUS_BUILD(FUS_TAG_PTR,   0)
+#define FUS_VALUE_ERR   FUS_BUILD(FUS_TAG_COLLECTION, 0)
     /* NOTE: FUS_VALUE_ERR == NULL */
 
 #define FUS_VALUE_NULL  FUS_BUILD(FUS_TAG_OTHER, 0)
@@ -35,13 +33,11 @@ typedef unsigned long int fus_uint_t;
 typedef fus_uint_t fus_built_t;
 typedef fus_uint_t fus_tag_t;
 typedef fus_int_t fus_payload_t;
+typedef fus_payload_t fus_sym_i_t;
 
 typedef union {
     fus_built_t i;
-    struct fus_arr_t *a;
-    struct fus_obj_t *o;
-    struct fus_str_t *s;
-    struct fus_fun_t *f;
+    struct fus_collection *c;
 } fus_value_t;
 
 
@@ -58,6 +54,9 @@ const char *fus_err_code_msgs[FUS_ERRS] = {
     "Underflow"
 };
 
+
+
+#define FUS_PRINT_ERRS_TO_STDERR
 
 #ifdef FUS_USE_CURRENT_ERR_CODE
 extern fus_err_code_t fus_current_err_code;
@@ -183,11 +182,31 @@ fus_value_t fus_eq(fus_value_t value_x, fus_value_t value_y){
     fus_tag_t tag_y = FUS_GET_TAG(value_y);
     if(tag_x != tag_y)return FUS_VALUE_FALSE;
 
-    if(tag_x == FUS_TAG_PTR)return fus_err(FUS_ERR_WRONG_TYPE);
+    if(tag_x == FUS_TAG_COLLECTION)return fus_err(FUS_ERR_WRONG_TYPE);
         /* Can't compare arr, obj, str, fun.
         TODO: It should be possible to compare everything except fun */
 
     return fus_bool(value_x.i == value_y.i);
+}
+
+
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_value(fus_class_t *class, void *ptr){
+    fus_value_t *value_ptr = ptr;
+    value_ptr->i = FUS_VALUE_ERR.i;
+}
+
+void fus_collection_cleanup(struct fus_collection *c);
+void fus_class_cleanup_value(fus_class_t *class, void *ptr){
+    fus_value_t *value_ptr = ptr;
+    fus_value_t value = *value_ptr;
+    fus_tag_t tag = FUS_GET_TAG(value);
+    if(tag == FUS_TAG_COLLECTION)fus_collection_cleanup(value.c);
 }
 
 

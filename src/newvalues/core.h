@@ -30,8 +30,8 @@ typedef struct fus_core {
     int dummy;
 } fus_core_t;
 
-int fus_core_init(fus_core_t *core){
-    return 0;
+void fus_core_init(fus_core_t *core){
+    /* Ok */
 }
 
 void fus_core_cleanup(fus_core_t *core){
