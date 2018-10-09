@@ -1,6 +1,17 @@
 #ifndef _FUS_CLASS_H_
 #define _FUS_CLASS_H_
 
+/* Simple class system to simplify memory management.
+    All instances of a given class have the same size.
+    The only class "methods" are init (initialize) and
+    cleanup.
+    It should always be valid to call cleanup on an
+    instance which has been initialized.
+    Sensible defaults are fus_class_instance_init_zero
+    and fus_class_instance_cleanup_zero, which just
+    zero the instance's memory. */
+
+
 #include "core.h"
 
 
@@ -23,7 +34,7 @@ typedef struct fus_class {
 
 
 
-void fus_class_init(
+int fus_class_init(
     fus_class_t *class,
     fus_core_t *core,
     const char *name,
@@ -36,6 +47,7 @@ void fus_class_init(
     class->instance_size = instance_size;
     class->instance_init = instance_init;
     class->instance_cleanup = instance_cleanup;
+    return 0;
 }
 
 void fus_class_cleanup(fus_class_t *class){
@@ -52,6 +64,9 @@ void fus_class_instance_cleanup(fus_class_t *class, void *instance){
     if(class->instance_cleanup)class->instance_cleanup(class, instance);
 }
 
+
+
+
 int fus_class_instance_init_zero(fus_class_t *class, void *instance){
     fus_memset(class->core, instance, 0, class->instance_size);
     return 0;
@@ -59,6 +74,17 @@ int fus_class_instance_init_zero(fus_class_t *class, void *instance){
 
 void fus_class_instance_cleanup_zero(fus_class_t *class, void *instance){
     fus_memset(class->core, instance, 0, class->instance_size);
+}
+
+int fus_class_init_zero(
+    fus_class_t *class,
+    fus_core_t *core,
+    const char *name,
+    size_t instance_size
+){
+    return fus_class_init(class, core, name, instance_size,
+        fus_class_instance_init_zero,
+        fus_class_instance_cleanup_zero);
 }
 
 

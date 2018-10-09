@@ -6,6 +6,7 @@
 #include "core.h"
 #include "class.h"
 #include "array.h"
+#include "vm.h"
 //#include "value.h"
 
 
