@@ -3,18 +3,26 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "value.h"
+#include "core.h"
+#include "class.h"
+#include "array.h"
+//#include "value.h"
 
 
 
 int main(int n_args, char *args[]){
-    char c = 'p';
-    fus_value_t v[4];
-    for(int i = 0; i < 4; i++){
-        printf("%c %p\n", c, &v[i]);
+    int err;
+
+    fus_core_t core;
+    err = fus_core_init(&core);
+    if(err){
+        fprintf(stderr, "Couldn't init core\n");
+        return EXIT_FAILURE;
     }
 
-    printf("OK");
+    fus_core_cleanup(&core);
+
+    printf("OK\n");
     return 0;
 }
 
