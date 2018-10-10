@@ -6,11 +6,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-#define FUS_TAG_COLLECTION 0x0
-#define FUS_TAG_INT        0x1
-#define FUS_TAG_SYM        0x2
-#define FUS_TAG_OTHER      0x3
-#define FUS_GET_TAG(x) ((x).i & ~0x3)
+#define FUS_TAG_COLLECTION ((fus_tag_t)0x0)
+#define FUS_TAG_INT        ((fus_tag_t)0x1)
+#define FUS_TAG_SYM        ((fus_tag_t)0x2)
+#define FUS_TAG_OTHER      ((fus_tag_t)0x3)
+#define FUS_GET_TAG(x) ( \
+    (fus_tag_t)((x).i) & (fus_tag_t)0x3 \
+)
 #define FUS_GET_PAYLOAD(x) ((x).i >> 2)
 #define FUS_BUILD(tag, x) ((fus_value_t)( \
     ((fus_payload_t)(x) << 2) | (fus_tag_t)(tag) \
@@ -52,9 +54,9 @@ const char *fus_err_code_msg(fus_err_code_t code);
 
 
 
-#ifndef FUS_ABORT_ON_ERR
+#ifndef FUS_EXIT_ON_ERR
 /* default */
-#define FUS_ABORT_ON_ERR 1
+#define FUS_EXIT_ON_ERR 1
 #endif
 
 #ifndef FUS_PRINT_ERRS_TO_STDERR

@@ -23,8 +23,8 @@ fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code){
 #if FUS_USE_CURRENT_ERR_CODE
     fus_current_err_code = code;
 #endif
-#if FUS_ABORT_ON_ERR
-    abort();
+#if FUS_EXIT_ON_ERR
+    fus_exit(vm->core, EXIT_FAILURE);
 #endif
     return FUS_VALUE_ERR;
 }
@@ -39,9 +39,6 @@ fus_sym_i_t fus_sym_decode(fus_value_t value){
     if(FUS_GET_TAG(value) != FUS_TAG_SYM){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
-#endif
-#if FUS_ABORT_ON_ERR
-        abort();
 #endif
         return 0;
     }
@@ -63,9 +60,6 @@ fus_int_t fus_int_decode(fus_value_t value){
     if(FUS_GET_TAG(value) != FUS_TAG_INT){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not an int}", value.i);
-#endif
-#if FUS_ABORT_ON_ERR
-        abort();
 #endif
         return 0;
     }
