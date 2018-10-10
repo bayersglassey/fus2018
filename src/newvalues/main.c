@@ -3,12 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "core.h"
-#include "class.h"
-#include "array.h"
-#include "vm.h"
-#include "collection.h"
-
+#include "includes.h"
 
 
 int main(int n_args, char *args[]){
