@@ -7,10 +7,17 @@
 #define FUS_COLLECTION_LOG_WEIRD_TYPE(type) \
     fprintf(stderr, "%s: Got weird collection type: %i\n", __func__, type);
 
+void fus_collection_dump(fus_collection_t *c, FILE *file){
+    fprintf(file, "address=%p, type=%i, refcount=%i\n",
+        c, c->type, c->refcount);
+}
+
 void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
     fus_collection_type_t type
 ){
+    if(c == NULL)return;
     c->type = type;
+    c->refcount = 0;
     if(type == FUS_COLLECTION_ARR){
         fus_arr_t *a = &c->data.a;
         fus_array_init(&a->values, &vm->class_value);
@@ -29,6 +36,13 @@ void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
 }
 
 void fus_collection_cleanup(fus_collection_t *c){
+    if(c == NULL)return;
+    if(c->refcount != 0){
+        fprintf(stderr, "%s: WARNING: "
+            "Cleanup of value with nonzero refcount: ", __func__);
+        fus_collection_dump(c, stderr);
+        fflush(stderr);
+    }
     fus_collection_type_t type = c->type;
     if(type == FUS_COLLECTION_ARR){
         fus_arr_t *a = &c->data.a;

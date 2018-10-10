@@ -98,10 +98,48 @@ fus_value_t fus_eq(fus_vm_t *vm,
 
 
 
+void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
+    fus_tag_t tag = FUS_GET_TAG(value);
+    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
+        fus_collection_t *c = value.c;
+        fus_collection_cleanup(c);
+    }
+}
+
+void fus_value_attach(fus_vm_t *vm, fus_value_t value){
+    fus_tag_t tag = FUS_GET_TAG(value);
+    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
+        fus_collection_t *c = value.c;
+        c->refcount++;
+    }
+}
+
+void fus_value_detach(fus_vm_t *vm, fus_value_t value){
+    fus_tag_t tag = FUS_GET_TAG(value);
+    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
+        fus_collection_t *c = value.c;
+        c->refcount--;
+        if(c->refcount <= 0){
+            if(c->refcount < 0){
+                fprintf(stderr, "%s: WARNING: "
+                    "Collection's refcount has gone negative: ",
+                    __func__);
+                fus_collection_dump(c, stderr);
+                fflush(stderr);
+            }
+            fus_value_cleanup(vm, value);
+        }
+    }
+}
+
 
 /*******************
  * FUS_CLASS STUFF *
  *******************/
+
+void fus_value_class_data_init(fus_value_class_data_t *data, fus_vm_t *vm){
+    data->vm = vm;
+}
 
 void fus_class_init_value(fus_class_t *class, void *ptr){
     fus_value_t *value_ptr = ptr;
@@ -109,10 +147,9 @@ void fus_class_init_value(fus_class_t *class, void *ptr){
 }
 
 void fus_class_cleanup_value(fus_class_t *class, void *ptr){
+    fus_value_class_data_t *data = class->data;
     fus_value_t *value_ptr = ptr;
-    fus_value_t value = *value_ptr;
-    fus_tag_t tag = FUS_GET_TAG(value);
-    if(tag == FUS_TAG_COLLECTION)fus_collection_cleanup(value.c);
+    fus_value_cleanup(data->vm, *value_ptr);
 }
 
 

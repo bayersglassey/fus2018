@@ -32,8 +32,12 @@ typedef struct fus_class {
     fus_core_t *core;
     const char *name;
     size_t instance_size;
+
+    /* Instance methods (function pointers and generic data member) */
+    void *data;
     fus_class_instance_init_t *instance_init;
     fus_class_instance_cleanup_t *instance_cleanup;
+
 } fus_class_t;
 
 
@@ -43,6 +47,7 @@ void fus_class_init(
     fus_core_t *core,
     const char *name,
     size_t instance_size,
+    void *data,
     fus_class_instance_init_t *instance_init,
     fus_class_instance_cleanup_t *instance_cleanup
 );
@@ -60,7 +65,8 @@ void fus_class_init_zero(
     fus_class_t *class,
     fus_core_t *core,
     const char *name,
-    size_t instance_size
+    size_t instance_size,
+    void *data
     /* Just a shorthand for fus_class_init using instance_init_zero
     and instance_cleanup_zero, so you don't have to type them out... */
 );

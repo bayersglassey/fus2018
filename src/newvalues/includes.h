@@ -14,6 +14,7 @@
 /* Files which expect to be included by "includes.h", and their
 primary typedefs */
 typedef union fus_value fus_value_t;
+typedef struct fus_value_class_data fus_value_class_data_t;
 typedef struct fus_vm fus_vm_t;
 typedef struct fus_collection fus_collection_t;
 typedef struct fus_arr fus_arr_t;

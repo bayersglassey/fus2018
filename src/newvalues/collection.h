@@ -37,6 +37,7 @@ struct fus_fun {
 
 struct fus_collection {
     fus_collection_type_t type;
+    int refcount;
     union {
         fus_arr_t a;
         fus_obj_t o;
@@ -46,6 +47,7 @@ struct fus_collection {
 };
 
 
+void fus_collection_dump(fus_collection_t *c, FILE *file);
 
 void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
     fus_collection_type_t type);

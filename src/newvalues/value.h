@@ -93,10 +93,20 @@ fus_value_t fus_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 
 
+void fus_value_cleanup(fus_vm_t *vm, fus_value_t value);
+void fus_value_attach(fus_vm_t *vm, fus_value_t value);
+void fus_value_detach(fus_vm_t *vm, fus_value_t value);
+
 
 /*******************
  * FUS_CLASS STUFF *
  *******************/
+
+struct fus_value_class_data {
+    fus_vm_t *vm;
+};
+
+void fus_value_class_data_init(fus_value_class_data_t *data, fus_vm_t *vm);
 
 void fus_class_init_value(fus_class_t *class, void *ptr);
 void fus_class_cleanup_value(fus_class_t *class, void *ptr);
