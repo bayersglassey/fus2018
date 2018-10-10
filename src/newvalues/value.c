@@ -31,39 +31,38 @@ fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code){
 
 
 fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i){
-    fus_value_t value = FUS_BUILD(FUS_TAG_SYM, sym_i);
+    if(sym_i > FUS_PAYLOAD_MAX)return fus_err(vm, FUS_ERR_OVERFLOW);
+    if(sym_i < FUS_PAYLOAD_MIN)return fus_err(vm, FUS_ERR_UNDERFLOW);
+    fus_value_t value = (fus_value_t)FUS_BUILD(FUS_TAG_SYM, sym_i);
     return value;
 }
 
 fus_sym_i_t fus_sym_decode(fus_value_t value){
-    if(FUS_GET_TAG(value) != FUS_TAG_SYM){
+    if(FUS_GET_TAG(value.i) != FUS_TAG_SYM){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
 #endif
         return 0;
     }
-    return FUS_GET_PAYLOAD(value);
+    return FUS_GET_PAYLOAD(value.i);
 }
 
 
 fus_value_t fus_int(fus_vm_t *vm, fus_int_t i){
-    fus_value_t value = FUS_BUILD(FUS_TAG_INT, i);
-    if(FUS_GET_PAYLOAD(value) != i){
-        /* If i is too big (if it uses either of the first 2 bits),
-        we would lose precision when building the fus value. */
-        return fus_err(vm, FUS_ERR_OVERFLOW);
-    }
+    if(i > FUS_PAYLOAD_MAX)return fus_err(vm, FUS_ERR_OVERFLOW);
+    if(i < FUS_PAYLOAD_MIN)return fus_err(vm, FUS_ERR_UNDERFLOW);
+    fus_value_t value = (fus_value_t)FUS_BUILD(FUS_TAG_SYM, i);
     return value;
 }
 
 fus_int_t fus_int_decode(fus_value_t value){
-    if(FUS_GET_TAG(value) != FUS_TAG_INT){
+    if(FUS_GET_TAG(value.i) != FUS_TAG_INT){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not an int}", value.i);
 #endif
         return 0;
     }
-    return FUS_GET_PAYLOAD(value);
+    return FUS_GET_PAYLOAD(value.i);
 }
 
 
@@ -79,8 +78,8 @@ bool fus_bool_decode(fus_value_t value){
 fus_value_t fus_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
-    fus_tag_t tag_x = FUS_GET_TAG(value_x);
-    fus_tag_t tag_y = FUS_GET_TAG(value_y);
+    fus_tag_t tag_x = FUS_GET_TAG(value_x.i);
+    fus_tag_t tag_y = FUS_GET_TAG(value_y.i);
     if(tag_x != tag_y)return FUS_VALUE_FALSE;
 
     if(tag_x == FUS_TAG_COLLECTION)return fus_err(vm, FUS_ERR_WRONG_TYPE);
@@ -93,7 +92,7 @@ fus_value_t fus_eq(fus_vm_t *vm,
 
 
 void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
-    fus_tag_t tag = FUS_GET_TAG(value);
+    fus_tag_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_COLLECTION && value.c != NULL){
         fus_collection_t *c = value.c;
         fus_collection_cleanup(c);
@@ -101,7 +100,7 @@ void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
 }
 
 void fus_value_attach(fus_vm_t *vm, fus_value_t value){
-    fus_tag_t tag = FUS_GET_TAG(value);
+    fus_tag_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_COLLECTION && value.c != NULL){
         fus_collection_t *c = value.c;
         c->refcount++;
@@ -109,7 +108,7 @@ void fus_value_attach(fus_vm_t *vm, fus_value_t value){
 }
 
 void fus_value_detach(fus_vm_t *vm, fus_value_t value){
-    fus_tag_t tag = FUS_GET_TAG(value);
+    fus_tag_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_COLLECTION && value.c != NULL){
         fus_collection_t *c = value.c;
         c->refcount--;

@@ -6,25 +6,31 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+/* NOTE: our home-rolled bit fiddling probably won't work with one's
+compliment integers, etc. */
 #define FUS_TAG_COLLECTION ((fus_tag_t)0x0)
 #define FUS_TAG_INT        ((fus_tag_t)0x1)
 #define FUS_TAG_SYM        ((fus_tag_t)0x2)
 #define FUS_TAG_OTHER      ((fus_tag_t)0x3)
-#define FUS_GET_TAG(x) ( \
-    (fus_tag_t)((x).i) & (fus_tag_t)0x3 \
-)
-#define FUS_GET_PAYLOAD(x) ((x).i >> 2)
-#define FUS_BUILD(tag, x) ((fus_value_t)( \
-    ((fus_payload_t)(x) << 2) | (fus_tag_t)(tag) \
+#define FUS_GET_TAG(x) ((fus_tag_t)( \
+    (fus_built_t)(x) & (fus_tag_t)0x3 \
 ))
+#define FUS_GET_PAYLOAD(x) ((fus_payload_t)( \
+    (fus_built_t)(x) >> 2 \
+))
+#define FUS_BUILD(tag, x) ((fus_built_t)( \
+    ((fus_built_t)(x) << 2) | (fus_tag_t)(tag) \
+))
+#define FUS_PAYLOAD_MIN FUS_GET_PAYLOAD(FUS_BUILD(0, FUS_INT_MIN))
+#define FUS_PAYLOAD_MAX FUS_GET_PAYLOAD(FUS_BUILD(0, FUS_INT_MAX))
 
 
-#define FUS_VALUE_ERR   FUS_BUILD(FUS_TAG_COLLECTION, 0)
+#define FUS_VALUE_ERR   ((fus_value_t)FUS_BUILD(FUS_TAG_COLLECTION, 0))
     /* NOTE: FUS_VALUE_ERR == NULL */
 
-#define FUS_VALUE_NULL  FUS_BUILD(FUS_TAG_OTHER, 0)
-#define FUS_VALUE_TRUE  FUS_BUILD(FUS_TAG_OTHER, 1)
-#define FUS_VALUE_FALSE FUS_BUILD(FUS_TAG_OTHER, 2)
+#define FUS_VALUE_NULL  ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 0))
+#define FUS_VALUE_TRUE  ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 1))
+#define FUS_VALUE_FALSE ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 2))
 
 
 typedef long int fus_int_t;
