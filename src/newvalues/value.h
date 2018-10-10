@@ -35,10 +35,10 @@ typedef fus_uint_t fus_tag_t;
 typedef fus_int_t fus_payload_t;
 typedef fus_payload_t fus_sym_i_t;
 
-typedef union {
+union fus_value {
     fus_built_t i;
-    struct fus_collection *c;
-} fus_value_t;
+    fus_collection_t *c;
+};
 
 
 typedef enum {
@@ -76,25 +76,21 @@ extern fus_err_code_t fus_current_err_code;
 
 
 
-fus_value_t fus_err(fus_err_code_t code);
+fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code);
 
 
-fus_value_t fus_sym(fus_sym_i_t sym_i);
+fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i);
 fus_sym_i_t fus_sym_decode(fus_value_t value);
 
-fus_value_t fus_int(fus_int_t i);
+fus_value_t fus_int(fus_vm_t *vm, fus_int_t i);
 fus_int_t fus_int_decode(fus_value_t value);
 
-
-fus_value_t fus_int_add(fus_value_t value_x, fus_value_t value_y);
-fus_value_t fus_int_sub(fus_value_t value_x, fus_value_t value_y);
-fus_value_t fus_int_mul(fus_value_t value_x, fus_value_t value_y);
-
-fus_value_t fus_bool(bool b);
+fus_value_t fus_bool(fus_vm_t *vm, bool b);
 bool fus_bool_decode(fus_value_t value);
 
 
-fus_value_t fus_eq(fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
 
 
 

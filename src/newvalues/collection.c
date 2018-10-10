@@ -7,7 +7,7 @@
 #define FUS_COLLECTION_LOG_WEIRD_TYPE(type) \
     fprintf(stderr, "%s: Got weird collection type: %i\n", __func__, type);
 
-void fus_collection_init(fus_collection_t *c, struct fus_vm *vm,
+void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
     fus_collection_type_t type
 ){
     c->type = type;

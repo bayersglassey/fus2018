@@ -20,11 +20,11 @@
 
 
 
-typedef struct fus_vm {
+struct fus_vm {
     fus_core_t *core;
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)
-} fus_vm_t;
+};
 
 void fus_vm_init(fus_vm_t *vm, fus_core_t *core);
 void fus_vm_cleanup(fus_vm_t *vm);

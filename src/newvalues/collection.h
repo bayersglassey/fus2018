@@ -16,26 +16,26 @@ typedef enum {
     FUS_COLLECTIONS
 } fus_collection_type_t;
 
-typedef struct fus_arr {
+struct fus_arr {
     fus_array_t values;
-} fus_arr_t;
+};
 
-typedef struct fus_obj {
+struct fus_obj {
     fus_array_t keys;
     fus_array_t values;
-} fus_obj_t;
+};
 
-typedef struct fus_str {
+struct fus_str {
     fus_array_t text;
-} fus_str_t;
+};
 
-typedef struct fus_fun {
+struct fus_fun {
     /* not sure what goes in here yet...
     dummy member because C doesn't allow empty struct */
     int dummy;
-} fus_fun_t;
+};
 
-typedef struct fus_collection {
+struct fus_collection {
     fus_collection_type_t type;
     union {
         fus_arr_t a;
@@ -43,11 +43,11 @@ typedef struct fus_collection {
         fus_str_t s;
         fus_fun_t f;
     } data;
-} fus_collection_t;
+};
 
 
 
-void fus_collection_init(fus_collection_t *c, struct fus_vm *vm,
+void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
     fus_collection_type_t type);
 void fus_collection_cleanup(fus_collection_t *c);
 
