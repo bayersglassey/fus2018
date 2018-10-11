@@ -82,7 +82,7 @@ fus_value_t fus_eq(fus_vm_t *vm,
     fus_tag_t tag_y = FUS_GET_TAG(value_y.i);
     if(tag_x != tag_y)return FUS_VALUE_FALSE;
 
-    if(tag_x == FUS_TAG_COLLECTION)return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(tag_x == FUS_TAG_BOXED)return fus_err(vm, FUS_ERR_WRONG_TYPE);
         /* Can't compare arr, obj, str, fun.
         TODO: It should be possible to compare everything except fun */
 
@@ -93,31 +93,31 @@ fus_value_t fus_eq(fus_vm_t *vm,
 
 void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
     fus_tag_t tag = FUS_GET_TAG(value.i);
-    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
-        fus_collection_t *c = value.c;
-        fus_collection_cleanup(c);
+    if(tag == FUS_TAG_BOXED && value.p != NULL){
+        fus_boxed_t *p = value.p;
+        fus_boxed_cleanup(p);
     }
 }
 
 void fus_value_attach(fus_vm_t *vm, fus_value_t value){
     fus_tag_t tag = FUS_GET_TAG(value.i);
-    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
-        fus_collection_t *c = value.c;
-        c->refcount++;
+    if(tag == FUS_TAG_BOXED && value.p != NULL){
+        fus_boxed_t *p = value.p;
+        p->refcount++;
     }
 }
 
 void fus_value_detach(fus_vm_t *vm, fus_value_t value){
     fus_tag_t tag = FUS_GET_TAG(value.i);
-    if(tag == FUS_TAG_COLLECTION && value.c != NULL){
-        fus_collection_t *c = value.c;
-        c->refcount--;
-        if(c->refcount <= 0){
-            if(c->refcount < 0){
+    if(tag == FUS_TAG_BOXED && value.p != NULL){
+        fus_boxed_t *p = value.p;
+        p->refcount--;
+        if(p->refcount <= 0){
+            if(p->refcount < 0){
                 fprintf(stderr, "%s: WARNING: "
                     "Collection's refcount has gone negative: ",
                     __func__);
-                fus_collection_dump(c, stderr);
+                fus_boxed_dump(p, stderr);
                 fflush(stderr);
             }
             fus_value_cleanup(vm, value);

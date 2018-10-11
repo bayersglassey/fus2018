@@ -1,5 +1,5 @@
-#ifndef _FUS_COLLECTION_H_
-#define _FUS_COLLECTION_H_
+#ifndef _FUS_BOXED_H_
+#define _FUS_BOXED_H_
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -9,12 +9,12 @@
 
 
 typedef enum {
-    FUS_COLLECTION_ARR,
-    FUS_COLLECTION_OBJ,
-    FUS_COLLECTION_STR,
-    FUS_COLLECTION_FUN,
-    FUS_COLLECTIONS
-} fus_collection_type_t;
+    FUS_BOXED_ARR,
+    FUS_BOXED_OBJ,
+    FUS_BOXED_STR,
+    FUS_BOXED_FUN,
+    FUS_BOXEDS
+} fus_boxed_type_t;
 
 struct fus_arr {
     fus_array_t values;
@@ -35,8 +35,8 @@ struct fus_fun {
     int dummy;
 };
 
-struct fus_collection {
-    fus_collection_type_t type;
+struct fus_boxed {
+    fus_boxed_type_t type;
     int refcount;
     union {
         fus_arr_t a;
@@ -47,10 +47,10 @@ struct fus_collection {
 };
 
 
-void fus_collection_dump(fus_collection_t *c, FILE *file);
+void fus_boxed_dump(fus_boxed_t *p, FILE *file);
 
-void fus_collection_init(fus_collection_t *c, fus_vm_t *vm,
-    fus_collection_type_t type);
-void fus_collection_cleanup(fus_collection_t *c);
+void fus_boxed_init(fus_boxed_t *p, fus_vm_t *vm,
+    fus_boxed_type_t type);
+void fus_boxed_cleanup(fus_boxed_t *p);
 
 #endif

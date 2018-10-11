@@ -6,9 +6,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-/* NOTE: our home-rolled bit fiddling probably won't work with one's
-compliment integers, etc. */
-#define FUS_TAG_COLLECTION ((fus_tag_t)0x0)
+#define FUS_TAG_BOXED      ((fus_tag_t)0x0)
 #define FUS_TAG_INT        ((fus_tag_t)0x1)
 #define FUS_TAG_SYM        ((fus_tag_t)0x2)
 #define FUS_TAG_OTHER      ((fus_tag_t)0x3)
@@ -25,7 +23,7 @@ compliment integers, etc. */
 #define FUS_PAYLOAD_MAX FUS_GET_PAYLOAD(FUS_BUILD(0, FUS_INT_MAX))
 
 
-#define FUS_VALUE_ERR   ((fus_value_t)FUS_BUILD(FUS_TAG_COLLECTION, 0))
+#define FUS_VALUE_ERR   ((fus_value_t)FUS_BUILD(FUS_TAG_BOXED, 0))
     /* NOTE: FUS_VALUE_ERR == NULL */
 
 #define FUS_VALUE_NULL  ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 0))
@@ -45,7 +43,7 @@ typedef fus_payload_t fus_sym_i_t;
 
 union fus_value {
     fus_built_t i;
-    fus_collection_t *c;
+    fus_boxed_t *p;
 };
 
 
