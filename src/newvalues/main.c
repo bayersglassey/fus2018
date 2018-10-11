@@ -7,39 +7,6 @@
 
 
 void run_tests(fus_vm_t *vm){
-    #define DEBUG_THING(THING, FMT) printf(#THING " = " FMT "\n", THING);
-    DEBUG_THING(FUS_INT_MIN, "%li")
-    DEBUG_THING(FUS_INT_MAX, "%li")
-    DEBUG_THING((unsigned long)FUS_INT_MIN, "%lu")
-    DEBUG_THING((unsigned long)FUS_INT_MAX, "%lu")
-    DEBUG_THING((unsigned long)FUS_INT_MIN << 2, "%lu")
-    DEBUG_THING((unsigned long)FUS_INT_MAX << 2, "%lu")
-    DEBUG_THING((unsigned long)FUS_INT_MIN, "%lX")
-    DEBUG_THING((unsigned long)FUS_INT_MAX, "%lX")
-    DEBUG_THING((unsigned long)FUS_INT_MIN << 2, "%lX")
-    DEBUG_THING((unsigned long)FUS_INT_MAX << 2, "%lX")
-    DEBUG_THING(FUS_PAYLOAD_MIN, "%li")
-    DEBUG_THING(FUS_PAYLOAD_MAX, "%li")
-    DEBUG_THING((unsigned long)3, "%lu")
-
-    DEBUG_THING((fus_uint_t)FUS_INT_MIN, "%lX")
-    DEBUG_THING((fus_uint_t)FUS_INT_MIN + 1, "%lX")
-    DEBUG_THING((fus_uint_t)FUS_INT_MIN >> 3, "%lX")
-    DEBUG_THING(FUS_INT_MIN, "%lX")
-    DEBUG_THING(FUS_INT_MIN + 1, "%lX")
-    DEBUG_THING(FUS_INT_MIN >> 3, "%lX")
-    DEBUG_THING(FUS_INT_MIN >> 6, "%lX")
-    DEBUG_THING(FUS_INT_MIN >> 9, "%lX")
-    DEBUG_THING(FUS_INT_MIN >> 12, "%lX")
-    return ;
-    for(fus_uint_t i = (fus_uint_t)FUS_INT_MIN >> 3; i <= (fus_uint_t)FUS_INT_MIN; i++){
-        fus_uint_t j = i << 2;
-        DEBUG_THING(i, "%lX")
-        DEBUG_THING(j, "  %lX")
-    }
-
-    return;
-
     fus_value_t x = fus_int(vm, 2);
     fus_value_t y = fus_int(vm, 3);
     fus_value_t xay = fus_int_add(vm, x, y);
