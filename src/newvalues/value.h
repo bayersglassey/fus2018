@@ -6,43 +6,42 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-#define FUS_TAG_BOXED      ((fus_tag_t)0x0)
-#define FUS_TAG_INT        ((fus_tag_t)0x1)
-#define FUS_TAG_SYM        ((fus_tag_t)0x2)
-#define FUS_TAG_OTHER      ((fus_tag_t)0x3)
-#define FUS_GET_TAG(x) ((fus_tag_t)( \
-    (fus_built_t)(x) & (fus_tag_t)0x3 \
-))
-#define FUS_GET_PAYLOAD(x) ((fus_payload_t)( \
-    (fus_built_t)(x) >> 2 \
-))
-#define FUS_BUILD(tag, x) ((fus_built_t)( \
-    ((fus_built_t)(x) << 2) | (fus_tag_t)(tag) \
-))
-#define FUS_PAYLOAD_MIN FUS_GET_PAYLOAD(FUS_BUILD(0, FUS_INT_MIN))
-#define FUS_PAYLOAD_MAX FUS_GET_PAYLOAD(FUS_BUILD(0, FUS_INT_MAX))
+#define FUS_TAG_BOXED      0
+#define FUS_TAG_INT        1
+#define FUS_TAG_SYM        2
+#define FUS_TAG_OTHER      3
+
+#define FUS_TAG_SHIFT      2
+#define FUS_TAG_MASK       ((1 << FUS_TAG_SHIFT) - 1)
+
+#define FUS_GET_TAG(x)         ((x) & FUS_TAG_MASK)
+#define FUS_GET_PAYLOAD(x)     ((x) >> FUS_TAG_SHIFT)
+#define FUS_ADD_TAG(tag, pl)   ( ((pl) << FUS_TAG_SHIFT) | (tag))
 
 
-#define FUS_VALUE_ERR   ((fus_value_t)FUS_BUILD(FUS_TAG_BOXED, 0))
+/* WARNING: The following may be wrong... gotta test */
+#define FUS_PAYLOAD_MIN (FUS_UNBOXED_MIN >> FUS_TAG_SHIFT)
+#define FUS_PAYLOAD_MAX (FUS_UNBOXED_MAX >> FUS_TAG_SHIFT)
+
+
+#define FUS_VALUE_CAST  (fus_value_t)(fus_unboxed_t)
+#define FUS_VALUE_ERR   (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_BOXED, 0))
     /* NOTE: FUS_VALUE_ERR == NULL */
 
-#define FUS_VALUE_NULL  ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 0))
-#define FUS_VALUE_TRUE  ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 1))
-#define FUS_VALUE_FALSE ((fus_value_t)FUS_BUILD(FUS_TAG_OTHER, 2))
+#define FUS_VALUE_NULL  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 0))
+#define FUS_VALUE_TRUE  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 1))
+#define FUS_VALUE_FALSE (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 2))
 
 
-typedef long int fus_int_t;
-typedef unsigned long int fus_uint_t;
-#define FUS_INT_MIN LONG_MIN
-#define FUS_INT_MAX LONG_MAX
+typedef long int fus_unboxed_t;
+#define FUS_UNBOXED_MIN LONG_MIN
+#define FUS_UNBOXED_MAX LONG_MAX
 
-typedef fus_uint_t fus_built_t;
-typedef fus_uint_t fus_tag_t;
-typedef fus_int_t fus_payload_t;
-typedef fus_payload_t fus_sym_i_t;
+typedef fus_unboxed_t fus_sym_i_t;
+
 
 union fus_value {
-    fus_built_t i;
+    fus_unboxed_t i;
     fus_boxed_t *p;
 };
 
@@ -88,8 +87,8 @@ fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code);
 fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i);
 fus_sym_i_t fus_sym_decode(fus_value_t value);
 
-fus_value_t fus_int(fus_vm_t *vm, fus_int_t i);
-fus_int_t fus_int_decode(fus_value_t value);
+fus_value_t fus_int(fus_vm_t *vm, fus_unboxed_t i);
+fus_unboxed_t fus_int_decode(fus_value_t value);
 
 fus_value_t fus_bool(fus_vm_t *vm, bool b);
 bool fus_bool_decode(fus_value_t value);
