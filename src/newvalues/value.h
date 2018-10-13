@@ -107,9 +107,9 @@ fus_value_t fus_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 
 
-void fus_value_cleanup(fus_vm_t *vm, fus_value_t value);
-void fus_value_attach(fus_vm_t *vm, fus_value_t value);
-void fus_value_detach(fus_vm_t *vm, fus_value_t value);
+void fus_value_cleanup(fus_value_t value);
+void fus_value_attach(fus_value_t value);
+void fus_value_detach(fus_value_t value);
 
 
 /*******************

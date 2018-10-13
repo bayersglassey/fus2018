@@ -91,7 +91,7 @@ fus_value_t fus_eq(fus_vm_t *vm,
 
 
 
-void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
+void fus_value_cleanup(fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){
         fus_boxed_t *p = value.p;
@@ -99,7 +99,7 @@ void fus_value_cleanup(fus_vm_t *vm, fus_value_t value){
     }
 }
 
-void fus_value_attach(fus_vm_t *vm, fus_value_t value){
+void fus_value_attach(fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){
         fus_boxed_t *p = value.p;
@@ -107,7 +107,7 @@ void fus_value_attach(fus_vm_t *vm, fus_value_t value){
     }
 }
 
-void fus_value_detach(fus_vm_t *vm, fus_value_t value){
+void fus_value_detach(fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){
         fus_boxed_t *p = value.p;
@@ -120,7 +120,7 @@ void fus_value_detach(fus_vm_t *vm, fus_value_t value){
                 fus_boxed_dump(p, stderr);
                 fflush(stderr);
             }
-            fus_value_cleanup(vm, value);
+            fus_value_cleanup(value);
         }
     }
 }
@@ -142,7 +142,7 @@ void fus_class_init_value(fus_class_t *class, void *ptr){
 void fus_class_cleanup_value(fus_class_t *class, void *ptr){
     fus_value_class_data_t *data = class->data;
     fus_value_t *value_ptr = ptr;
-    fus_value_cleanup(data->vm, *value_ptr);
+    fus_value_cleanup(*value_ptr);
 }
 
 

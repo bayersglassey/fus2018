@@ -23,6 +23,8 @@
 
 struct fus_vm {
     fus_core_t *core;
+    int n_boxed;
+
     fus_value_class_data_t value_class_data;
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)

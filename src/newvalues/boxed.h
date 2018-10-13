@@ -36,6 +36,7 @@ struct fus_fun {
 };
 
 struct fus_boxed {
+    fus_vm_t *vm;
     fus_boxed_type_t type;
     int refcount;
     union {

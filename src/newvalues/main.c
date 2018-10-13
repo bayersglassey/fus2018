@@ -30,6 +30,10 @@
 #define FUS_TESTS_END() \
     printf("END: %s\n", title); \
     FUS_TESTS_PASSED() \
+    if(vm->n_boxed != 0){ \
+        printf("WARNING: " \
+            "vm has nonzero n_boxed: %i\n", vm->n_boxed); \
+    } \
     printf(FUS_TESTS_DIVIDER "\n"); \
     printf("\n"); \
     *n_tests_ptr += n_tests; \
@@ -96,6 +100,8 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_value_t vx_len = fus_arr_len(vm, vx);
     FUS_PAYLOAD_TEST(fus_int_decode(vx_len), 0)
+
+    fus_value_cleanup(vx);
 
     FUS_TESTS_END()
 }

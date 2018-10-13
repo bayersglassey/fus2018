@@ -13,6 +13,8 @@
 
 void fus_vm_init(fus_vm_t *vm, fus_core_t *core){
     vm->core = core;
+    vm->n_boxed = 0;
+
     fus_value_class_data_init(&vm->value_class_data, vm);
 
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_INIT)
@@ -25,6 +27,12 @@ void fus_vm_init(fus_vm_t *vm, fus_core_t *core){
 }
 
 void fus_vm_cleanup(fus_vm_t *vm){
+    if(vm->n_boxed != 0){
+        fprintf(stderr, "%s: WARNING: "
+            "Cleanup of vm with nonzero n_boxed: %i\n",
+            __func__, vm->n_boxed);
+        fflush(stderr);
+    }
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_CLEANUP)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_CLEANUP)
 }
