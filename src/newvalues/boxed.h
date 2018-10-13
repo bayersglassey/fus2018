@@ -53,4 +53,17 @@ void fus_boxed_init(fus_boxed_t *p, fus_vm_t *vm,
     fus_boxed_type_t type);
 void fus_boxed_cleanup(fus_boxed_t *p);
 
+
+
+/*******
+ * ARR *
+ *******/
+
+void fus_arr_init(fus_arr_t *a, fus_vm_t *vm);
+void fus_arr_cleanup(fus_arr_t *a);
+bool fus_is_arr(fus_value_t value);
+fus_value_t fus_arr(fus_vm_t *vm);
+fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value);
+
+
 #endif

@@ -61,3 +61,32 @@ void fus_boxed_cleanup(fus_boxed_t *p){
     }
 }
 
+
+/*******
+ * ARR *
+ *******/
+
+void fus_arr_init(fus_arr_t *a, fus_vm_t *vm){
+    fus_array_init(&a->values, &vm->class_value);
+}
+
+void fus_arr_cleanup(fus_arr_t *a){
+    fus_array_cleanup(&a->values);
+}
+
+bool fus_is_arr(fus_value_t value){
+    return FUS_IS_UNBOXED(value) && value.p->type == FUS_BOXED_ARR;
+}
+
+fus_value_t fus_arr(fus_vm_t *vm){
+    fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
+    fus_boxed_init(p, vm, FUS_BOXED_ARR);
+    fus_arr_init(&p->data.a, vm);
+    return (fus_value_t)p;
+}
+
+fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value){
+    if(!fus_is_arr(value))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    return fus_int(vm, value.p->data.a.values.len);
+}
+

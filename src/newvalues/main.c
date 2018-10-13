@@ -24,12 +24,8 @@
     printf("BEGIN: %s\n", title);
 
 #define FUS_TESTS_PASSED() \
-    printf("Tests passed: %i/%i\n", n_tests - n_fails, n_tests); \
-    if(n_fails != 0){ \
-        printf("*** %i TESTS NOT OK ***\n", n_fails); \
-    }else{ \
-        printf("Tests OK!\n"); \
-    }
+    printf("Tests passed: %i/%i [%s]\n", n_tests - n_fails, n_tests, \
+        n_fails == 0? "OK": "FAIL");
 
 #define FUS_TESTS_END() \
     printf("END: %s\n", title); \
@@ -42,13 +38,22 @@
 
 
 #define FUS_PAYLOAD_TEST(X, Y) { \
-    printf(#X " == " #Y "\n"); \
+    printf("  " #X " == " #Y "\n"); \
     n_tests++; \
     fus_unboxed_t __x = (X); \
     fus_unboxed_t __y = (Y); \
-    printf("  %li == %li\n", __x, __y); \
+    printf("    %li == %li\n", __x, __y); \
     if(__x != __y){ \
-        printf("  ...FAIL\n"); \
+        printf("    ...FAIL\n"); \
+        n_fails++; \
+    } \
+}
+
+#define FUS_TEST(X) { \
+    printf("  " #X " == true\n"); \
+    n_tests++; \
+    if(!(X)){ \
+        printf("    ...FAIL\n"); \
         n_fails++; \
     } \
 }
@@ -82,12 +87,26 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
+void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    const char *title = "Arr tests";
+    FUS_TESTS_BEGIN()
+
+    fus_value_t vx = fus_arr(vm);
+    FUS_TEST(fus_is_arr(vx))
+
+    fus_value_t vx_len = fus_arr_len(vm, vx);
+    FUS_PAYLOAD_TEST(fus_int_decode(vx_len), 0)
+
+    FUS_TESTS_END()
+}
+
 int run_tests(fus_vm_t *vm){
     /* Returns number of failures */
     int n_tests = 0;
     int n_fails = 0;
 
     run_unboxed_tests(vm, &n_tests, &n_fails);
+    run_arr_tests(vm, &n_tests, &n_fails);
 
     printf("TOTALS:\n");
     FUS_TESTS_PASSED()
