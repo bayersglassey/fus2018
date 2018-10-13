@@ -11,15 +11,15 @@
 
 
 typedef struct fus_array {
-    fus_class_t *elem_class;
+    fus_class_t *class;
     void *elems;
-    int elems_len;
-    int elems_maxlen;
+    int len;
+    size_t size;
 } fus_array_t;
 
 
 
-void fus_array_init(fus_array_t *array, fus_class_t *elem_class);
+void fus_array_init(fus_array_t *array, fus_class_t *class);
 void fus_array_cleanup(fus_array_t *array);
 
 
