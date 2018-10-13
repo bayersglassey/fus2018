@@ -38,7 +38,7 @@ fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i){
 }
 
 fus_sym_i_t fus_sym_decode(fus_value_t value){
-    if(FUS_GET_TAG(value.i) != FUS_TAG_SYM){
+    if(!FUS_IS_SYM(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
 #endif
@@ -56,7 +56,7 @@ fus_value_t fus_int(fus_vm_t *vm, fus_unboxed_t i){
 }
 
 fus_unboxed_t fus_int_decode(fus_value_t value){
-    if(FUS_GET_TAG(value.i) != FUS_TAG_INT){
+    if(!FUS_IS_INT(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not an int}", value.i);
 #endif
@@ -136,7 +136,7 @@ void fus_value_class_data_init(fus_value_class_data_t *data, fus_vm_t *vm){
 
 void fus_class_init_value(fus_class_t *class, void *ptr){
     fus_value_t *value_ptr = ptr;
-    value_ptr->i = FUS_VALUE_ERR.i;
+    *value_ptr = FUS_VALUE_ERR;
 }
 
 void fus_class_cleanup_value(fus_class_t *class, void *ptr){

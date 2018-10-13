@@ -14,9 +14,9 @@
 #define FUS_TAG_SHIFT      2
 #define FUS_TAG_MASK       ((1 << FUS_TAG_SHIFT) - 1)
 
-#define FUS_GET_TAG(x)         ((x) & FUS_TAG_MASK)
-#define FUS_GET_PAYLOAD(x)     ((x) >> FUS_TAG_SHIFT)
-#define FUS_ADD_TAG(tag, pl)   ( ((pl) << FUS_TAG_SHIFT) | (tag))
+#define FUS_GET_TAG(X)          ((X) & FUS_TAG_MASK)
+#define FUS_GET_PAYLOAD(X)      ((X) >> FUS_TAG_SHIFT)
+#define FUS_ADD_TAG(TAG, PLOAD) ( ((PLOAD) << FUS_TAG_SHIFT) | (TAG))
 
 
 /* WARNING: The following may be wrong... gotta test */
@@ -25,12 +25,21 @@
 
 
 #define FUS_VALUE_CAST  (fus_value_t)(fus_unboxed_t)
-#define FUS_VALUE_ERR   (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_BOXED, 0))
-    /* NOTE: FUS_VALUE_ERR == NULL */
 
+#define FUS_VALUE_ERR   ((fus_value_t)(fus_boxed_t*) NULL)
 #define FUS_VALUE_NULL  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 0))
 #define FUS_VALUE_TRUE  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 1))
 #define FUS_VALUE_FALSE (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 2))
+
+
+#define FUS_IS_INT(VALUE)  (FUS_GET_TAG((VALUE).i) == FUS_TAG_INT)
+#define FUS_IS_SYM(VALUE)  (FUS_GET_TAG((VALUE).i) == FUS_TAG_SYM)
+#define FUS_IS_NULL(VALUE) ((VALUE).i == FUS_VALUE_NULL.i)
+#define FUS_IS_BOOL(VALUE) \
+    ( (VALUE).i == FUS_VALUE_TRUE.i || (VALUE).i == FUS_VALUE_FALSE.i )
+#define FUS_IS_ERR(VALUE)  ((VALUE).p == NULL)
+#define FUS_IS_UNBOXED(VALUE) \
+    ( FUS_GET_TAG((VALUE).i) == FUS_TAG_BOXED && (VALUE).p != NULL )
 
 
 typedef long int fus_unboxed_t;

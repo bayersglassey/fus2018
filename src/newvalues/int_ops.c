@@ -7,8 +7,8 @@
 fus_value_t fus_int_add(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
-    if(FUS_GET_TAG(value_x.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
-    if(FUS_GET_TAG(value_y.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_x))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_err(vm, FUS_ERR_WRONG_TYPE);
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
@@ -24,8 +24,8 @@ fus_value_t fus_int_add(fus_vm_t *vm,
 fus_value_t fus_int_sub(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
-    if(FUS_GET_TAG(value_x.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
-    if(FUS_GET_TAG(value_y.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_x))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_err(vm, FUS_ERR_WRONG_TYPE);
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
@@ -41,8 +41,8 @@ fus_value_t fus_int_sub(fus_vm_t *vm,
 fus_value_t fus_int_mul(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
-    if(FUS_GET_TAG(value_x.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
-    if(FUS_GET_TAG(value_y.i) != FUS_TAG_INT)return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_x))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_err(vm, FUS_ERR_WRONG_TYPE);
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
