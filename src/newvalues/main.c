@@ -28,12 +28,9 @@
         n_fails == 0? "OK": "FAIL");
 
 #define FUS_TESTS_END() \
+    FUS_TEST_EQ_INT(vm->n_boxed, 0) \
     printf("END: %s\n", title); \
     FUS_TESTS_PASSED() \
-    if(vm->n_boxed != 0){ \
-        printf("WARNING: " \
-            "vm has nonzero n_boxed: %i\n", vm->n_boxed); \
-    } \
     printf(FUS_TESTS_DIVIDER "\n"); \
     printf("\n"); \
     *n_tests_ptr += n_tests; \
@@ -41,20 +38,27 @@
 
 
 
-#define FUS_PAYLOAD_TEST(X, Y) { \
-    printf("  " #X " == " #Y "\n"); \
+#define FUS_TEST_EQ(TOKX, TOKY, X, Y, T, FMT) { \
+    printf("  " TOKX " == " TOKY "\n"); \
     n_tests++; \
-    fus_unboxed_t __x = (X); \
-    fus_unboxed_t __y = (Y); \
-    printf("    %li == %li\n", __x, __y); \
+    T __x = (X); \
+    T __y = (Y); \
+    printf("    " FMT " == " FMT "\n", __x, __y); \
     if(__x != __y){ \
         printf("    ...FAIL\n"); \
         n_fails++; \
     } \
 }
 
+#define FUS_TEST_EQ_INT(X, Y) \
+    FUS_TEST_EQ(#X, #Y, X, Y, int, "%i")
+#define FUS_TEST_EQ_PTR(X, Y) \
+    FUS_TEST_EQ(#X, #Y, (void*)(X), (void*)(Y), int, "%p")
+#define FUS_TEST_EQ_UNBOXED(X, Y) \
+    FUS_TEST_EQ(#X, #Y, X, Y, fus_unboxed_t, "%li")
+
 #define FUS_TEST(X) { \
-    printf("  " #X " == true\n"); \
+    printf("  " #X "\n"); \
     n_tests++; \
     if(!(X)){ \
         printf("    ...FAIL\n"); \
@@ -68,25 +72,25 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     const char *title = "Unboxed int/null/bool tests";
     FUS_TESTS_BEGIN()
 
-    FUS_PAYLOAD_TEST(fus_int_decode(fus_int(vm,  0)),  0)
-    FUS_PAYLOAD_TEST(fus_int_decode(fus_int(vm, -1)), -1)
-    FUS_PAYLOAD_TEST(fus_int_decode(fus_int(vm,  1)),  1)
-    FUS_PAYLOAD_TEST(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
-    FUS_PAYLOAD_TEST(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm,  0)),  0)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, -1)), -1)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm,  1)),  1)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
 
     int x = 2;
     int y = 3;
     fus_value_t vx = fus_int(vm, x);
     fus_value_t vy = fus_int(vm, y);
-    FUS_PAYLOAD_TEST(fus_int_decode(vx), x)
-    FUS_PAYLOAD_TEST(fus_int_decode(vy), y)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx), x)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vy), y)
 
     fus_value_t vaddxy = fus_int_add(vm, vx, vy);
     fus_value_t vsubxy = fus_int_sub(vm, vx, vy);
     fus_value_t vmulxy = fus_int_mul(vm, vx, vy);
-    FUS_PAYLOAD_TEST(fus_int_decode(vaddxy), x + y)
-    FUS_PAYLOAD_TEST(fus_int_decode(vsubxy), x - y)
-    FUS_PAYLOAD_TEST(fus_int_decode(vmulxy), x * y)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vaddxy), x + y)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vsubxy), x - y)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vmulxy), x * y)
 
     FUS_TESTS_END()
 }
@@ -99,7 +103,7 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST(fus_is_arr(vx))
 
     fus_value_t vx_len = fus_arr_len(vm, vx);
-    FUS_PAYLOAD_TEST(fus_int_decode(vx_len), 0)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx_len), 0)
 
     fus_value_cleanup(vx);
 
