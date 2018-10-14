@@ -67,6 +67,10 @@
 }
 
 
+#define FUS_REFCOUNT(VALUE) ((VALUE).p->refcount)
+    /* Not sure if I want this macro in the core library */
+
+
 
 void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     const char *title = "Unboxed int/null/bool tests";
@@ -101,10 +105,19 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_value_t vx = fus_arr(vm);
     FUS_TEST(fus_is_arr(vx))
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 0)
 
     fus_value_t vx_len = fus_arr_len(vm, vx);
     FUS_TEST_EQ_UNBOXED(fus_int_decode(vx_len), 0)
 
+    fus_value_t vx2 = fus_arr_push(vm, vx, fus_int(vm, 10));
+    FUS_TEST(fus_is_arr(vx2))
+    FUS_TEST(vx.p == vx2.p)
+
+    fus_value_t vx2_len = fus_arr_len(vm, vx2);
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx2_len), 1)
+
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 0)
     fus_value_cleanup(vx);
 
     FUS_TESTS_END()

@@ -95,3 +95,17 @@ fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value){
     return fus_int(vm, value.p->data.a.values.len);
 }
 
+fus_value_t fus_arr_push(fus_vm_t *vm, fus_value_t value1,
+    fus_value_t value2
+){
+    if(!fus_is_arr(value1))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_arr_t *a = &value1.p->data.a;
+
+    fus_array_set_len(&a->values, a->values.len + 1);
+
+    fprintf(stderr, "%s: WARNING: Returning value1 directly. "
+        "TODO: if refcount > 1, make a copy of the arr first.\n",
+        __func__);
+    return value1;
+}
+
