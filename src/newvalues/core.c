@@ -66,3 +66,12 @@ void *fus_memset(fus_core_t *core, void *ptr, int value, size_t n){
     return new_ptr;
 }
 
+void *fus_memcpy(fus_core_t *core, void *ptr, void *srcptr, size_t n){
+    void *new_ptr = memcpy(ptr, srcptr, n);
+    if(new_ptr == NULL){
+        fus_perror(core, "fus_memcpy");
+        fus_exit(core, EXIT_FAILURE);
+    }
+    return new_ptr;
+}
+

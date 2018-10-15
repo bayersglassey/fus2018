@@ -38,17 +38,22 @@
 
 
 
-#define FUS_TEST_EQ(TOKX, TOKY, X, Y, T, FMT) { \
-    printf("  " TOKX " == " TOKY "\n"); \
+#define FUS_TEST_BINOP(TOKX, TOKY, X, Y, T, FMT, OP) { \
+    printf("  " TOKX " " #OP " " TOKY "\n"); \
     n_tests++; \
     T __x = (X); \
     T __y = (Y); \
-    printf("    " FMT " == " FMT "\n", __x, __y); \
-    if(__x != __y){ \
+    printf("    " FMT " " #OP " " FMT "\n", __x, __y); \
+    if(!(__x OP __y)){ \
         printf("    ...FAIL\n"); \
         n_fails++; \
     } \
 }
+
+#define FUS_TEST_EQ(TOKX, TOKY, X, Y, T, FMT) \
+    FUS_TEST_BINOP(TOKX, TOKY, X, Y, T, FMT, ==)
+#define FUS_TEST_NE(TOKX, TOKY, X, Y, T, FMT) \
+    FUS_TEST_BINOP(TOKX, TOKY, X, Y, T, FMT, !=)
 
 #define FUS_TEST_EQ_INT(X, Y) \
     FUS_TEST_EQ(#X, #Y, X, Y, int, "%i")
@@ -117,8 +122,30 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_value_t vx2_len = fus_arr_len(vm, vx2);
     FUS_TEST_EQ_UNBOXED(fus_int_decode(vx2_len), 1)
 
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 0)
-    fus_value_cleanup(vx);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 0)
+
+    fus_value_attach(vx2);
+    fus_value_attach(vx2);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
+
+    fus_value_t vx3 = fus_arr_push(vm, vx2, fus_int(vm, 20));
+    FUS_TEST(fus_is_arr(vx3))
+    FUS_TEST(vx2.p != vx3.p)
+
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 0)
+
+    fus_value_t vx2_len_2 = fus_arr_len(vm, vx2);
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx2_len_2), 1)
+
+    fus_value_t vx3_len = fus_arr_len(vm, vx3);
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx3_len), 2)
+
+    fus_value_detach(vx2);
+    fus_value_detach(vx2);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 0)
+
+    fus_value_cleanup(vx3);
 
     FUS_TESTS_END()
 }

@@ -21,6 +21,19 @@ void fus_array_cleanup(fus_array_t *array){
 }
 
 
+void fus_array_copy(fus_array_t *array, fus_array_t *other_array){
+    array->class = other_array->class;
+    array->elems = NULL;
+    array->len = other_array->len;
+    array->size = other_array->size;
+    if(array->size != 0){
+        array->elems = fus_malloc(array->class->core, array->size);
+        fus_memcpy(array->class->core,
+            array->elems, other_array->elems, array->size);
+    }
+}
+
+
 void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
     fus_class_t *class = array->class;
     fus_core_t *core = class->core;

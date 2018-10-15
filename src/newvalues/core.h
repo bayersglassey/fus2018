@@ -45,6 +45,7 @@ void *fus_realloc(fus_core_t *core, void *ptr, size_t size);
 void fus_free(fus_core_t *core, void *ptr);
 
 void *fus_memset(fus_core_t *core, void *ptr, int value, size_t n);
+void *fus_memcpy(fus_core_t *core, void *ptr, void *srcptr, size_t n);
 
 
 #endif

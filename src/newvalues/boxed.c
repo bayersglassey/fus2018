@@ -90,6 +90,12 @@ fus_value_t fus_arr(fus_vm_t *vm){
     return (fus_value_t)p;
 }
 
+fus_value_t fus_arr_unique(fus_boxed_t *p){
+    fus_value_t new_value = fus_arr(p->vm);
+    fus_array_copy(&new_value.p->data.a.values, &p->data.a.values);
+    return new_value;
+}
+
 fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value){
     if(!fus_is_arr(value))return fus_err(vm, FUS_ERR_WRONG_TYPE);
     return fus_int(vm, value.p->data.a.values.len);
@@ -99,13 +105,11 @@ fus_value_t fus_arr_push(fus_vm_t *vm, fus_value_t value1,
     fus_value_t value2
 ){
     if(!fus_is_arr(value1))return fus_err(vm, FUS_ERR_WRONG_TYPE);
-    fus_arr_t *a = &value1.p->data.a;
 
+    if(value1.p->refcount >= 1)value1 = fus_arr_unique(value1.p);
+    fus_arr_t *a = &value1.p->data.a;
     fus_array_set_len(&a->values, a->values.len + 1);
 
-    fprintf(stderr, "%s: WARNING: Returning value1 directly. "
-        "TODO: if refcount > 1, make a copy of the arr first.\n",
-        __func__);
     return value1;
 }
 
