@@ -52,4 +52,35 @@ newvalues: mkunique can currently return a thing with refcount 0 or 1...
         Drop could be implemented as fus_arr_pop followed by
         fus_value_detach.
 
+I think we need two prefixes, one for the "safe API" and one for the
+"unsafe API".
+The safe API deals with e.g. fus_boxed_t, fus_unboxed_t, bool, etc.
+The unsafe API deals with nothing but fus_value_t.
+So who gets the "fus_" prefix, and what is the other prefix?..
+    * "fus_" unsafe, "fuss_" safe
+    * "fus_" unsafe, "sfus_" safe
+    * "ufus_" unsafe, "fus_" safe
+    * "usfus_" unsafe, "fus_" safe
+    * "fusu_" unsafe, "fus_" safe
+    * "fusus_" unsafe, "fus_" safe
+
+...I think I like ufus (unsafe) and fus (safe).
+(Really I prefer usfus, but ufus is easier to type...)
+
+Or, fus_value_* is the safe prefix?
+    fus_arr_len()
+    fus_value_arr_len()
+    fus_is_arr()
+    fus_value_is_arr()
+
+ALSO: fus_int_decode, fus_sym_decode, fus_bool_decode:
+    If the type is wrong, how do we report it?
+    We're not returning a fus value, so we can't return fus_err(...).
+    Do we pass a pointer to the value to be decoded, and turn it into
+    a fus_err if it's the wrong type????
+    Or do we add fus_vm_err() which is called by fus_err()?
+    ...it's not really "safe" since the error has escaped the VM
+    as a "decoded" thing, but at least VM can choose to bring the house
+    down with an abort, or whatever... hmmmmm.
+    Current approach where we get nice debug output is maybe superior option.
 
