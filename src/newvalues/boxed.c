@@ -144,33 +144,47 @@ fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value){
     return fus_int(vm, value.p->data.a.values.len);
 }
 
-void fus_arr_push(fus_vm_t *vm, fus_value_t *value1_ptr,
-    fus_value_t value2
+fus_value_t fus_arr_get(fus_vm_t *vm, fus_value_t value_a,
+    fus_unboxed_t i
 ){
-    /* Refcounts of value1 and value2 are unchanged
+    if(!fus_is_arr(value_a))return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_arr_t *a = &value_a.p->data.a;
+    if(i < 0 || i >= a->values.len){
+        return fus_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+    }
+    fus_value_t value = FUS_ARR_VALUES(*a)[i];
+    fus_value_attach(value);
+    return value;
+}
+
+void fus_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value
+){
+    /* Represents a transfer of ownership of value to value_a.
+    So refcounts of value and value_a are unchanged
     (Except in case of error, when they are both decremented) */
 
     /* Typecheck */
-    fus_value_t value1 = *value1_ptr;
-    if(!fus_is_arr(value1)){
-        fus_value_detach(value1);
-        fus_value_detach(value2);
-        *value1_ptr = fus_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_value_t value_a = *value_a_ptr;
+    if(!fus_is_arr(value_a)){
+        fus_value_detach(value_a);
+        fus_value_detach(value);
+        *value_a_ptr = fus_err(vm, FUS_ERR_WRONG_TYPE);
         return;
     }
 
     /* Uniqueness guarantee */
-    fus_arr_mkunique(&value1.p);
+    fus_arr_mkunique(&value_a.p);
 
     /* Get arr and resize its array */
-    fus_arr_t *a = &value1.p->data.a;
+    fus_arr_t *a = &value_a.p->data.a;
     fus_array_len_t new_len = a->values.len + 1;
     fus_array_set_len(&a->values, new_len);
 
-    /* Poke value2 into last array element */
-    fus_value_t *values = (fus_value_t*)&a->values.elems;
+    /* Poke value into last array element */
+    FUS_ARR_VALUES(*a)[new_len - 1] = value;
 
     /* Return */
-    *value1_ptr = value1;
+    *value_a_ptr = value_a;
 }
 

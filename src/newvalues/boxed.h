@@ -7,6 +7,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+#define FUS_ARR_VALUES(A) ( (fus_value_t*)(A).values.elems )
+
 
 typedef enum {
     FUS_BOXED_ARR,
@@ -69,6 +71,8 @@ bool fus_is_arr(fus_value_t value);
 fus_value_t fus_arr(fus_vm_t *vm);
 void fus_arr_mkunique(fus_boxed_t **p_ptr);
 fus_value_t fus_arr_len(fus_vm_t *vm, fus_value_t value);
+fus_value_t fus_arr_get(fus_vm_t *vm, fus_value_t value,
+    fus_unboxed_t i);
 void fus_arr_push(fus_vm_t *vm, fus_value_t *value1_ptr,
     fus_value_t value2);
 
