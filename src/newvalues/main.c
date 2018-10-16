@@ -110,42 +110,37 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_value_t vx = fus_arr(vm);
     FUS_TEST(fus_is_arr(vx))
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 0)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 1)
 
-    fus_value_t vx_len = fus_arr_len(vm, vx);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx_len), 0)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx)), 0)
 
-    fus_value_t vx2 = fus_arr_push(vm, vx, fus_int(vm, 10));
+    fus_value_t vx2 = vx;
+    fus_arr_push(vm, &vx2, fus_int(vm, 10));
     FUS_TEST(fus_is_arr(vx2))
-    FUS_TEST(vx.p == vx2.p)
+    FUS_TEST(vx2.p == vx.p)
 
-    fus_value_t vx2_len = fus_arr_len(vm, vx2);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx2_len), 1)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx2)), 1)
 
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 0)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
 
-    fus_value_attach(vx2);
     fus_value_attach(vx2);
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
 
-    fus_value_t vx3 = fus_arr_push(vm, vx2, fus_int(vm, 20));
+    fus_value_t vx3 = vx2;
+    fus_arr_push(vm, &vx3, fus_int(vm, 20));
     FUS_TEST(fus_is_arr(vx3))
-    FUS_TEST(vx2.p != vx3.p)
+    FUS_TEST(vx3.p != vx2.p)
 
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 0)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
 
-    fus_value_t vx2_len_2 = fus_arr_len(vm, vx2);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx2_len_2), 1)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx2)), 1)
+    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx3)), 2)
 
-    fus_value_t vx3_len = fus_arr_len(vm, vx3);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx3_len), 2)
-
+    FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vx2);
-    fus_value_detach(vx2);
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 0)
-
-    fus_value_cleanup(vx3);
+    FUS_TEST_EQ_INT(vm->n_boxed, 1)
+    fus_value_detach(vx3);
 
     FUS_TESTS_END()
 }

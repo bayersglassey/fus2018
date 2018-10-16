@@ -102,26 +102,14 @@ void fus_value_cleanup(fus_value_t value){
 void fus_value_attach(fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){
-        fus_boxed_t *p = value.p;
-        p->refcount++;
+        fus_boxed_attach(value.p);
     }
 }
 
 void fus_value_detach(fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){
-        fus_boxed_t *p = value.p;
-        p->refcount--;
-        if(p->refcount <= 0){
-            if(p->refcount < 0){
-                fprintf(stderr, "%s: WARNING: "
-                    "Collection's refcount has gone negative: ",
-                    __func__);
-                fus_boxed_dump(p, stderr);
-                fflush(stderr);
-            }
-            fus_value_cleanup(value);
-        }
+        fus_boxed_detach(value.p);
     }
 }
 
