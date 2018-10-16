@@ -36,3 +36,20 @@ Sep 8, 2018:
 Need "load data(...)".
 The latter is like "data(...)" but loaded from a file (like "load(...)").
 
+
+Oct 15, 2018:
+-------------
+
+newvalues: mkunique can currently return a thing with refcount 0 or 1...
+    What should the behaviour be?
+    Presumably we always want it to return a thing with a specific refcount.
+    Perhaps it's an error to pass it something which has refcount 0?
+    -> YES. More importantly, values should be created with refcount 1
+        and all fus_ functions should transfer/modify refcounts differently.
+        E.g. fus_arr_push does NOT affect refcount of pushed object: it
+        assumes you're PASSING ownership to the arr value.
+        Similarly, fus_arr_pop passes ownership.
+        Drop could be implemented as fus_arr_pop followed by
+        fus_value_detach.
+
+
