@@ -129,9 +129,8 @@ void fus_class_init_value(fus_class_t *class, void *ptr){
 }
 
 void fus_class_cleanup_value(fus_class_t *class, void *ptr){
-    fus_value_class_data_t *data = class->data;
     fus_value_t *value_ptr = ptr;
-    fus_value_cleanup(*value_ptr);
+    fus_value_detach(*value_ptr);
 }
 
 

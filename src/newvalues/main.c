@@ -28,7 +28,6 @@
         n_fails == 0? "OK": "FAIL");
 
 #define FUS_TESTS_END() \
-    FUS_TEST_EQ_INT(vm->n_boxed, 0) \
     printf("END: %s\n", title); \
     FUS_TESTS_PASSED() \
     printf(FUS_TESTS_DIVIDER "\n"); \
@@ -101,11 +100,13 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_int_decode(vsubxy), x - y)
     FUS_TEST_EQ_UNBOXED(fus_int_decode(vmulxy), x * y)
 
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
+
     FUS_TESTS_END()
 }
 
-void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Arr tests";
+void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    const char *title = "Arr tests (basic)";
     FUS_TESTS_BEGIN()
 
     fus_value_t vx = fus_arr(vm);
@@ -145,6 +146,25 @@ void run_arr_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_value_detach(vx2);
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
     fus_value_detach(vx3);
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
+
+    FUS_TESTS_END()
+}
+
+void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    const char *title = "Arr tests (intermediate)";
+    FUS_TESTS_BEGIN()
+
+    fus_value_t vx = fus_arr(vm);
+    fus_arr_push(vm, &vx, fus_int(vm, 10));
+    fus_arr_push(vm, &vx, fus_int(vm, 20));
+
+    fus_value_t vy = fus_arr(vm);
+    fus_arr_push(vm, &vy, vx);
+
+    FUS_TEST_EQ_INT(vm->n_boxed, 2)
+    fus_value_detach(vy);
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     FUS_TESTS_END()
 }
@@ -155,7 +175,10 @@ int run_tests(fus_vm_t *vm){
     int n_fails = 0;
 
     run_unboxed_tests(vm, &n_tests, &n_fails);
-    run_arr_tests(vm, &n_tests, &n_fails);
+    run_arr_tests_basic(vm, &n_tests, &n_fails);
+    run_arr_tests_medium(vm, &n_tests, &n_fails);
+
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     printf("TOTALS:\n");
     FUS_TESTS_PASSED()
