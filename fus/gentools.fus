@@ -1,0 +1,19 @@
+
+sig: x0 x1 add -> gen
+def range: gen takes(x0 x1 add):
+    # Example: (0 3 1 @range) behaves like (gen: 0 out 1 out 2 out)
+    ='add
+    swap
+    # (x1 x0)
+    do:
+        over over != while
+        dup out 'add + loop
+
+sig(->)
+def test:
+    0 3 1 @range
+        >> 0 == assert
+        >> 1 == assert
+        >> 2 == assert
+    done assert
+
