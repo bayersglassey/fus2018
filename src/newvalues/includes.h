@@ -10,6 +10,7 @@
 #include "core.h"
 #include "class.h"
 #include "array.h"
+#include "lexer.h"
 
 /* Files which expect to be included by "includes.h", and their
 primary typedefs */
@@ -25,5 +26,6 @@ typedef struct fus_fun fus_fun_t;
 #include "vm.h"
 #include "boxed.h"
 #include "int_ops.h"
+#include "parser.h"
 
 #endif
