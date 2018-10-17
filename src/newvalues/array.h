@@ -32,4 +32,14 @@ void fus_array_copy(fus_array_t *array, fus_array_t *other_array);
 
 void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len);
 
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_array(fus_class_t *class, void *ptr);
+void fus_class_cleanup_array(fus_class_t *class, void *ptr);
+
+
 #endif

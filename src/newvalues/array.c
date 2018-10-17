@@ -65,3 +65,25 @@ void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
     array->len = new_len;
 }
 
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_array(fus_class_t *class, void *ptr){
+    fus_array_t *array = ptr;
+    fus_array_init(array, NULL);
+        /* WARNING: we're passing a NULL class to the array...
+        caller should re-initialize array ASAP with a valid
+        class...
+        is there a way to include the class of array elements
+        in the array's class?..
+        so have "array of T" classes...
+        my god, though, it's getting too complex then... */
+}
+
+void fus_class_cleanup_array(fus_class_t *class, void *ptr){
+    fus_array_t *array = ptr;
+    fus_array_cleanup(array);
+}
