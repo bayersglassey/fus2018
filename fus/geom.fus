@@ -1,25 +1,33 @@
 
 module Prend:
-    sig: -> prend
-    def new:
+
+    def sig: -> prend
+    new:
         obj
             arr =.prismels
             arr =.shapes
-    sig: prend prismel name -> prend
-    def add_prismel:
+
+    def sig: prend prismel name -> prend
+    add_prismel:
         ='name ='prismel
         ''prismel 'name =.name ='prismel
         ..prismels 'prismel, =.prismels
 
+
 module Prismel:
+
     def N_FLIP: 2
     def N_ROT: 12
     def N_IMAGES: @N_FLIP @N_ROT *
-    sig(-> prismel) def new:
+
+    def sig: -> prismel
+    new:
         obj
             null =.name
             arr @N_IMAGES repeat =.images
-    sig(data -> prismel) def parse:
+
+    def sig: data -> prismel
+    parse:
         ='data
         @new ='prismel
 
@@ -29,33 +37,29 @@ module Prismel:
         len 0 == assert
 
         'images_data len @N_IMAGES == assert
-        0 'images_data len do ~image_loop:
-            over over < while ~image_loop
-            swap dup ='image_i 1 + swap
+        'images_data len @int_togen for ~image_loop:
+            ='image_i
             'images_data 'image_i .$ ='image_data
 
-            0 'image_data len do ~line_loop:
-                over over < while ~line_loop
-                swap dup ='line_i 1 + swap
-
+            'image_data len @int_togen for ~line_loop:
+                ='line_i
                 'image_data 'line_i .$ ='line_data
+
                 'line_data is_int ifelse:
                     'line_i 0 == assert
                     'line_data ='other_image_i
                     'other_image_i 'image_i < assert
                     'images_data 'other_image_i .$ ='other_image_data
                     ''images_data 'other_image_data 'image_i =.$ ='images_data
-                    loop ~image_loop
+                    drop loop ~image_loop
+                        # NOTE: the "drop" is for the generator for ~line_loop
+                        # Should we... build that into the "for" magic?..
                 :
                     'line_data
                         lpop is_int assert
                         lpop is_int assert
                         lpop is_int assert
                     len 0 == assert
-                loop ~line_loop
-            drop drop
-            loop ~image_loop
-        drop drop
 
         ''prismel
             'images_data =.images
@@ -68,23 +72,25 @@ module Shape:
 
 @(Prend new)
 
-    `vert data:
+    data:
         # ++
         # +X
         images:
             : (-1 -1 2) (-1 0 2)
             (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0)
             (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0) (0)
-    @(Prismel parse) swap @(Prend add_prismel)
+    @(Prismel parse)
+    `vert @(Prend add_prismel)
 
-    `edge data:
+    data:
         # an edge (invisible line)
         images:
             () () () () () () () () () () () ()
             () () () () () () () () () () () ()
-    @(Prismel parse) swap @(Prend add_prismel)
+    @(Prismel parse)
+    `edge @(Prend add_prismel)
 
-    `sq data:
+    data:
 
         # +---+
         # |   |
@@ -123,7 +129,8 @@ module Shape:
             :  0
             : 11
             : 10
-    @(Prismel parse) swap @(Prend add_prismel)
+    @(Prismel parse)
+    `sq @(Prend add_prismel)
 ='prend
 
 'prend p

@@ -14,6 +14,7 @@ def eq:
         fun(str_eq) =.str
         fun(sym_eq) =.sym
         fun("Can't compare functions!" error) =.fun
+        fun("Can't compare generators!" error) =.gen
         &obj_eq =.obj
         &arr_eq =.arr
     'x typeof get ='f
@@ -24,16 +25,11 @@ def eq:
 sig eq
 def obj_eq:
     ='y ='x
-    'x keys 'y keys @arr_eq not if: f return
+    ('x keys) ('y keys) @arr_eq not if: f return
 
     t ='result
-    'x keys ='keys
-    0 'keys len do l:
-        over over < while l
-        swap dup ='i 1 + swap
-        'keys 'i .$ ='key
-        ('x 'key get) ('y 'key get) @eq not if: f ='result break l
-    drop drop
+    'x keys @arr_togen for: ='key
+        ('x 'key get) ('y 'key get) @eq not if: f ='result break
 
     'result
 
@@ -41,14 +37,11 @@ def obj_eq:
 sig eq
 def arr_eq:
     ='ys ='xs
-    'xs len 'ys len != if: f return
+    ('xs len) ('ys len) != if: f return
 
     t ='result
-    0 'xs len do l:
-        over over < while l
-        swap dup ='i 1 + swap
-        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break l
-    drop drop
+    'xs len @int_togen for: ='i
+        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break
 
     'result
 

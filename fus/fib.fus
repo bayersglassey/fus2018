@@ -39,16 +39,16 @@ module GenCache:
 
     def next:
         ..gen >> ='value =.gen
-        ..cache 'value, dup len ='len =.cache
+        ..cache dup len ='i 'value, =.cache
         "Generated value "
-            'len int_tostr str_concat
+            'i int_tostr str_concat
             ": " str_concat
             'value int_tostr str_concat
         str_p
         ''value
 
     def get:
-        ='self ='i
+        ='i ='self
         'i 0 < if: "Out of bounds!" error
         ('self .cache len) 'i - do:
             dup 0 > while
