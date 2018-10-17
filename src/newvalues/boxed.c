@@ -188,3 +188,20 @@ void fus_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
     *value_a_ptr = value_a;
 }
 
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_arr(fus_class_t *class, void *ptr){
+    fus_arr_t *a = ptr;
+    fus_vm_t *vm = class->data;
+    fus_arr_init(a, vm);
+}
+
+void fus_class_cleanup_arr(fus_class_t *class, void *ptr){
+    fus_arr_t *a = ptr;
+    fus_arr_cleanup(a);
+}
+

@@ -230,13 +230,15 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_parser_t parser;
     fus_parser_init(&parser, vm);
 
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 0)
     fus_parser_parse_token_simple(&parser, "def");
     fus_parser_parse_token_simple(&parser, "test");
-    FUS_TEST_EQ_INT(parser.stack.len, 0)
-    FUS_TEST_EQ_INT(parser.values.len, 2)
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 2)
     fus_parser_parse_token_simple(&parser, "(");
-    FUS_TEST_EQ_INT(parser.stack.len, 1)
-    FUS_TEST_EQ_INT(parser.values.len, 0)
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 0)
     fus_parser_parse_token_simple(&parser,   "arr");
     fus_parser_parse_token_simple(&parser,   "\"Thing \"");
     fus_parser_parse_token_simple(&parser,   ",");
@@ -252,8 +254,8 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_parser_parse_token_simple(&parser,     "2");
     fus_parser_parse_token_simple(&parser,     "=.");
     fus_parser_parse_token_simple(&parser,     "y");
-    FUS_TEST_EQ_INT(parser.stack.len, 2)
-    FUS_TEST_EQ_INT(parser.values.len, 7)
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 2)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 7)
     fus_parser_parse_token_simple(&parser,   ")");
     fus_parser_parse_token_simple(&parser,   ",");
     fus_parser_parse_token_simple(&parser,   "\"!\"");
@@ -263,13 +265,13 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_parser_parse_token_simple(&parser,   "\"Thing 2: {x: 1, y: 2}!\"");
     fus_parser_parse_token_simple(&parser,   "str_eq");
     fus_parser_parse_token_simple(&parser,   "assert");
-    FUS_TEST_EQ_INT(parser.stack.len, 1)
-    FUS_TEST_EQ_INT(parser.values.len, 16)
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 16)
     fus_parser_parse_token_simple(&parser, ")");
-    FUS_TEST_EQ_INT(parser.stack.len, 0)
-    FUS_TEST_EQ_INT(parser.values.len, 3)
+    FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
+    FUS_TEST_EQ_INT(parser.arr.values.len, 3)
 
-    fus_parser_print(&parser);
+    fus_parser_print(&parser); printf("\n");
 
     fus_parser_cleanup(&parser);
 
@@ -285,7 +287,7 @@ int run_tests(fus_vm_t *vm){
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
     //run_lexer_tests(vm, &n_tests, &n_fails);
-    //run_parser_tests(vm, &n_tests, &n_fails);
+    run_parser_tests(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 

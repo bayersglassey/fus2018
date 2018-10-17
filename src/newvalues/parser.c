@@ -4,13 +4,13 @@
 
 void fus_parser_init(fus_parser_t *parser, fus_vm_t *vm){
     parser->vm = vm;
-    fus_array_init(&parser->stack, &vm->class_array);
-    fus_array_init(&parser->values, &vm->class_value);
+    fus_array_init(&parser->arr_stack, &vm->class_arr);
+    fus_arr_init(&parser->arr, vm);
 }
 
 void fus_parser_cleanup(fus_parser_t *parser){
-    fus_array_cleanup(&parser->stack);
-    fus_array_cleanup(&parser->values);
+    fus_array_cleanup(&parser->arr_stack);
+    fus_arr_cleanup(&parser->arr);
 }
 
 void fus_parser_fprint(fus_parser_t *parser, FILE *file){

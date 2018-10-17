@@ -9,8 +9,8 @@
 
 typedef struct fus_parser {
     fus_vm_t *vm;
-    fus_array_t stack;
-    fus_array_t values;
+    fus_array_t arr_stack;
+    fus_arr_t arr;
 } fus_parser_t;
 
 

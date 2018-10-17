@@ -15,7 +15,8 @@
 /* The following macro can be passed another macro */
 #define FUS_VM_CLASSES_DO(M) \
     M(array, fus_array_t) \
-    M(value, fus_value_t)
+    M(value, fus_value_t) \
+    M(arr, fus_arr_t)
 
 #define FUS_VM_CLASS_DECL(NAME, T) \
     fus_class_t class_##NAME;
@@ -25,9 +26,6 @@
 struct fus_vm {
     fus_core_t *core;
     int n_boxed;
-
-    fus_value_class_data_t value_class_data;
-    int array_class_data; /* dummy to make FUS_VM_CLASS_INIT happy */
 
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)

@@ -77,4 +77,12 @@ void fus_arr_push(fus_vm_t *vm, fus_value_t *value1_ptr,
     fus_value_t value2);
 
 
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_arr(fus_class_t *class, void *ptr);
+void fus_class_cleanup_arr(fus_class_t *class, void *ptr);
+
+
 #endif

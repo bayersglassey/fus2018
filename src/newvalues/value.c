@@ -119,10 +119,6 @@ void fus_value_detach(fus_value_t value){
  * FUS_CLASS STUFF *
  *******************/
 
-void fus_value_class_data_init(fus_value_class_data_t *data, fus_vm_t *vm){
-    data->vm = vm;
-}
-
 void fus_class_init_value(fus_class_t *class, void *ptr){
     fus_value_t *value_ptr = ptr;
     *value_ptr = FUS_VALUE_ERR;
@@ -132,5 +128,4 @@ void fus_class_cleanup_value(fus_class_t *class, void *ptr){
     fus_value_t *value_ptr = ptr;
     fus_value_detach(*value_ptr);
 }
-
 
