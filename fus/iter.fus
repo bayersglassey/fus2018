@@ -1,61 +1,52 @@
 
-load: fus format
-use: format format
+
+defsig iter: x -> gen
 
 
-defsig new: -> it
-defsig iter: x -> it
-defsig next: it -> it value ok
-
-
-
-sig next def next: dup .next call next
-
-sig new def new:
-    obj
-        0 =.i
-        sig next fun(null f) =.next
 
 sig iter def iter:
     obj
-        &iter_arr =.arr
         &iter_int =.int
+        &iter_arr =.arr
+        fun(keys &iter_arr) =.obj
+        fun() =.gen
     over typeof get call iter
 
-sig iter def iter_arr:
-    @new
-        swap =.a
-        sig next fun:
-            dup .a len 0 > ifelse:
-                ..i 1 + =.i
-                ..a lpop ='value =.a
-                ''value t
-            : null f
-        =.next
-
 sig iter def iter_int:
-    @new
-        swap =.end
-        fun next:
-            dup .i over .end < ifelse:
-                ..i dup ='i 1 + =.i
-                ''i t
-            : null f
-        =.next
+    gen takes(n):
+        0 ='i
+        do:
+            'i 'n < while
+            'i out loop
+
+sig iter def iter_arr:
+    gen takes(a):
+        ='a
+        0 ='i
+        do:
+            'i 'a len < while
+            'a 'i .$ out loop
 
 sig(->) def test:
-    arr 1, 2, 3, ='a
+    3 @iter
+        >> 0 == assert
+        >> 1 == assert
+        >> 2 == assert
+    done assert
 
-    'a @iter do loop:
-        dup .i ='i
-        @next while loop ='value
+    (arr 1, 2, 3,) @iter
+        >> 1 == assert
+        >> 2 == assert
+        >> 3 == assert
+    done assert
 
-        arr "Step ", ''i, ": ", ''value, "\n",
-        @format str_p
-    drop drop
+    (obj 1 =.x 2 =.y) @iter
+        >> `x sym_eq assert
+        >> `y sym_eq assert
+    done assert
 
-    'a @iter
-        @next assert 1 == assert
-        @next assert 2 == assert
-        @next assert 3 == assert
-    @next not assert drop drop
+    gen(10 out 20 out) @iter
+        >> 10 == assert
+        >> 20 == assert
+    done assert
+

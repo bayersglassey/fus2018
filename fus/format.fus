@@ -11,9 +11,10 @@ sig(->) def test:
 sig format
 def format:
     "" ='s
-    do loop:
-        dup len 0 > while loop
+    do:
+        dup len 0 > while
         lpop @tostr ''s swap str_join ='s
+        loop
     drop
     ''s
 
@@ -26,8 +27,9 @@ def tostr:
         fun() =.str
         fun(sym_tostr) =.sym
         fun(drop "<fun>") =.fun
+        fun(arr_togen @gen_tostr) =.arr
         &obj_tostr =.obj
-        &arr_tostr =.arr
+        &gen_tostr =.gen
     over typeof get call tostr
 
 sig tostr
@@ -37,8 +39,8 @@ def obj_tostr:
     "{" ='s
     t ='first
 
-    'o keys do loop:
-        dup len 0 > while loop
+    'o keys do:
+        dup len 0 > while
         lpop ='key
         'o 'key get ='val
         ''s
@@ -48,26 +50,25 @@ def obj_tostr:
             ": " str_join
             'val @tostr str_join
         ='s
+        loop
     drop
 
     ''s "}" str_join
 
 sig tostr
-def arr_tostr:
-    ='a
+def gen_tostr:
 
     "[" ='s
-    t ='first
+    0 ='i
 
-    0 'a len do loop:
-        over over < while loop
-        swap dup ='i 1 + swap
-        'a 'i .$ ='val
+    for:
+        ='val
+        'i 10 >= if: ''s ", ..." str_join ='s break
         ''s
-            'first ifelse: f ='first
-            : ", " str_join
+            'i 0 > if: ", " str_join
             'val @tostr str_join
         ='s
-    drop drop
+        ''i 1 + ='i
 
     ''s "]" str_join
+

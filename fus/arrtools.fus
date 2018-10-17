@@ -4,15 +4,16 @@ def range:
     # Example: 0 3 1 @range -> arr 0, 1, 2,
     ='add
     arr ='a
-    do loop:
+    do:
         # (x0 x1)
-        over over != while loop
+        over over != while
         swap
             # (x1 x0)
             dup ''a swap push ='a
             # (x1 x0)
             'add +
         swap
+        loop
     drop drop
     ''a
 
@@ -26,11 +27,12 @@ def resize:
 
     ='new_len ='xs
     null 'new_len repeat ='new_xs
-    0 ('xs len 'new_len @min) do loop:
-        over over < while loop
+    0 ('xs len 'new_len @min) do:
+        over over < while
         swap dup ='i 1 + swap
 
         ''new_xs ('xs 'i .$) 'i =.$ ='new_xs
+        loop
     drop drop
 
     ''new_xs
@@ -43,11 +45,12 @@ sig: arr state step -> arr state
 def for:
     ='step
     0 ='i
-    do loop:
-        over len 'i > while loop
+    do:
+        over len 'i > while
         over 'i .$ 'i
         'step call step
         ''i 1 + ='i
+        loop
 
 
 sig(->)

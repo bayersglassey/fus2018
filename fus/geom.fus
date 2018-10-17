@@ -29,13 +29,13 @@ module Prismel:
         len 0 == assert
 
         'images_data len @N_IMAGES == assert
-        0 'images_data len do image_loop:
-            over over < while image_loop
+        0 'images_data len do ~image_loop:
+            over over < while ~image_loop
             swap dup ='image_i 1 + swap
             'images_data 'image_i .$ ='image_data
 
-            0 'image_data len do line_loop:
-                over over < while line_loop
+            0 'image_data len do ~line_loop:
+                over over < while ~line_loop
                 swap dup ='line_i 1 + swap
 
                 'image_data 'line_i .$ ='line_data
@@ -45,14 +45,16 @@ module Prismel:
                     'other_image_i 'image_i < assert
                     'images_data 'other_image_i .$ ='other_image_data
                     ''images_data 'other_image_data 'image_i =.$ ='images_data
-                    next image_loop
+                    loop ~image_loop
                 :
                     'line_data
                         lpop is_int assert
                         lpop is_int assert
                         lpop is_int assert
                     len 0 == assert
+                loop ~line_loop
             drop drop
+            loop ~image_loop
         drop drop
 
         ''prismel

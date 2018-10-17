@@ -7,7 +7,7 @@ Modules & Functions
 
 General
 
-    data typeof is_null is_bool is_int is_str is_sym is_obj is_arr is_fun
+    data typeof is_null is_bool is_int is_str is_sym is_obj is_arr is_fun is_gen
 
 Stack
 
@@ -19,7 +19,7 @@ Vars
 
 Control
 
-    if ifelse do next break while
+    if ifelse do loop break while until return restart
 
 Debug
 
@@ -54,8 +54,13 @@ Obj
 Arr
 
     arr len , push pop lpush lpop split join repeat .$ ..$ =.$ ?.$
+    arr_togen
 
 Fun
 
     fun call
+
+Gen
+
+    gen done out >> for
 

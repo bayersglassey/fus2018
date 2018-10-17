@@ -32,14 +32,15 @@ module Array:
         'array .dims ='dims
         0 ='i
 
-        0 'v len do loop:
-            over over < while loop
+        0 'v len do:
+            over over < while
             swap dup ='v_i 1 + swap
 
             ''i
                 'dims 'v_i .$ *
                 'v 'v_i .$ +
             ='i
+            loop
         drop drop
 
         ''i
