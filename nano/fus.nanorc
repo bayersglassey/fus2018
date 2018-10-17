@@ -26,6 +26,9 @@ color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*:"
 color brightmagenta "\(|\)"
 color brightmagenta ":"
 
+# Labels
+color magenta "~[[:alpha:]_][[:alnum:]_]*\>"
+
 # Def Calls
 #color brightred "@[[:alpha:]_][[:alnum:]_]*"
 color brightblue "@"

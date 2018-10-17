@@ -9,6 +9,10 @@ General
 
     data typeof is_null is_bool is_int is_str is_sym is_obj is_arr is_fun is_gen
 
+Labels
+
+    ~x
+
 Stack
 
     dup drop swap nip over
