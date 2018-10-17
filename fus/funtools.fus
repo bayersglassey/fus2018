@@ -1,45 +1,58 @@
 
-sig: xs f -> xs
-def map:
-    ='f ='xs
-    0 'xs len do loop:
-        over over < while loop
-        swap dup ='i 1 + swap
-        ''xs 'i ..$ 'f call(x -> y) 'i =.$ ='xs
-    drop drop
-    ''xs
+def sig(int -> gen) int_togen:
+    gen takes(n):
+        ='n
+        0 ='i
+        do:
+            'i 'n < while 'i out
+            ''i 1 + ='i loop
 
-sig: xs x f -> x
-def fold:
+def sig(xs f ->xs) map:
+    over is_arr if:
+        ='f
+        ='xs
+        'xs len @int_togen for:
+            ='i
+            ''xs 'i ..$ 'f call(x -> y) 'i =.$ ='xs
+        ''xs
+    else: gen takes(xs f):
+        ='f
+        for: 'f call(x -> y) out
+
+def sig(xs x f -> x) fold:
     ='f ='x ='xs
-    0 'xs len do loop:
-        over over < while loop
-        swap dup ='i 1 + swap
+    'xs len @int_togen for:
+        ='i
         ''x ('xs 'i .$) 'f call(x y -> z) ='x
-    drop drop
     ''x
 
-sig(xs -> bool) def all:
+def sig(xs -> bool) all:
     t fun(and) @fold
 
-sig(xs -> bool) def any:
+def sig(xs -> bool) any:
     f fun(or) @fold
 
-sig(xs -> int) def sum:
+def sig(xs -> int) sum:
     0 fun(+) @fold
 
-sig(xs -> int) def prod:
+def sig(xs -> int) prod:
     1 fun(*) @fold
 
 
 
-sig(->) def test:
+def sig(->) test:
 
     (arr 1, 2, 3,) fun(10 *) @map
         lpop 10 == assert
         lpop 20 == assert
         lpop 30 == assert
     len 0 == assert
+
+    gen(1 out 2 out 3 out) fun(10 *) @map
+        >> 10 == assert
+        >> 20 == assert
+        >> 30 == assert
+    done assert
 
     (arr t, t, t,) @all assert
     (arr t, f, t,) @all not assert
