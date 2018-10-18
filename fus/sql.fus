@@ -41,9 +41,10 @@ module Schema:
 
     module fields:
         def ID: @INT T =.auto_inc T =.primary T =.unique F =.allow_null F =.allow_empty
-        def INT: obj `int =.type
-        def STR: obj `str =.type null =.max_len
-        def DECIMAL: obj `decimal =.type null =.precision
+        def BOOL: obj `bool =.type F =.default
+        def INT: obj `int =.type 0 =.default
+        def STR: obj `str =.type "" =.default null =.max_len
+        def DECIMAL: obj `decimal =.type @(Decimal zero) =.default null =.precision
 
     def new:
         obj
@@ -54,6 +55,16 @@ module Schema:
             obj =.fields
             null =.primary_key
             F =.finished
+
+    def create of(schema -> object):
+        ='schema
+        obj 'schema =._schema ='object
+        'schema .fields ='fields
+        'fields keys @arr_togen for: ='name
+            'fields 'name get ='field
+            'field .default ='value
+            ''object ''value 'name set ='object
+        ''object
 
     def finish of(schema -> schema):
         ='schema
@@ -116,11 +127,15 @@ module Field:
             F =.allow_null
             T =.allow_empty
             F =.unique
+            null =.default
 
     def validate_opts of(opts -> opts):
         ='opts
         'opts is_null if: obj ='opts
-        @default_opts ''opts @obj_merge ='opts
+        @default_opts
+            'opts .allow_null if: null =.default
+            ''opts @obj_merge
+        ='opts
 
         T ='ok
         'opts .type is_null if: F ='ok # for example
