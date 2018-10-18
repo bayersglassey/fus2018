@@ -232,42 +232,42 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
     FUS_TEST_EQ_INT(parser.arr.values.len, 0)
-    fus_parser_parse_token_simple(&parser, "def");
-    fus_parser_parse_token_simple(&parser, "test");
+    fus_parser_stringparse_name (&parser, "def");
+    fus_parser_stringparse_name (&parser, "test");
     FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
     FUS_TEST_EQ_INT(parser.arr.values.len, 2)
-    fus_parser_parse_token_simple(&parser, "(");
-    FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
-    FUS_TEST_EQ_INT(parser.arr.values.len, 0)
-    fus_parser_parse_token_simple(&parser,   "arr");
-    fus_parser_parse_token_simple(&parser,   "\"Thing \"");
-    fus_parser_parse_token_simple(&parser,   ",");
-    fus_parser_parse_token_simple(&parser,   "2");
-    fus_parser_parse_token_simple(&parser,   ",");
-    fus_parser_parse_token_simple(&parser,   "\": \"");
-    fus_parser_parse_token_simple(&parser,   ",");
-    fus_parser_parse_token_simple(&parser,   "(");
-    fus_parser_parse_token_simple(&parser,     "obj");
-    fus_parser_parse_token_simple(&parser,     "1");
-    fus_parser_parse_token_simple(&parser,     "=.");
-    fus_parser_parse_token_simple(&parser,     "x");
-    fus_parser_parse_token_simple(&parser,     "2");
-    fus_parser_parse_token_simple(&parser,     "=.");
-    fus_parser_parse_token_simple(&parser,     "y");
-    FUS_TEST_EQ_INT(parser.arr_stack.len, 2)
-    FUS_TEST_EQ_INT(parser.arr.values.len, 7)
-    fus_parser_parse_token_simple(&parser,   ")");
-    fus_parser_parse_token_simple(&parser,   ",");
-    fus_parser_parse_token_simple(&parser,   "\"!\"");
-    fus_parser_parse_token_simple(&parser,   ",");
-    fus_parser_parse_token_simple(&parser,   "@");
-    fus_parser_parse_token_simple(&parser,   "format");
-    fus_parser_parse_token_simple(&parser,   "\"Thing 2: {x: 1, y: 2}!\"");
-    fus_parser_parse_token_simple(&parser,   "str_eq");
-    fus_parser_parse_token_simple(&parser,   "assert");
-    FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
-    FUS_TEST_EQ_INT(parser.arr.values.len, 16)
-    fus_parser_parse_token_simple(&parser, ")");
+    fus_parser_push_arr(&parser);
+        FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
+        FUS_TEST_EQ_INT(parser.arr.values.len, 0)
+        fus_parser_stringparse_name (&parser, "arr");
+        fus_parser_stringparse_str  (&parser, "\"Thing \"");
+        fus_parser_stringparse_op   (&parser, ",");
+        fus_parser_stringparse_int  (&parser, "2");
+        fus_parser_stringparse_op   (&parser, ",");
+        fus_parser_stringparse_str  (&parser, "\": \"");
+        fus_parser_stringparse_op   (&parser, ",");
+        fus_parser_push_arr(&parser);
+            fus_parser_stringparse_name (&parser, "obj");
+            fus_parser_stringparse_int  (&parser, "1");
+            fus_parser_stringparse_op   (&parser, "=.");
+            fus_parser_stringparse_name (&parser, "x");
+            fus_parser_stringparse_int  (&parser, "2");
+            fus_parser_stringparse_op   (&parser, "=.");
+            fus_parser_stringparse_name (&parser, "y");
+            FUS_TEST_EQ_INT(parser.arr_stack.len, 2)
+            FUS_TEST_EQ_INT(parser.arr.values.len, 7)
+        fus_parser_pop_arr(&parser);
+        fus_parser_stringparse_op   (&parser, ",");
+        fus_parser_stringparse_str  (&parser, "\"!\"");
+        fus_parser_stringparse_op   (&parser, ",");
+        fus_parser_stringparse_op   (&parser, "@");
+        fus_parser_stringparse_name (&parser, "format");
+        fus_parser_stringparse_str  (&parser, "\"Thing 2: {x: 1, y: 2}!\"");
+        fus_parser_stringparse_name (&parser, "str_eq");
+        fus_parser_stringparse_name (&parser, "assert");
+        FUS_TEST_EQ_INT(parser.arr_stack.len, 1)
+        FUS_TEST_EQ_INT(parser.arr.values.len, 16)
+    fus_parser_pop_arr(&parser);
     FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
     FUS_TEST_EQ_INT(parser.arr.values.len, 3)
 
