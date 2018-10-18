@@ -16,7 +16,7 @@ const char *fus_err_code_msg(fus_err_code_t code){
 
 
 
-fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code){
+fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code){
 #if FUS_PRINT_ERRS_TO_STDERR
     const char *msg = fus_err_code_msg(code);
     fprintf(stderr, "{Fus err #%i: %s}", code, msg);
@@ -31,14 +31,14 @@ fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code){
 }
 
 
-fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i){
-    if(sym_i > FUS_PAYLOAD_MAX)return fus_err(vm, FUS_ERR_OVERFLOW);
-    if(sym_i < FUS_PAYLOAD_MIN)return fus_err(vm, FUS_ERR_UNDERFLOW);
+fus_value_t fus_value_sym(fus_vm_t *vm, fus_sym_i_t sym_i){
+    if(sym_i > FUS_PAYLOAD_MAX)return fus_value_err(vm, FUS_ERR_OVERFLOW);
+    if(sym_i < FUS_PAYLOAD_MIN)return fus_value_err(vm, FUS_ERR_UNDERFLOW);
     fus_value_t value = (fus_value_t)FUS_ADD_TAG(FUS_TAG_SYM, sym_i);
     return value;
 }
 
-fus_sym_i_t fus_sym_decode(fus_value_t value){
+fus_sym_i_t fus_value_sym_decode(fus_value_t value){
     if(!FUS_IS_SYM(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
@@ -49,14 +49,14 @@ fus_sym_i_t fus_sym_decode(fus_value_t value){
 }
 
 
-fus_value_t fus_int(fus_vm_t *vm, fus_unboxed_t i){
-    if(i > FUS_PAYLOAD_MAX)return fus_err(vm, FUS_ERR_OVERFLOW);
-    if(i < FUS_PAYLOAD_MIN)return fus_err(vm, FUS_ERR_UNDERFLOW);
+fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i){
+    if(i > FUS_PAYLOAD_MAX)return fus_value_err(vm, FUS_ERR_OVERFLOW);
+    if(i < FUS_PAYLOAD_MIN)return fus_value_err(vm, FUS_ERR_UNDERFLOW);
     fus_value_t value = (fus_value_t)FUS_ADD_TAG(FUS_TAG_INT, i);
     return value;
 }
 
-fus_unboxed_t fus_int_decode(fus_value_t value){
+fus_unboxed_t fus_value_int_decode(fus_value_t value){
     if(!FUS_IS_INT(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not an int}", value.i);
@@ -68,26 +68,26 @@ fus_unboxed_t fus_int_decode(fus_value_t value){
 
 
 
-fus_value_t fus_bool(fus_vm_t *vm, bool b){
+fus_value_t fus_value_bool(fus_vm_t *vm, bool b){
     return b? FUS_VALUE_TRUE: FUS_VALUE_FALSE;
 }
 
-bool fus_bool_decode(fus_value_t value){
+bool fus_value_bool_decode(fus_value_t value){
     return value.i == FUS_VALUE_TRUE.i;
 }
 
-fus_value_t fus_eq(fus_vm_t *vm,
+fus_value_t fus_value_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
     fus_unboxed_t tag_x = FUS_GET_TAG(value_x.i);
     fus_unboxed_t tag_y = FUS_GET_TAG(value_y.i);
     if(tag_x != tag_y)return FUS_VALUE_FALSE;
 
-    if(tag_x == FUS_TAG_BOXED)return fus_err(vm, FUS_ERR_WRONG_TYPE);
+    if(tag_x == FUS_TAG_BOXED)return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
         /* Can't compare arr, obj, str, fun.
         TODO: It should be possible to compare everything except fun */
 
-    return fus_bool(vm, value_x.i == value_y.i);
+    return fus_value_bool(vm, value_x.i == value_y.i);
 }
 
 

@@ -80,25 +80,25 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     const char *title = "Unboxed int/null/bool tests";
     FUS_TESTS_BEGIN()
 
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm,  0)),  0)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, -1)), -1)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm,  1)),  1)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm,  0)),  0)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, -1)), -1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm,  1)),  1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
 
     int x = 2;
     int y = 3;
-    fus_value_t vx = fus_int(vm, x);
-    fus_value_t vy = fus_int(vm, y);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vx), x)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vy), y)
+    fus_value_t vx = fus_value_int(vm, x);
+    fus_value_t vy = fus_value_int(vm, y);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vx), x)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vy), y)
 
-    fus_value_t vaddxy = fus_int_add(vm, vx, vy);
-    fus_value_t vsubxy = fus_int_sub(vm, vx, vy);
-    fus_value_t vmulxy = fus_int_mul(vm, vx, vy);
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vaddxy), x + y)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vsubxy), x - y)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(vmulxy), x * y)
+    fus_value_t vaddxy = fus_value_int_add(vm, vx, vy);
+    fus_value_t vsubxy = fus_value_int_sub(vm, vx, vy);
+    fus_value_t vmulxy = fus_value_int_mul(vm, vx, vy);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vaddxy), x + y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vsubxy), x - y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vmulxy), x * y)
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
@@ -109,19 +109,19 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     const char *title = "Arr tests (basic)";
     FUS_TESTS_BEGIN()
 
-    fus_value_t vx = fus_arr(vm);
-    FUS_TEST(fus_is_arr(vx))
+    fus_value_t vx = fus_value_arr(vm);
+    FUS_TEST(fus_value_is_arr(vx))
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 1)
 
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx)), 0)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx)), 0)
 
     fus_value_t vx2 = vx;
-    fus_arr_push(vm, &vx2, fus_int(vm, 10));
-    FUS_TEST(fus_is_arr(vx2))
+    fus_value_arr_push(vm, &vx2, fus_value_int(vm, 10));
+    FUS_TEST(fus_value_is_arr(vx2))
     FUS_TEST(vx2.p == vx.p)
 
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx2)), 1)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_get(vm, vx2, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get(vm, vx2, 0)), 10)
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
 
@@ -129,18 +129,18 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
 
     fus_value_t vx3 = vx2;
-    fus_arr_push(vm, &vx3, fus_int(vm, 20));
-    FUS_TEST(fus_is_arr(vx3))
+    fus_value_arr_push(vm, &vx3, fus_value_int(vm, 20));
+    FUS_TEST(fus_value_is_arr(vx3))
     FUS_TEST(vx3.p != vx2.p)
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
 
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx2)), 1)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_get(vm, vx2, 0)), 10)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_len(vm, vx3)), 2)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_get(vm, vx3, 0)), 10)
-    FUS_TEST_EQ_UNBOXED(fus_int_decode(fus_arr_get(vm, vx3, 1)), 20)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get(vm, vx2, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx3)), 2)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get(vm, vx3, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get(vm, vx3, 1)), 20)
 
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vx2);
@@ -155,12 +155,12 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     const char *title = "Arr tests (intermediate)";
     FUS_TESTS_BEGIN()
 
-    fus_value_t vx = fus_arr(vm);
-    fus_arr_push(vm, &vx, fus_int(vm, 10));
-    fus_arr_push(vm, &vx, fus_int(vm, 20));
+    fus_value_t vx = fus_value_arr(vm);
+    fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
+    fus_value_arr_push(vm, &vx, fus_value_int(vm, 20));
 
-    fus_value_t vy = fus_arr(vm);
-    fus_arr_push(vm, &vy, vx);
+    fus_value_t vy = fus_value_arr(vm);
+    fus_value_arr_push(vm, &vy, vx);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vy);

@@ -91,20 +91,20 @@ extern fus_err_code_t fus_current_err_code;
 
 
 
-fus_value_t fus_err(fus_vm_t *vm, fus_err_code_t code);
+fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code);
 
 
-fus_value_t fus_sym(fus_vm_t *vm, fus_sym_i_t sym_i);
-fus_sym_i_t fus_sym_decode(fus_value_t value);
+fus_value_t fus_value_sym(fus_vm_t *vm, fus_sym_i_t sym_i);
+fus_sym_i_t fus_value_sym_decode(fus_value_t value);
 
-fus_value_t fus_int(fus_vm_t *vm, fus_unboxed_t i);
-fus_unboxed_t fus_int_decode(fus_value_t value);
+fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i);
+fus_unboxed_t fus_value_int_decode(fus_value_t value);
 
-fus_value_t fus_bool(fus_vm_t *vm, bool b);
-bool fus_bool_decode(fus_value_t value);
+fus_value_t fus_value_bool(fus_vm_t *vm, bool b);
+bool fus_value_bool_decode(fus_value_t value);
 
 
-fus_value_t fus_eq(fus_vm_t *vm,
+fus_value_t fus_value_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 
 
