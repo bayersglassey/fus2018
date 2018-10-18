@@ -316,14 +316,17 @@ int main(int n_args, char *args[]){
     int err;
 
     fus_core_t core;
+    fus_symtable_t symtable;
     fus_vm_t vm;
 
     fus_core_init(&core);
-    fus_vm_init(&vm, &core);
+    fus_symtable_init(&symtable, &core);
+    fus_vm_init(&vm, &core, &symtable);
 
     if(run_tests(&vm) != 0)return EXIT_FAILURE;
 
     fus_vm_cleanup(&vm);
+    fus_symtable_cleanup(&symtable);
     fus_core_cleanup(&core);
 
     return EXIT_SUCCESS;

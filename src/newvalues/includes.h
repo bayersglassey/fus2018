@@ -11,6 +11,7 @@
 #include "class.h"
 #include "array.h"
 #include "lexer.h"
+#include "symtable.h"
 
 /* Files which expect to be included by "includes.h", and their
 primary typedefs */

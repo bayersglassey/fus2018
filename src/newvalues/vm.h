@@ -25,13 +25,15 @@
 
 struct fus_vm {
     fus_core_t *core;
+    fus_symtable_t *symtable;
     int n_boxed;
 
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)
 };
 
-void fus_vm_init(fus_vm_t *vm, fus_core_t *core);
+void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
+    fus_symtable_t *symtable);
 void fus_vm_cleanup(fus_vm_t *vm);
 
 

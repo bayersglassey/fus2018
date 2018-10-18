@@ -15,8 +15,11 @@
     fus_class_cleanup(&vm->class_##NAME);
 
 
-void fus_vm_init(fus_vm_t *vm, fus_core_t *core){
+void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
+    fus_symtable_t *symtable
+){
     vm->core = core;
+    vm->symtable = symtable;
     vm->n_boxed = 0;
 
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_SIMPLE_CLASS_INIT)
