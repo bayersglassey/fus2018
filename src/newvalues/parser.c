@@ -24,8 +24,12 @@ void fus_parser_print(fus_parser_t *parser){
 
 
 
-void fus_parser_push_arr(fus_parser_t *parser){}
-void fus_parser_pop_arr(fus_parser_t *parser){}
+void fus_parser_push_arr(fus_parser_t *parser){
+}
+void fus_parser_pop_arr(fus_parser_t *parser){
+}
+void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
+}
 
 
 void fus_parser_stringparse_name(fus_parser_t *parser, const char *string){
@@ -45,17 +49,47 @@ void fus_parser_stringparse_str(fus_parser_t *parser, const char *string){
 void fus_parser_tokenparse_name(fus_parser_t *parser,
     const char *token, int token_len
 ){
+    /* TODO */
 }
 void fus_parser_tokenparse_op(fus_parser_t *parser,
     const char *token, int token_len
 ){
+    /* TODO */
 }
 void fus_parser_tokenparse_int(fus_parser_t *parser,
     const char *token, int token_len
 ){
+    fus_value_t value = fus_value_tokenparse_int(parser->vm,
+        token, token_len);
+    fus_parser_push_value(parser, value);
 }
 void fus_parser_tokenparse_str(fus_parser_t *parser,
     const char *token, int token_len
 ){
+    /* TODO */
 }
 
+
+fus_value_t fus_value_stringparse_int(fus_vm_t *vm, const char *token){
+    return fus_value_tokenparse_int(vm, token, strlen(token));
+}
+
+
+fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
+    const char *token, int token_len
+){
+    fus_unboxed_t result = 0;
+    bool neg = token[0] == '-';
+    for(int i = neg? 1: 0; i < token_len; i++){
+        fus_unboxed_t digit = token[i] - '0';
+        fus_unboxed_t max = FUS_UNBOXED_MAX - digit / 10;
+        if(result > max){
+            return fus_value_err(vm,
+                neg? FUS_ERR_UNDERFLOW: FUS_ERR_OVERFLOW);
+        }
+        result = result * 10 + digit;
+    }
+    if(neg)result = -result;
+        /* TODO: Can flipping sign cause underflow/overflow? */
+    return fus_value_int(vm, result);
+}

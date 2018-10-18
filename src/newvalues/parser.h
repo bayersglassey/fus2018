@@ -21,6 +21,7 @@ void fus_parser_print(fus_parser_t *parser);
 
 void fus_parser_push_arr(fus_parser_t *parser);
 void fus_parser_pop_arr(fus_parser_t *parser);
+void fus_parser_push_value(fus_parser_t *parser, fus_value_t value);
 
 void fus_parser_stringparse_name(fus_parser_t *parser, const char *string);
 void fus_parser_stringparse_op(fus_parser_t *parser, const char *string);
@@ -34,6 +35,11 @@ void fus_parser_tokenparse_op(fus_parser_t *parser,
 void fus_parser_tokenparse_int(fus_parser_t *parser,
     const char *token, int token_len);
 void fus_parser_tokenparse_str(fus_parser_t *parser,
+    const char *token, int token_len);
+
+fus_value_t fus_value_stringparse_int(fus_vm_t *vm, const char *token);
+
+fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
     const char *token, int token_len);
 
 #endif

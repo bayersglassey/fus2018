@@ -224,7 +224,22 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Parser tests";
+    const char *title = "Parser tests (values)";
+    FUS_TESTS_BEGIN()
+
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "0")), 0);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "1")), 1);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "10")), 10);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "26")), 26);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "999")), 999);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-999")), -999);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-0")), 0);
+
+    FUS_TESTS_END()
+}
+
+void run_parser_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    const char *title = "Parser tests (full)";
     FUS_TESTS_BEGIN()
 
     fus_parser_t parser;
