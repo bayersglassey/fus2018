@@ -111,6 +111,28 @@ void fus_arr_cleanup(fus_arr_t *a){
 }
 
 
+
+fus_array_len_t fus_arr_len(fus_arr_t *a){
+    return a->values.len;
+}
+
+fus_value_t fus_arr_get(fus_arr_t *a, int i){
+    fus_value_t value = FUS_ARR_VALUES(*a)[i];
+    fus_value_attach(value);
+    return value;
+}
+
+void fus_arr_push(fus_arr_t *a, fus_value_t value){
+    /* Resize array */
+    fus_array_len_t new_len = a->values.len + 1;
+    fus_array_set_len(&a->values, new_len);
+
+    /* Poke value into last array element */
+    FUS_ARR_VALUES(*a)[new_len - 1] = value;
+}
+
+
+
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
     /* Guarantees that p will have refcount 1.
     Either leaves p alone if it already has refcount 1,
@@ -144,20 +166,19 @@ fus_value_t fus_value_arr(fus_vm_t *vm){
 fus_value_t fus_value_arr_len(fus_vm_t *vm, fus_value_t value){
     /* Return len of arr value as a new int value */
     if(!fus_value_is_arr(value))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-    return fus_value_int(vm, value.p->data.a.values.len);
+    return fus_value_int(vm, fus_arr_len(&value.p->data.a));
 }
 
 fus_value_t fus_value_arr_get(fus_vm_t *vm, fus_value_t value_a,
     fus_unboxed_t i
 ){
+    /* Return element i of value_a. Increases element's refcount. */
     if(!fus_value_is_arr(value_a))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_arr_t *a = &value_a.p->data.a;
-    if(i < 0 || i >= a->values.len){
+    if(i < 0 || i >= fus_arr_len(a)){
         return fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
     }
-    fus_value_t value = FUS_ARR_VALUES(*a)[i];
-    fus_value_attach(value);
-    return value;
+    return fus_arr_get(a, i);
 }
 
 void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
@@ -179,13 +200,9 @@ void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
     /* Uniqueness guarantee */
     fus_boxed_arr_mkunique(&value_a.p);
 
-    /* Get arr and resize its array */
+    /* Get arr and do the push */
     fus_arr_t *a = &value_a.p->data.a;
-    fus_array_len_t new_len = a->values.len + 1;
-    fus_array_set_len(&a->values, new_len);
-
-    /* Poke value into last array element */
-    FUS_ARR_VALUES(*a)[new_len - 1] = value;
+    fus_arr_push(a, value);
 
     /* Return */
     *value_a_ptr = value_a;

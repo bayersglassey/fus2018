@@ -68,6 +68,10 @@ void fus_boxed_detach(fus_boxed_t *p);
 void fus_arr_init(fus_arr_t *a, fus_vm_t *vm);
 void fus_arr_cleanup(fus_arr_t *a);
 
+fus_array_len_t fus_arr_len(fus_arr_t *a);
+fus_value_t fus_arr_get(fus_arr_t *a, int i);
+void fus_arr_push(fus_arr_t *a, fus_value_t value);
+
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr);
 
 bool fus_value_is_arr(fus_value_t value);
