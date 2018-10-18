@@ -1,0 +1,154 @@
+
+
+def test of(->):
+    use: Schema new
+    use: Schema create
+    use: Schema finish
+    use: Schema add_field
+    use: Schema fields ID
+    use: Schema fields STR
+    use: Schema fields DECIMAL
+    @new
+        "Bank Account" =.title
+        `id @ID @add_field
+        `first_name @STR F =.allow_empty @add_field
+        `last_name @STR F =.allow_empty @add_field
+        `dollars @DECIMAL 2 =.precision @add_field
+    @finish ='schema
+
+    'schema .primary_key `id sym_eq assert
+
+    # A "RUN" KEYWORD LIKE THIS WOULD BE COOL
+    # ...it would take the place of "try..catch" etc
+    # Also, the way we use it here, it appears to automatically copy
+    # vars from parent scope
+    # We could presumably let it use takes(...) as well
+    run: 'schema obj @create
+    dup .ok not assert
+    .error
+        dup keys len 2 == assert
+        dup .first_name .code `missing_field sym_eq assert
+        dup .last_name .code `missing_field sym_eq assert
+    drop
+
+    'schema (obj "Adam" =.first_name "X" =.last_name) @create ='adam
+    'adam ._schema .name `bank_account sym_eq assert
+    'adam .first_name "Adam" str_eq assert
+    'adam .dollars 0 @(Decimal eq) assert
+
+
+module Schema:
+
+    module fields:
+        def ID: @INT T =.auto_inc T =.primary T =.unique F =.allow_null F =.allow_empty
+        def INT: obj `int =.type
+        def STR: obj `str =.type null =.max_len
+        def DECIMAL: obj `decimal =.type null =.precision
+
+    def new:
+        obj
+            `Schema =.type
+            null =.title
+            null =.name
+            null =.table_name
+            obj =.fields
+            null =.primary_key
+            F =.finished
+
+    def finish of(schema -> schema):
+        ='schema
+        'schema .title is_null if:
+            obj
+                `no_title =.code
+                "Schema has no title" =.msg
+            error
+        'schema .name is_null if:
+            ''schema ('schema .title @slugify str_tosym) =.name ='schema
+        'schema .table_name is_null if:
+            ''schema ('schema .name sym_tostr) =.table_name ='schema
+        ''schema T =.finished
+
+    def add_field of(schema name opts -> schema):
+        ='opts ='name ='schema
+        'name 'opts @(Field new) ='field
+
+        'field .opts .primary if:
+            'schema .primary_key is_null not if:
+                obj
+                    `primary_exists =.code
+                    "Schema already has primary key" =.msg
+                    'schema .primary_key =.old_key
+                    'name =.new_key
+                error
+            ''schema 'name =.primary_key ='schema
+
+        'schema .fields ='fields
+        'fields 'name has if:
+            obj
+                `field_exists =.code
+                "Field already exists" =.msg
+                'fields 'name get =.old_field
+                'field =.new_field
+            error
+
+        ''schema
+            ''fields drop
+            ..fields ''field 'name set =.fields
+
+    def get_field of(schema name -> field): .fields get
+
+
+module Field:
+
+    def new of(name opts -> field):
+        ='opts ='name
+        ''opts @validate_opts ='opts
+        obj
+            `Field =.type
+            'name =.name
+            'opts =.opts
+
+    def default_opts:
+        obj
+            null =.type
+            F =.auto_inc
+            F =.primary
+            F =.allow_null
+            T =.allow_empty
+            F =.unique
+
+    def validate_opts of(opts -> opts):
+        ='opts
+        'opts is_null if: obj ='opts
+        @default_opts ''opts @obj_merge ='opts
+
+        T ='ok
+        'opts .type is_null if: F ='ok # for example
+        'ok not if:
+            obj
+                `bad_opts =.code
+                "Invalid options" =.msg
+                'opts =.opts
+            error
+
+        ''opts
+
+
+module Decimal:
+
+    def new:
+        ='x
+        'x is_int if: ''x @from_int return
+        'x is_str if: ''x @from_str return
+        'x is_null not if:
+            obj
+                `Decimal =.module
+                `cannot_convert =.code
+                "Wrong type" =.msg
+                ''x =.value
+            error
+        @zero
+
+    def zero:
+        obj arr 0, =.digits 0 =.decimal_pos
+
