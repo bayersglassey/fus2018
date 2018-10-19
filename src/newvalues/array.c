@@ -65,6 +65,10 @@ void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
     array->len = new_len;
 }
 
+void fus_array_push(fus_array_t *array){
+    fus_array_set_len(array, array->len + 1);
+}
+
 
 
 /*******************

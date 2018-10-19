@@ -29,6 +29,7 @@ void fus_parser_push_arr(fus_parser_t *parser){
 void fus_parser_pop_arr(fus_parser_t *parser){
 }
 void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
+    fus_arr_push(&parser->arr, value);
 }
 
 
@@ -82,6 +83,8 @@ fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
 fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
     const char *token, int token_len
 ){
-    return fus_value_err(vm, FUS_ERR_IDUNNO);
+    /* TODO */
+    fprintf(stderr, "TODO: Implement str values\n");
+    return fus_value_int(vm, 0);
 }
 

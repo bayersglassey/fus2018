@@ -124,11 +124,10 @@ fus_value_t fus_arr_get(fus_arr_t *a, int i){
 
 void fus_arr_push(fus_arr_t *a, fus_value_t value){
     /* Resize array */
-    fus_array_len_t new_len = a->values.len + 1;
-    fus_array_set_len(&a->values, new_len);
+    fus_array_push(&a->values);
 
     /* Poke value into last array element */
-    FUS_ARR_VALUES(*a)[new_len - 1] = value;
+    FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
 }
 
 
