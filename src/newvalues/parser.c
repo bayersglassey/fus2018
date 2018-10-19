@@ -73,6 +73,9 @@ void fus_parser_tokenparse_str(fus_parser_t *parser,
 fus_value_t fus_value_stringparse_int(fus_vm_t *vm, const char *token){
     return fus_value_tokenparse_int(vm, token, strlen(token));
 }
+fus_value_t fus_value_stringparse_sym(fus_vm_t *vm, const char *token){
+    return fus_value_tokenparse_sym(vm, token, strlen(token));
+}
 
 
 fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
@@ -92,4 +95,12 @@ fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
     if(neg)result = -result;
         /* TODO: Can flipping sign cause underflow/overflow? */
     return fus_value_int(vm, result);
+}
+
+fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
+    const char *token, int token_len
+){
+    int sym_i = fus_symtable_get_or_add_token(vm->symtable,
+        token, token_len);
+    return fus_value_sym(vm, sym_i);
 }

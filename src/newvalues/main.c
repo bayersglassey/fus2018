@@ -275,7 +275,7 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
-void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Parser tests (values)")
 
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "0")), 0);
@@ -285,6 +285,11 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "999")), 999);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-999")), -999);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-0")), 0);
+
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "x")),
+        fus_symtable_get_string(vm->symtable, "x"));
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
+        fus_symtable_get_string(vm->symtable, "ABC123!@#"));
 
     FUS_TESTS_END()
 }
@@ -354,7 +359,8 @@ int run_tests(fus_vm_t *vm){
     //run_lexer_tests(vm, &n_tests, &n_fails);
     run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
     run_symtable_tests_full(vm, &n_tests, &n_fails);
-    run_parser_tests(vm, &n_tests, &n_fails);
+    run_parser_tests_basic(vm, &n_tests, &n_fails);
+    //run_parser_tests_full(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 

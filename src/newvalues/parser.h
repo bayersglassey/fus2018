@@ -38,8 +38,11 @@ void fus_parser_tokenparse_str(fus_parser_t *parser,
     const char *token, int token_len);
 
 fus_value_t fus_value_stringparse_int(fus_vm_t *vm, const char *token);
+fus_value_t fus_value_stringparse_sym(fus_vm_t *vm, const char *token);
 
 fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
+    const char *token, int token_len);
+fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
     const char *token, int token_len);
 
 #endif
