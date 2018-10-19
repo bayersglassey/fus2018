@@ -8,7 +8,8 @@ const char *fus_err_code_msg(fus_err_code_t code){
         "Wrong type",
         "Overflow",
         "Underflow",
-        "Out of Bounds"
+        "Out of Bounds",
+        "Lol Idunno"
     };
     if(code < 0 || code >= FUS_ERRS)return "Unknown";
     return codes[code];

@@ -32,51 +32,25 @@ void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
 }
 
 
-void fus_parser_stringparse_name(fus_parser_t *parser, const char *string){
-    fus_parser_tokenparse_name(parser, string, strlen(string));
-}
-void fus_parser_stringparse_op(fus_parser_t *parser, const char *string){
-    fus_parser_tokenparse_name(parser, string, strlen(string));
-}
-void fus_parser_stringparse_int(fus_parser_t *parser, const char *string){
-    fus_parser_tokenparse_name(parser, string, strlen(string));
-}
-void fus_parser_stringparse_str(fus_parser_t *parser, const char *string){
-    fus_parser_tokenparse_name(parser, string, strlen(string));
-}
 
+#define FUS_PARSER_DEFS(T) \
+    fus_value_t fus_value_stringparse_##T(fus_vm_t *vm, const char *token){ \
+        return fus_value_tokenparse_##T(vm, token, strlen(token)); \
+    } \
+    void fus_parser_stringparse_##T(fus_parser_t *parser, const char *token){ \
+        fus_parser_tokenparse_##T(parser, token, strlen(token)); \
+    } \
+    void fus_parser_tokenparse_##T(fus_parser_t *parser, \
+        const char *token, int token_len \
+    ){ \
+        fus_value_t value = fus_value_tokenparse_##T(parser->vm, \
+            token, token_len); \
+        fus_parser_push_value(parser, value); \
+    }
 
-void fus_parser_tokenparse_name(fus_parser_t *parser,
-    const char *token, int token_len
-){
-    /* TODO */
-}
-void fus_parser_tokenparse_op(fus_parser_t *parser,
-    const char *token, int token_len
-){
-    /* TODO */
-}
-void fus_parser_tokenparse_int(fus_parser_t *parser,
-    const char *token, int token_len
-){
-    fus_value_t value = fus_value_tokenparse_int(parser->vm,
-        token, token_len);
-    fus_parser_push_value(parser, value);
-}
-void fus_parser_tokenparse_str(fus_parser_t *parser,
-    const char *token, int token_len
-){
-    /* TODO */
-}
-
-
-fus_value_t fus_value_stringparse_int(fus_vm_t *vm, const char *token){
-    return fus_value_tokenparse_int(vm, token, strlen(token));
-}
-fus_value_t fus_value_stringparse_sym(fus_vm_t *vm, const char *token){
-    return fus_value_tokenparse_sym(vm, token, strlen(token));
-}
-
+FUS_PARSER_DEFS(int)
+FUS_PARSER_DEFS(sym)
+FUS_PARSER_DEFS(str)
 
 fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
     const char *token, int token_len
@@ -104,3 +78,10 @@ fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
         token, token_len);
     return fus_value_sym(vm, sym_i);
 }
+
+fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
+    const char *token, int token_len
+){
+    return fus_value_err(vm, FUS_ERR_IDUNNO);
+}
+
