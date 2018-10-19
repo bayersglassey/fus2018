@@ -63,6 +63,8 @@
     FUS_TEST_EQ(#X, #Y, (void*)(X), (void*)(Y), int, "%p")
 #define FUS_TEST_EQ_UNBOXED(X, Y) \
     FUS_TEST_EQ(#X, #Y, X, Y, fus_unboxed_t, "%li")
+#define FUS_TEST_NE_UNBOXED(X, Y) \
+    FUS_TEST_NE(#X, #Y, X, Y, fus_unboxed_t, "%li")
 
 #define FUS_TEST(X) { \
     printf("  " #X "\n"); \
@@ -222,8 +224,8 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
-void run_symtable_tests(fus_core_t *core, int *n_tests_ptr, int *n_fails_ptr){
-    FUS_TESTS_BEGIN("Symtable tests")
+void run_symtable_tests_basic(fus_core_t *core, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Symtable tests (no vm)")
 
     fus_symtable_t table;
     fus_symtable_init(&table, core);
@@ -250,6 +252,25 @@ void run_symtable_tests(fus_core_t *core, int *n_tests_ptr, int *n_fails_ptr){
         sym_i_lala);
 
     fus_symtable_cleanup(&table);
+
+    FUS_TESTS_END()
+}
+
+void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Symtable tests (full)")
+
+    fus_symtable_t *table = vm->symtable;
+
+    int sym_i_x = fus_symtable_get_or_add_string(table, "x");
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_x)), sym_i_x)
+
+    int sym_i_y = fus_symtable_get_or_add_string(table, "y");
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_y)), sym_i_y)
+
+    FUS_TEST_NE_INT(sym_i_x, sym_i_y)
+    FUS_TEST_NE_UNBOXED(
+        fus_value_sym_decode(fus_value_sym(vm, sym_i_x)),
+        fus_value_sym_decode(fus_value_sym(vm, sym_i_y)))
 
     FUS_TESTS_END()
 }
@@ -331,7 +352,8 @@ int run_tests(fus_vm_t *vm){
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
     //run_lexer_tests(vm, &n_tests, &n_fails);
-    run_symtable_tests(vm->core, &n_tests, &n_fails);
+    run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
+    run_symtable_tests_full(vm, &n_tests, &n_fails);
     run_parser_tests(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
