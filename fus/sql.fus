@@ -52,7 +52,7 @@ module Schema:
             null =.title
             null =.name
             null =.table_name
-            obj =.fields
+            arr =.fields
             null =.primary_key
             F =.finished
 
@@ -60,8 +60,8 @@ module Schema:
         ='schema
         obj 'schema =._schema ='object
         'schema .fields ='fields
-        'fields keys @arr_togen for: ='name
-            'fields 'name get ='field
+        'fields @arr_togen for: ='field
+            'field .name ='name
             'field .default ='value
             ''object ''value 'name set ='object
         ''object
@@ -79,6 +79,34 @@ module Schema:
             ''schema ('schema .name sym_tostr) =.table_name ='schema
         ''schema T =.finished
 
+    def sql_update of(object -> sql):
+        ='object
+        'object ._schema ='schema
+
+        'schema .primary_key ='pk_name
+        'schema 'pk_name @get_field ='pk_field
+        'object 'pk_name get ='pk_value
+
+        'schema 'fields fun: ='field
+            'object 'field .name get ='value
+            'field 'value @(Field get_db_value)
+        @map ='values
+
+        'schema ''values @sql_format_values ='db_values
+
+        arr
+            "UPDATE ", 'schema .table_name,
+            " WHERE ", 'pk_name, " = ",
+            'pk_field 'pk_value @(Field get_db_value),
+            " VALUES ", 'db_values, ";",
+        @sql_format
+
+    def sql_format_values(schema values -> db_values):
+        ='values ='schema
+        'values fun:
+            'schema swap ... # ummm
+        @map ", " @str_join
+
     def add_field of(schema name opts -> schema):
         ='opts ='name ='schema
         'name 'opts @(Field new) ='field
@@ -93,20 +121,21 @@ module Schema:
                 error
             ''schema 'name =.primary_key ='schema
 
-        'schema .fields ='fields
-        'fields 'name has if:
+        'schema 'name @get_field ='old_field
+        'old_field is_null not if:
             obj
                 `field_exists =.code
                 "Field already exists" =.msg
-                'fields 'name get =.old_field
+                'old_field =.old_field
                 'field =.new_field
             error
 
         ''schema
-            ''fields drop
-            ..fields ''field 'name set =.fields
+            ..fields ''field, =.fields
 
-    def get_field of(schema name -> field): .fields get
+    def get_field of(schema name -> field_or_null):
+        ='name
+        .fields fun(.name dup 'name sym_eq) @filter @first
 
 
 module Field:
@@ -166,4 +195,6 @@ module Decimal:
 
     def zero:
         obj arr 0, =.digits 0 =.decimal_pos
+
+    # etc...
 
