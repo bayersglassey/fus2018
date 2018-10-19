@@ -8,6 +8,10 @@
 #include <stdbool.h>
 
 
+#define FUS_SYMTABLE_ENTRIES(TABLE) \
+    ( (fus_symtable_entry_t*)(TABLE).entries.elems )
+
+
 typedef struct fus_symtable_entry {
     struct fus_symtable *table;
     int token_len;
@@ -29,6 +33,18 @@ void fus_symtable_entry_cleanup(fus_symtable_entry_t *entry);
 
 void fus_symtable_init(fus_symtable_t *table, fus_core_t *core);
 void fus_symtable_cleanup(fus_symtable_t *table);
+
+int fus_symtable_len(fus_symtable_t *table);
+int fus_symtable_add_token(fus_symtable_t *table,
+    const char *token, int token_len);
+int fus_symtable_get_token(fus_symtable_t *table,
+    const char *token, int token_len);
+int fus_symtable_get_or_add_token(fus_symtable_t *table,
+    const char *token, int token_len);
+
+int fus_symtable_add_string(fus_symtable_t *table, const char *string);
+int fus_symtable_get_string(fus_symtable_t *table, const char *string);
+int fus_symtable_get_or_add_string(fus_symtable_t *table, const char *string);
 
 
 

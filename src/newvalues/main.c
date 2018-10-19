@@ -45,7 +45,7 @@
     T __y = (Y); \
     printf("    " FMT " " #OP " " FMT "\n", __x, __y); \
     if(!(__x OP __y)){ \
-        printf("    ...FAIL\n"); \
+        printf("    [FAIL]\n"); \
         n_fails++; \
     } \
 }
@@ -57,6 +57,8 @@
 
 #define FUS_TEST_EQ_INT(X, Y) \
     FUS_TEST_EQ(#X, #Y, X, Y, int, "%i")
+#define FUS_TEST_NE_INT(X, Y) \
+    FUS_TEST_NE(#X, #Y, X, Y, int, "%i")
 #define FUS_TEST_EQ_PTR(X, Y) \
     FUS_TEST_EQ(#X, #Y, (void*)(X), (void*)(Y), int, "%p")
 #define FUS_TEST_EQ_UNBOXED(X, Y) \
@@ -66,7 +68,7 @@
     printf("  " #X "\n"); \
     n_tests++; \
     if(!(X)){ \
-        printf("    ...FAIL\n"); \
+        printf("    [FAIL]\n"); \
         n_fails++; \
     } \
 }
@@ -220,6 +222,38 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
+void run_symtable_tests(fus_core_t *core, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Symtable tests")
+
+    fus_symtable_t table;
+    fus_symtable_init(&table, core);
+
+    FUS_TEST_EQ_INT(fus_symtable_len(&table), 0);
+
+    int sym_i_x = fus_symtable_add_string(&table, "x");
+    FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
+    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "x"), sym_i_x);
+    FUS_TEST_EQ_INT(fus_symtable_get_or_add_string(&table, "x"), sym_i_x);
+    FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
+
+    int sym_i_y = fus_symtable_add_string(&table, "y");
+    FUS_TEST_EQ_INT(fus_symtable_len(&table), 2);
+    FUS_TEST_NE_INT(sym_i_x, sym_i_y);
+
+    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "x"), sym_i_x);
+
+    int sym_i_lala = fus_symtable_add_string(&table, "LA LA $#@$");
+    FUS_TEST_EQ_INT(fus_symtable_len(&table), 3);
+    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA"), -1);
+    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA $#@$ 2"), -1);
+    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA $#@$"),
+        sym_i_lala);
+
+    fus_symtable_cleanup(&table);
+
+    FUS_TESTS_END()
+}
+
 void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Parser tests (values)")
 
@@ -297,6 +331,7 @@ int run_tests(fus_vm_t *vm){
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
     //run_lexer_tests(vm, &n_tests, &n_fails);
+    run_symtable_tests(vm->core, &n_tests, &n_fails);
     run_parser_tests(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)

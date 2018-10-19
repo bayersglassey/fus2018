@@ -36,10 +36,73 @@ void fus_symtable_init(fus_symtable_t *table, fus_core_t *core){
         sizeof(fus_symtable_entry_t), table,
         &fus_class_init_symtable_entry,
         &fus_class_cleanup_symtable_entry);
+    fus_array_init(&table->entries, &table->class_entry);
 }
 
 void fus_symtable_cleanup(fus_symtable_t *table){
+    fus_array_cleanup(&table->entries);
     fus_class_cleanup(&table->class_entry);
+}
+
+
+
+static int fus_symtable_append_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    fus_array_len_t new_len = table->entries.len + 1;
+    int sym_i = new_len - 1;
+    fus_array_set_len(&table->entries, new_len);
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    fus_symtable_entry_t *entry = &entries[sym_i];
+    fus_symtable_entry_init(entry, table, token, token_len);
+    return sym_i;
+}
+
+int fus_symtable_len(fus_symtable_t *table){
+    return table->entries.len;
+}
+
+int fus_symtable_add_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    /* Assumes token is not in table. Adds it and returns its index */
+    return fus_symtable_append_token(table, token, token_len);
+}
+
+int fus_symtable_get_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    /* Returns index of token in table, or -1 if not found */
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    int len = table->entries.len;
+    for(int sym_i = len - 1; sym_i >= 0; sym_i--){
+        fus_symtable_entry_t *entry = &entries[sym_i];
+        if(
+            entry->token_len == token_len &&
+            !strncmp(entry->token, token, token_len)
+        )return sym_i;
+    }
+    return -1;
+}
+
+int fus_symtable_get_or_add_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    /* Returns token's index in table, adding it first if not found */
+    int sym_i = fus_symtable_get_token(table, token, token_len);
+    if(sym_i < 0)return fus_symtable_append_token(table, token, token_len);
+    return sym_i;
+}
+
+
+int fus_symtable_add_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_add_token(table, string, strlen(string));
+}
+int fus_symtable_get_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_token(table, string, strlen(string));
+}
+int fus_symtable_get_or_add_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_or_add_token(table, string, strlen(string));
 }
 
 
