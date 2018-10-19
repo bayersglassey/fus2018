@@ -9,8 +9,7 @@
 /* The following macro can be passed another macro */
 #define FUS_VM_SIMPLE_CLASSES_DO(M) \
     M(char, char) \
-    M(unboxed, fus_unboxed_t) \
-    M(sym_i, fus_sym_i_t)
+    M(unboxed, fus_unboxed_t)
 
 /* The following macro can be passed another macro */
 #define FUS_VM_CLASSES_DO(M) \

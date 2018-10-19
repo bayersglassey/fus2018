@@ -46,8 +46,6 @@ typedef long int fus_unboxed_t;
 #define FUS_UNBOXED_MIN LONG_MIN
 #define FUS_UNBOXED_MAX LONG_MAX
 
-typedef fus_unboxed_t fus_sym_i_t;
-
 
 union fus_value {
     fus_unboxed_t i;
@@ -94,8 +92,8 @@ extern fus_err_code_t fus_current_err_code;
 fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code);
 
 
-fus_value_t fus_value_sym(fus_vm_t *vm, fus_sym_i_t sym_i);
-fus_sym_i_t fus_value_sym_decode(fus_value_t value);
+fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i);
+int fus_value_sym_decode(fus_value_t value);
 
 fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i);
 fus_unboxed_t fus_value_int_decode(fus_value_t value);
