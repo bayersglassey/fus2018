@@ -19,7 +19,7 @@ sig tostr
 def tostr:
     obj
         fun(drop "null") =.null
-        fun(ifelse("t")("f")) =.bool
+        fun(ifelse("T")("F")) =.bool
         fun(int_tostr) =.int
         fun() =.str
         fun(sym_tostr) =.sym
@@ -34,12 +34,12 @@ def obj_tostr:
     ='o
 
     "{" ='s
-    t ='first
+    T ='first
 
     'o keys @arr_togen for: ='key
         'o 'key get ='val
         ''s
-            'first ifelse: f ='first
+            'first ifelse: F ='first
             : ", " str_join
             'key sym_tostr str_join
             ": " str_join

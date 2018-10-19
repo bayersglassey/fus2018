@@ -66,10 +66,10 @@ sig scale def blues2_scale:
 
 sig sounds def drum_sounds:
     obj
-         500 10000 (obj -10 =.volinc 5000 =.limit 1 =.step t =.wacky) @noise =.drum1
-         500 10000 (obj -10 =.volinc 5000 =.limit 2 =.step t =.wacky) @noise =.drum2
-         500 10000 (obj -10 =.volinc 5000 =.limit 3 =.step t =.wacky) @noise =.drum3
-        1500 10000 (obj -10 =.volinc 1000 =.limit t =.wacky) @noise =.cymb1
+         500 10000 (obj -10 =.volinc 5000 =.limit 1 =.step T =.wacky) @noise =.drum1
+         500 10000 (obj -10 =.volinc 5000 =.limit 2 =.step T =.wacky) @noise =.drum2
+         500 10000 (obj -10 =.volinc 5000 =.limit 3 =.step T =.wacky) @noise =.drum3
+        1500 10000 (obj -10 =.volinc 1000 =.limit T =.wacky) @noise =.cymb1
 
 sig pattern def drums1:
     data:
@@ -90,10 +90,10 @@ sig pattern def drums2:
 
 sig sounds def bass_sounds:
     obj
-         500  500 10000 (obj 1000 =.limit t =.wacky) @triangle =.bass1
-         500 1000  9000 (obj 0 =.limit t =.wacky) @triangle =.bass2
-         500  750  9000 (obj 1 =.addinc1 t =.wacky) @triangle =.bass3
-        7500 1000 15000 (obj -1 =.addinc1 t =.wacky) @triangle =.bass4
+         500  500 10000 (obj 1000 =.limit T =.wacky) @triangle =.bass1
+         500 1000  9000 (obj 0 =.limit T =.wacky) @triangle =.bass2
+         500  750  9000 (obj 1 =.addinc1 T =.wacky) @triangle =.bass3
+        7500 1000 15000 (obj -1 =.addinc1 T =.wacky) @triangle =.bass4
 
 
 sig pattern def bass:

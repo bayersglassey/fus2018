@@ -35,7 +35,7 @@ Null
 
 Bool
 
-    t f not and or bool_eq
+    T F not and or bool_eq
 
 Int
 

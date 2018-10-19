@@ -5,10 +5,10 @@ defsig eq: x y -> bool
 sig eq
 def eq:
     ='y ='x
-    'x typeof 'y typeof sym_eq not if: f return
+    'x typeof 'y typeof sym_eq not if: F return
 
     obj
-        fun(drop drop t) =.null
+        fun(drop drop T) =.null
         fun(bool_eq) =.bool
         fun(==) =.int
         fun(str_eq) =.str
@@ -25,11 +25,11 @@ def eq:
 sig eq
 def obj_eq:
     ='y ='x
-    ('x keys) ('y keys) @arr_eq not if: f return
+    ('x keys) ('y keys) @arr_eq not if: F return
 
-    t ='result
+    T ='result
     'x keys @arr_togen for: ='key
-        ('x 'key get) ('y 'key get) @eq not if: f ='result break
+        ('x 'key get) ('y 'key get) @eq not if: F ='result break
 
     'result
 
@@ -37,11 +37,11 @@ def obj_eq:
 sig eq
 def arr_eq:
     ='ys ='xs
-    ('xs len) ('ys len) != if: f return
+    ('xs len) ('ys len) != if: F return
 
-    t ='result
+    T ='result
     'xs len @int_togen for: ='i
-        ('xs 'i .$) ('ys 'i .$) @eq not if: f ='result break
+        ('xs 'i .$) ('ys 'i .$) @eq not if: F ='result break
 
     'result
 
@@ -52,7 +52,7 @@ def test:
         null,
         1,
         "ASD",
-        t,
+        T,
         (arr 1, 2, 3,),
         (obj 1 =.x 2 =.y),
     ='x
@@ -78,7 +78,7 @@ def test:
     "ok" p
 
     "eq failure - bool" p
-    'x ('x f 3 =.$) @eq not assert
+    'x ('x F 3 =.$) @eq not assert
     "ok" p
 
     "eq failure - arr" p

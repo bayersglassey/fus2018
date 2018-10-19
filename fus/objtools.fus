@@ -6,9 +6,9 @@ def has:
         # key is an arr of syms
         ='keys ='obj
         do l:
-            'keys len 0 == if: t ='bool break l
+            'keys len 0 == if: T ='bool break l
             ''keys lpop ='key ='keys
-            'obj 'key has not if: f ='bool break l
+            'obj 'key has not if: F ='bool break l
             ''obj 'key get ='obj
         ''bool
     :

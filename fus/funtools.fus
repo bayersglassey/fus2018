@@ -27,10 +27,10 @@ def sig(xs x f -> x) fold:
     ''x
 
 def sig(xs -> bool) all:
-    t fun(and) @fold
+    T fun(and) @fold
 
 def sig(xs -> bool) any:
-    f fun(or) @fold
+    F fun(or) @fold
 
 def sig(xs -> int) sum:
     0 fun(+) @fold
@@ -54,11 +54,11 @@ def sig(->) test:
         >> 30 == assert
     done assert
 
-    (arr t, t, t,) @all assert
-    (arr t, f, t,) @all not assert
+    (arr T, T, T,) @all assert
+    (arr T, F, T,) @all not assert
 
-    (arr t, f, t,) @any assert
-    (arr f, f, f,) @any not assert
+    (arr T, F, T,) @any assert
+    (arr F, F, F,) @any not assert
 
     (arr 1, 2, 3, 4,) @sum 10 == assert
     (arr 1, 2, 3, 4,) @prod 24 == assert

@@ -45,31 +45,31 @@ stack len 0 == assert
 stack len 0 == assert
 
 "Logic" p
-t assert
-f not assert
-t t and assert
-t f and not assert
-f t and not assert
-f f and not assert
-t t or assert
-t f or assert
-f t or assert
-f f or not assert
+T assert
+F not assert
+T T and assert
+T F and not assert
+F T and not assert
+F F and not assert
+T T or assert
+T F or assert
+F T or assert
+F F or not assert
 :
-    t ='cond
-    f if: f ='cond
+    T ='cond
+    F if: F ='cond
     ''cond assert
 :
-    t ='cond
-    t if: f ='cond
+    T ='cond
+    T if: F ='cond
     ''cond not assert
 :
-    t ifelse: t ='cond
-    : f ='cond
+    T ifelse: T ='cond
+    : F ='cond
     ''cond assert
 :
-    f ifelse: t ='cond
-    : f ='cond
+    F ifelse: T ='cond
+    : F ='cond
     ''cond not assert
 def which_nested_conditional_branch(b b -> i):
     # Returns 0, 1, 2, or 3 depending on which branch was reached
@@ -80,10 +80,10 @@ def which_nested_conditional_branch(b b -> i):
         ifelse: 2 ='x
         : 3 ='x
     ''x
-t t @which_nested_conditional_branch 0 == assert
-f t @which_nested_conditional_branch 1 == assert
-t f @which_nested_conditional_branch 2 == assert
-f f @which_nested_conditional_branch 3 == assert
+T T @which_nested_conditional_branch 0 == assert
+F T @which_nested_conditional_branch 1 == assert
+T F @which_nested_conditional_branch 2 == assert
+F F @which_nested_conditional_branch 3 == assert
 "ok" p
 
 stack len 0 == assert
@@ -184,7 +184,7 @@ module ModuleTest:
         'f call F 1 == assert
         &f call F 2 == assert
 
-        t
+        T
 @(ModuleTest test) assert
 use: ModuleTest =MT
 @(MT test) assert
