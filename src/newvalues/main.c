@@ -17,7 +17,8 @@
 
 #define FUS_TESTS_DIVIDER FUS_TESTS_DIVIDER_80
 
-#define FUS_TESTS_BEGIN() \
+#define FUS_TESTS_BEGIN(TITLE) \
+    const char *title = TITLE; \
     int n_tests = 0; \
     int n_fails = 0; \
     printf(FUS_TESTS_DIVIDER "\n"); \
@@ -77,8 +78,7 @@
 
 
 void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Unboxed int/null/bool tests";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Unboxed int/null/bool tests")
 
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm,  0)),  0)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, -1)), -1)
@@ -106,8 +106,7 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Arr tests (basic)";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Arr tests (basic)")
 
     fus_value_t vx = fus_value_arr(vm);
     FUS_TEST(fus_value_is_arr(vx))
@@ -152,8 +151,7 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Arr tests (intermediate)";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Arr tests (intermediate)")
 
     fus_value_t vx = fus_value_arr(vm);
     fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
@@ -170,8 +168,7 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Lexer tests";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Lexer tests")
 
     fus_lexer_t lexer;
     fus_lexer_init(&lexer);
@@ -224,8 +221,7 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Parser tests (values)";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Parser tests (values)")
 
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "0")), 0);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "1")), 1);
@@ -239,8 +235,7 @@ void run_parser_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 }
 
 void run_parser_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    const char *title = "Parser tests (full)";
-    FUS_TESTS_BEGIN()
+    FUS_TESTS_BEGIN("Parser tests (full)")
 
     fus_parser_t parser;
     fus_parser_init(&parser, vm);
