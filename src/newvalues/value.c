@@ -93,14 +93,6 @@ fus_value_t fus_value_eq(fus_vm_t *vm,
 
 
 
-void fus_value_cleanup(fus_value_t value){
-    fus_unboxed_t tag = FUS_GET_TAG(value.i);
-    if(tag == FUS_TAG_BOXED && value.p != NULL){
-        fus_boxed_t *p = value.p;
-        fus_boxed_cleanup(p);
-    }
-}
-
 void fus_value_attach(fus_vm_t *vm, fus_value_t value){
     fus_unboxed_t tag = FUS_GET_TAG(value.i);
     if(tag == FUS_TAG_BOXED && value.p != NULL){

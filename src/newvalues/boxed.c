@@ -150,7 +150,7 @@ void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
 
 
 bool fus_value_is_arr(fus_value_t value){
-    return FUS_IS_UNBOXED(value) && value.p->type == FUS_BOXED_ARR;
+    return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_ARR;
 }
 
 fus_value_t fus_value_arr(fus_vm_t *vm){
@@ -158,6 +158,14 @@ fus_value_t fus_value_arr(fus_vm_t *vm){
     fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
     fus_boxed_init(p, vm, FUS_BOXED_ARR);
     fus_arr_init(&p->data.a, vm);
+    return (fus_value_t)p;
+}
+
+fus_value_t fus_value_arr_from_arr(fus_vm_t *vm, fus_arr_t *a){
+    /* Creates a new arr value with the given arr. */
+    fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
+    fus_boxed_init(p, vm, FUS_BOXED_ARR);
+    p->data.a = *a;
     return (fus_value_t)p;
 }
 
