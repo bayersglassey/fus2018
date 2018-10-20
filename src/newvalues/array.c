@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 
 #include "array.h"
 
@@ -34,14 +35,14 @@ void fus_array_copy(fus_array_t *array, fus_array_t *other_array){
 }
 
 
-void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
+static void fus_array_grow(fus_array_t *array, fus_array_len_t new_len,
+    bool do_init
+){
     fus_class_t *class = array->class;
     fus_core_t *core = class->core;
     size_t elem_size = class->instance_size;
 
-    /* Grow allocated memory as needed.
-    NOTE: We never shrink allocated memory!
-    It would make sense to add an option for this... */
+    /* Grow allocated memory as needed. */
     size_t new_size_min = new_len * elem_size;
     size_t new_size = array->size;
     if(new_size == 0)new_size = new_size_min;
@@ -52,21 +53,64 @@ void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
         array->size = new_size;
     }
 
-    char *elems = array->elems;
-    for(int i = array->len; i < new_len; i++){
-        void *elem = elems + i * elem_size;
-        fus_class_instance_init(class, elem);
-    }
-    for(int i = array->len - 1; i >= new_len; i--){
-        void *elem = elems + i * elem_size;
-        fus_class_instance_cleanup(class, elem);
+    if(do_init){
+        /* Init elems whose indices will now be within array's bounds */
+        char *elems = array->elems;
+        for(int i = array->len; i < new_len; i++){
+            void *elem = elems + i * elem_size;
+            fus_class_instance_init(class, elem);
+        }
     }
 
+    /* Set array->len */
     array->len = new_len;
 }
 
+static void fus_array_shrink(fus_array_t *array, fus_array_len_t new_len,
+    bool do_cleanup
+){
+    fus_class_t *class = array->class;
+    fus_core_t *core = class->core;
+    size_t elem_size = class->instance_size;
+
+    /* Shrink allocated memory as needed. */
+    /* NOTE: We currently never shrink allocated memory!
+    It would make sense to add an option for this.
+    On class? On core? Compile-time option? Hmm */
+
+    if(do_cleanup){
+        /* Cleanup elems whose indices will be out of array's bounds */
+        char *elems = array->elems;
+        for(int i = array->len - 1; i >= new_len; i--){
+            void *elem = elems + i * elem_size;
+            fus_class_instance_cleanup(class, elem);
+        }
+    }
+
+    /* Set array->len */
+    array->len = new_len;
+}
+
+void fus_array_set_len(fus_array_t *array, fus_array_len_t new_len){
+    if(new_len > array->len){
+        fus_array_grow(array, new_len, true);
+    }else if(new_len < array->len){
+        fus_array_shrink(array, new_len, true);
+    }
+}
+
 void fus_array_push(fus_array_t *array){
-    fus_array_set_len(array, array->len + 1);
+    /* We pass do_init=false, caller is expected to poke a value
+    into new last element.
+    TODO: That should probably be handled by this function */
+    fus_array_grow(array, array->len + 1, false);
+}
+
+void fus_array_pop(fus_array_t *array){
+    /* We pass do_cleanup=false, caller is expected to take ownership
+    of last element.
+    TODO: That should probably be handled by this function */
+    fus_array_shrink(array, array->len - 1, false);
 }
 
 
