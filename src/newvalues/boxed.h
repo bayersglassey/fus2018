@@ -21,10 +21,6 @@ struct fus_obj {
     fus_array_t values;
 };
 
-struct fus_str {
-    fus_array_t text;
-};
-
 struct fus_fun {
     /* not sure what goes in here yet...
     dummy member because C doesn't allow empty struct */
