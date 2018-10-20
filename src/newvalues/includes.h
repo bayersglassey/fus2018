@@ -25,6 +25,7 @@ typedef struct fus_fun fus_fun_t;
 typedef struct fus_printer fus_printer_t;
 #include "value.h"
 #include "vm.h"
+#include "arr.h"
 #include "boxed.h"
 #include "int_ops.h"
 #include "printer.h"
