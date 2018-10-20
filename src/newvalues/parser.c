@@ -75,7 +75,7 @@ fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
 fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
     const char *token, int token_len
 ){
-    int sym_i = fus_symtable_get_or_add_token(vm->symtable,
+    int sym_i = fus_symtable_get_or_add_from_token(vm->symtable,
         token, token_len);
     return fus_value_sym(vm, sym_i);
 }

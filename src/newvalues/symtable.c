@@ -46,7 +46,7 @@ void fus_symtable_cleanup(fus_symtable_t *table){
 
 
 
-static int fus_symtable_append_token(fus_symtable_t *table,
+static int fus_symtable_append_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
     fus_array_push(&table->entries);
@@ -72,14 +72,14 @@ const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i){
     return entry->token;
 }
 
-int fus_symtable_add_token(fus_symtable_t *table,
+int fus_symtable_add_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
     /* Assumes token is not in table. Adds it and returns its index */
-    return fus_symtable_append_token(table, token, token_len);
+    return fus_symtable_append_from_token(table, token, token_len);
 }
 
-int fus_symtable_get_token(fus_symtable_t *table,
+int fus_symtable_get_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
     /* Returns index of token in table, or -1 if not found */
@@ -95,24 +95,24 @@ int fus_symtable_get_token(fus_symtable_t *table,
     return -1;
 }
 
-int fus_symtable_get_or_add_token(fus_symtable_t *table,
+int fus_symtable_get_or_add_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
     /* Returns token's index in table, adding it first if not found */
-    int sym_i = fus_symtable_get_token(table, token, token_len);
-    if(sym_i < 0)return fus_symtable_append_token(table, token, token_len);
+    int sym_i = fus_symtable_get_from_token(table, token, token_len);
+    if(sym_i < 0)return fus_symtable_append_from_token(table, token, token_len);
     return sym_i;
 }
 
 
-int fus_symtable_add_string(fus_symtable_t *table, const char *string){
-    return fus_symtable_add_token(table, string, strlen(string));
+int fus_symtable_add_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_add_from_token(table, string, strlen(string));
 }
-int fus_symtable_get_string(fus_symtable_t *table, const char *string){
-    return fus_symtable_get_token(table, string, strlen(string));
+int fus_symtable_get_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_from_token(table, string, strlen(string));
 }
-int fus_symtable_get_or_add_string(fus_symtable_t *table, const char *string){
-    return fus_symtable_get_or_add_token(table, string, strlen(string));
+int fus_symtable_get_or_add_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_or_add_from_token(table, string, strlen(string));
 }
 
 

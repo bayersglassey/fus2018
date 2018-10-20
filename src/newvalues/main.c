@@ -232,23 +232,23 @@ void run_symtable_tests_basic(fus_core_t *core, int *n_tests_ptr, int *n_fails_p
 
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 0);
 
-    int sym_i_x = fus_symtable_add_string(&table, "x");
+    int sym_i_x = fus_symtable_add_from_string(&table, "x");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
-    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "x"), sym_i_x);
-    FUS_TEST_EQ_INT(fus_symtable_get_or_add_string(&table, "x"), sym_i_x);
+    FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "x"), sym_i_x);
+    FUS_TEST_EQ_INT(fus_symtable_get_or_add_from_string(&table, "x"), sym_i_x);
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
 
-    int sym_i_y = fus_symtable_add_string(&table, "y");
+    int sym_i_y = fus_symtable_add_from_string(&table, "y");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 2);
     FUS_TEST_NE_INT(sym_i_x, sym_i_y);
 
-    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "x"), sym_i_x);
+    FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "x"), sym_i_x);
 
-    int sym_i_lala = fus_symtable_add_string(&table, "LA LA $#@$");
+    int sym_i_lala = fus_symtable_add_from_string(&table, "LA LA $#@$");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 3);
-    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA"), -1);
-    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA $#@$ 2"), -1);
-    FUS_TEST_EQ_INT(fus_symtable_get_string(&table, "LA LA $#@$"),
+    FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "LA LA"), -1);
+    FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "LA LA $#@$ 2"), -1);
+    FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "LA LA $#@$"),
         sym_i_lala);
 
     fus_symtable_cleanup(&table);
@@ -261,10 +261,10 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_symtable_t *table = vm->symtable;
 
-    int sym_i_x = fus_symtable_get_or_add_string(table, "x");
+    int sym_i_x = fus_symtable_get_or_add_from_string(table, "x");
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_x)), sym_i_x)
 
-    int sym_i_y = fus_symtable_get_or_add_string(table, "y");
+    int sym_i_y = fus_symtable_get_or_add_from_string(table, "y");
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_y)), sym_i_y)
 
     FUS_TEST_NE_INT(sym_i_x, sym_i_y)
@@ -287,9 +287,9 @@ void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-0")), 0);
 
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "x")),
-        fus_symtable_get_string(vm->symtable, "x"));
+        fus_symtable_get_from_string(vm->symtable, "x"));
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
-        fus_symtable_get_string(vm->symtable, "ABC123!@#"));
+        fus_symtable_get_from_string(vm->symtable, "ABC123!@#"));
 
     FUS_TESTS_END()
 }
