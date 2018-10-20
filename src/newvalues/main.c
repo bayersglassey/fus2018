@@ -341,8 +341,7 @@ void run_parser_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
     FUS_TEST_EQ_INT(parser.arr.values.len, 3)
 
-    fus_parser_print(&parser); printf("\n");
-
+    fus_parser_dump(&parser, stdout);
     fus_parser_cleanup(&parser);
 
     FUS_TESTS_END()

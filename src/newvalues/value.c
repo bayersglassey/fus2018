@@ -108,6 +108,18 @@ void fus_value_detach(fus_vm_t *vm, fus_value_t value){
 }
 
 
+void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file){
+    fus_printer_t printer;
+    fus_printer_init(&printer, file);
+    fus_printer_print_value(&printer, vm, value);
+    fus_printer_cleanup(&printer);
+}
+
+void fus_value_print(fus_vm_t *vm, fus_value_t value){
+    fus_value_fprint(vm, value, stdout);
+}
+
+
 /*******************
  * FUS_CLASS STUFF *
  *******************/
