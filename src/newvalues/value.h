@@ -111,6 +111,9 @@ fus_value_t fus_value_eq(fus_vm_t *vm,
 void fus_value_attach(fus_vm_t *vm, fus_value_t value);
 void fus_value_detach(fus_vm_t *vm, fus_value_t value);
 
+bool fus_value_is_arr(fus_value_t value);
+bool fus_value_is_str(fus_value_t value);
+
 void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file);
 void fus_value_print(fus_vm_t *vm, fus_value_t value);
 

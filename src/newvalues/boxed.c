@@ -62,14 +62,14 @@ void fus_boxed_cleanup(fus_boxed_t *p){
     p->vm->n_boxed--;
     if(type == FUS_BOXED_ARR){
         fus_arr_t *a = &p->data.a;
-        fus_array_cleanup(&a->values);
+        fus_arr_cleanup(a);
     }else if(type == FUS_BOXED_OBJ){
         fus_obj_t *o = &p->data.o;
         fus_array_cleanup(&o->keys);
         fus_array_cleanup(&o->values);
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
-        fus_array_cleanup(&s->text);
+        fus_str_cleanup(s);
     }else if(type == FUS_BOXED_FUN){
         /* TODO... */
     }else{

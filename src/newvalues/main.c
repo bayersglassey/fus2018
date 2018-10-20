@@ -66,13 +66,22 @@
 #define FUS_TEST_NE_UNBOXED(X, Y) \
     FUS_TEST_NE(#X, #Y, X, Y, fus_unboxed_t, "%li")
 
-#define FUS_TEST(X) { \
-    printf("  " #X "\n"); \
+#define FUS_TEST_(TOKX, X) { \
+    printf("  " TOKX "\n"); \
     n_tests++; \
     if(!(X)){ \
         printf("    [FAIL]\n"); \
         n_fails++; \
     } \
+}
+#define FUS_TEST(X) FUS_TEST_(#X, X)
+
+#define FUS_TEST_STRCMP(X, Y) { \
+    const char *__x = (X); \
+    const char *__y = (Y); \
+    FUS_TEST_("!strcmp(" #X ", " #Y ")", __x && __y && !strcmp(__x, __y)) \
+    if(__x == NULL)printf("    NOTE: lhs is NULL\n"); \
+    if(__y == NULL)printf("    NOTE: rhs is NULL\n"); \
 }
 
 
@@ -290,6 +299,12 @@ void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
         fus_symtable_get_from_string(vm->symtable, "x"));
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
         fus_symtable_get_from_string(vm->symtable, "ABC123!@#"));
+
+    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"ABC\"")), "ABC");
+    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"TWO\\nLINES\"")),
+        "TWO\nLINES");
+    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"\\\"QUOTED\\\"\"")),
+        "\"QUOTED\"");
 
     FUS_TESTS_END()
 }

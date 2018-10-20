@@ -50,9 +50,6 @@ void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
 
 
 
-bool fus_value_is_arr(fus_value_t value){
-    return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_ARR;
-}
 
 fus_value_t fus_value_arr(fus_vm_t *vm){
     /* Creates a new, empty arr value. */
