@@ -22,10 +22,12 @@ typedef struct fus_arr fus_arr_t;
 typedef struct fus_obj fus_obj_t;
 typedef struct fus_str fus_str_t;
 typedef struct fus_fun fus_fun_t;
+typedef struct fus_printer fus_printer_t;
 #include "value.h"
 #include "vm.h"
 #include "boxed.h"
 #include "int_ops.h"
+#include "printer.h"
 #include "parser.h"
 
 #endif
