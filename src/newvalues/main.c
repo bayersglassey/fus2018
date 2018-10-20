@@ -128,7 +128,7 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
 
-    fus_value_attach(vx2);
+    fus_value_attach(vm, vx2);
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
 
     fus_value_t vx3 = vx2;
@@ -146,9 +146,9 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get(vm, vx3, 1)), 20)
 
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
-    fus_value_detach(vx2);
+    fus_value_detach(vm, vx2);
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
-    fus_value_detach(vx3);
+    fus_value_detach(vm, vx3);
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     FUS_TESTS_END()
@@ -165,7 +165,7 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_value_arr_push(vm, &vy, vx);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
-    fus_value_detach(vy);
+    fus_value_detach(vm, vy);
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     FUS_TESTS_END()
