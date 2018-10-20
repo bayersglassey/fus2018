@@ -40,40 +40,7 @@ The latter is like "data(...)" but loaded from a file (like "load(...)").
 Oct 15, 2018:
 -------------
 
-newvalues: mkunique can currently return a thing with refcount 0 or 1...
-    What should the behaviour be?
-    Presumably we always want it to return a thing with a specific refcount.
-    Perhaps it's an error to pass it something which has refcount 0?
-    -> YES. More importantly, values should be created with refcount 1
-        and all fus_ functions should transfer/modify refcounts differently.
-        E.g. fus_arr_push does NOT affect refcount of pushed object: it
-        assumes you're PASSING ownership to the arr value.
-        Similarly, fus_arr_pop passes ownership.
-        Drop could be implemented as fus_arr_pop followed by
-        fus_value_detach.
-
-I think we need two prefixes, one for the "safe API" and one for the
-"unsafe API".
-The safe API deals with e.g. fus_boxed_t, fus_unboxed_t, bool, etc.
-The unsafe API deals with nothing but fus_value_t.
-So who gets the "fus_" prefix, and what is the other prefix?..
-    * "fus_" unsafe, "fuss_" safe
-    * "fus_" unsafe, "sfus_" safe
-    * "ufus_" unsafe, "fus_" safe
-    * "usfus_" unsafe, "fus_" safe
-    * "fusu_" unsafe, "fus_" safe
-    * "fusus_" unsafe, "fus_" safe
-
-...I think I like ufus (unsafe) and fus (safe).
-(Really I prefer usfus, but ufus is easier to type...)
-
-Or, fus_value_* is the safe prefix?
-    fus_arr_len()
-    fus_value_arr_len()
-    fus_is_arr()
-    fus_value_is_arr()
-
-ALSO: fus_int_decode, fus_sym_decode, fus_bool_decode:
+fus_int_decode, fus_sym_decode, fus_bool_decode:
     If the type is wrong, how do we report it?
     We're not returning a fus value, so we can't return fus_err(...).
     Do we pass a pointer to the value to be decoded, and turn it into
