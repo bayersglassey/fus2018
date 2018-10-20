@@ -49,17 +49,27 @@ void fus_symtable_cleanup(fus_symtable_t *table){
 static int fus_symtable_append_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
-    fus_array_len_t new_len = table->entries.len + 1;
-    int sym_i = new_len - 1;
-    fus_array_set_len(&table->entries, new_len);
-    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
-    fus_symtable_entry_t *entry = &entries[sym_i];
+    fus_array_push(&table->entries);
+    int sym_i = table->entries.len - 1;
+    fus_symtable_entry_t *entry = fus_symtable_get_entry(table, sym_i);
     fus_symtable_entry_init(entry, table, token, token_len);
     return sym_i;
 }
 
 int fus_symtable_len(fus_symtable_t *table){
     return table->entries.len;
+}
+
+fus_symtable_entry_t *fus_symtable_get_entry(fus_symtable_t *table,
+    int sym_i
+){
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    return &entries[sym_i];
+}
+
+const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i){
+    fus_symtable_entry_t *entry = fus_symtable_get_entry(table, sym_i);
+    return entry->token;
 }
 
 int fus_symtable_add_token(fus_symtable_t *table,

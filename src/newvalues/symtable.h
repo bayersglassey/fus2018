@@ -31,10 +31,15 @@ void fus_symtable_entry_init(fus_symtable_entry_t *entry,
     fus_symtable_t *table, const char *token, int token_len);
 void fus_symtable_entry_cleanup(fus_symtable_entry_t *entry);
 
+
+
 void fus_symtable_init(fus_symtable_t *table, fus_core_t *core);
 void fus_symtable_cleanup(fus_symtable_t *table);
 
 int fus_symtable_len(fus_symtable_t *table);
+fus_symtable_entry_t *fus_symtable_get_entry(fus_symtable_t *table,
+    int sym_i);
+const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i);
 int fus_symtable_add_token(fus_symtable_t *table,
     const char *token, int token_len);
 int fus_symtable_get_token(fus_symtable_t *table,
