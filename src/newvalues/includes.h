@@ -12,6 +12,7 @@
 #include "array.h"
 #include "lexer.h"
 #include "symtable.h"
+#include "util.h"
 
 /* Files which expect to be included by "includes.h", and their
 primary typedefs */

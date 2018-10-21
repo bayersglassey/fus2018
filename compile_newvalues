@@ -4,7 +4,7 @@ then
     echo "Usage:"
     echo "    $(basename "$0") MAIN [GCC_ARGS...]"
     echo "Where:"
-    echo "    MAIN is one of: test cli"
+    echo "    MAIN is one of: test parse"
     exit 1
 fi
 
