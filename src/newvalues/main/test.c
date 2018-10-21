@@ -184,7 +184,7 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Lexer tests")
 
     fus_lexer_t lexer;
-    fus_lexer_init(&lexer);
+    fus_lexer_init(&lexer, NULL);
 
     const char *text =
         "def test:\n"
@@ -193,38 +193,39 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_lexer_load_chunk(&lexer, text, strlen(text));
 
-    #define FUS_TEST_LEXER_GOT(TEXT) \
+    #define FUS_TEST_LEXER_GOT(TEXT, TYPE) \
         fus_lexer_next(&lexer); \
-        FUS_TEST(fus_lexer_got(&lexer, TEXT))
+        FUS_TEST(fus_lexer_got(&lexer, TEXT)) \
+        FUS_TEST_EQ_INT(lexer.token_type, FUS_TOKEN_##TYPE)
 
-    FUS_TEST_LEXER_GOT("def");
-    FUS_TEST_LEXER_GOT("test");
-    FUS_TEST_LEXER_GOT("(");
-    FUS_TEST_LEXER_GOT(  "arr");
-    FUS_TEST_LEXER_GOT(  "\"Thing \"");
-    FUS_TEST_LEXER_GOT(  ",");
-    FUS_TEST_LEXER_GOT(  "2");
-    FUS_TEST_LEXER_GOT(  ",");
-    FUS_TEST_LEXER_GOT(  "\": \"");
-    FUS_TEST_LEXER_GOT(  ",");
-    FUS_TEST_LEXER_GOT(  "(");
-    FUS_TEST_LEXER_GOT(    "obj");
-    FUS_TEST_LEXER_GOT(    "1");
-    FUS_TEST_LEXER_GOT(    "=.");
-    FUS_TEST_LEXER_GOT(    "x");
-    FUS_TEST_LEXER_GOT(    "2");
-    FUS_TEST_LEXER_GOT(    "=.");
-    FUS_TEST_LEXER_GOT(    "y");
-    FUS_TEST_LEXER_GOT(  ")");
-    FUS_TEST_LEXER_GOT(  ",");
-    FUS_TEST_LEXER_GOT(  "\"!\"");
-    FUS_TEST_LEXER_GOT(  ",");
-    FUS_TEST_LEXER_GOT(  "@");
-    FUS_TEST_LEXER_GOT(  "format");
-    FUS_TEST_LEXER_GOT(  "\"Thing 2: {x: 1, y: 2}!\"");
-    FUS_TEST_LEXER_GOT(  "str_eq");
-    FUS_TEST_LEXER_GOT(  "assert");
-    FUS_TEST_LEXER_GOT(")");
+    FUS_TEST_LEXER_GOT("def", SYM);
+    FUS_TEST_LEXER_GOT("test", SYM);
+    FUS_TEST_LEXER_GOT("(", ARR_OPEN);
+    FUS_TEST_LEXER_GOT(  "arr", SYM);
+    FUS_TEST_LEXER_GOT(  "\"Thing \"", STR);
+    FUS_TEST_LEXER_GOT(  ",", SYM);
+    FUS_TEST_LEXER_GOT(  "2", INT);
+    FUS_TEST_LEXER_GOT(  ",", SYM);
+    FUS_TEST_LEXER_GOT(  "\": \"", STR);
+    FUS_TEST_LEXER_GOT(  ",", SYM);
+    FUS_TEST_LEXER_GOT(  "(", ARR_OPEN);
+    FUS_TEST_LEXER_GOT(    "obj", SYM);
+    FUS_TEST_LEXER_GOT(    "1", INT);
+    FUS_TEST_LEXER_GOT(    "=.", SYM);
+    FUS_TEST_LEXER_GOT(    "x", SYM);
+    FUS_TEST_LEXER_GOT(    "2", INT);
+    FUS_TEST_LEXER_GOT(    "=.", SYM);
+    FUS_TEST_LEXER_GOT(    "y", SYM);
+    FUS_TEST_LEXER_GOT(  ")", ARR_CLOSE);
+    FUS_TEST_LEXER_GOT(  ",", SYM);
+    FUS_TEST_LEXER_GOT(  "\"!\"", STR);
+    FUS_TEST_LEXER_GOT(  ",", SYM);
+    FUS_TEST_LEXER_GOT(  "@", SYM);
+    FUS_TEST_LEXER_GOT(  "format", SYM);
+    FUS_TEST_LEXER_GOT(  "\"Thing 2: {x: 1, y: 2}!\"", STR);
+    FUS_TEST_LEXER_GOT(  "str_eq", SYM);
+    FUS_TEST_LEXER_GOT(  "assert", SYM);
+    FUS_TEST_LEXER_GOT(")", ARR_CLOSE);
 
     FUS_TEST(fus_lexer_done(&lexer))
 
