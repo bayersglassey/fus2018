@@ -1,4 +1,17 @@
+
+if [ -z "$1" ]
+then
+    echo "Usage:"
+    echo "    $(basename "$0") MAIN [GCC_ARGS...]"
+    echo "Where:"
+    echo "    MAIN is one of: test cli"
+    exit 1
+fi
+
+MAIN="$1"
+shift
 gcc -g -std=c99 -Wall -Werror -Wno-unused \
     -o main \
     src/newvalues/*.c \
+    src/newvalues/main/"$MAIN".c \
     $@

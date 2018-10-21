@@ -1,1 +1,1 @@
-./compile_newvalues --coverage $@ && ./main && gcov *.gcda
+./compile_newvalues test --coverage $@ && ./main && gcov *.gcda
