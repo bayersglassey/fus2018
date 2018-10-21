@@ -1,52 +1,42 @@
 
-
-sig: obj key -> bool
-def has:
+def has of(obj key -> bool):
     dup is_arr ifelse:
         # key is an arr of syms
         ='keys ='obj
-        do l:
-            'keys len 0 == if: T ='bool break l
-            ''keys lpop ='key ='keys
-            'obj 'key has not if: F ='bool break l
+        T ='has
+        'keys @iter for: ='key
+            'obj 'key has not if: F ='has break
             ''obj 'key get ='obj
-        ''bool
+        ''has
     :
         # key is a sym
         has
 
-sig: obj key -> value
-def get: null @dget
+def get of(obj key -> value): null @dget
 
-sig: obj key default -> value
-def dget:
+def dget of (obj key default -> value):
     ='default
     dup is_arr ifelse:
         # key is an arr of syms
         ='keys ='obj
-        do l:
-            'keys len 0 == if: 'obj ='value break l
-            ''keys lpop ='key ='keys
-            'obj 'key has not if: 'default ='value break l
+        'keys @iter for: ='key
+            'obj 'key has not if: 'default ='obj break
             ''obj 'key get ='obj
-        ''value
+        ''obj
     :
         # key is a sym
         ='key ='obj
         'obj 'key has ifelse: 'obj 'key get
         : 'default
 
-sig: obj key -> obj value
-def rip: null @drip
+def rip of(obj key -> obj value): null @drip
 
-sig: obj key default -> obj value
-def drip:
+def drip of(obj key default -> obj value):
     over is_arr ifelse:
         # key is an arr of syms
         @drip_keys
 
-        sig: obj keys default -> obj value
-        def drip_keys:
+        def drip_keys of(obj keys default -> obj value):
             ='default ='keys ='obj
             'keys len 0 > ifelse:
                 ''keys lpop ='key ='keys
@@ -68,14 +58,12 @@ def drip:
         ''obj dup 'key has ifelse: 'key rip
         : 'default
 
-sig: obj value key -> obj
-def set:
+def set of(obj value key -> obj):
     dup is_arr ifelse:
         # key is an arr of syms
         @set_keys
 
-        sig: obj value keys -> obj
-        def set_keys:
+        def set_keys of(obj value keys -> obj):
             ='keys ='value ='obj
             'keys len 0 > ifelse:
                 ''keys lpop ='key ='keys
@@ -90,27 +78,22 @@ def set:
 
 
 
-sig: obj str -> obj
-def add_prefix:
+def add_prefix of(obj str -> obj):
     # Example:
     #     (obj 1 =.x 2 =.y) "la" @obj_add_prefix -> (obj 1 =.lax 2 =.lay)
 
     ='prefix ='o0
     obj ='o1
 
-    ('o0 keys) do loop:
-        dup len 0 > while loop
-        lpop ='key0
+    'o0 keys @iter for: ='key0
         'key0 sym_tostr 'prefix swap str_join str_tosym ='key1
-        ''o1 'o0 'key0 get 'key1 set ='o1
-    drop
+        ''o1 ('o0 'key0 get) 'key1 set ='o1
 
     ''o1
 
 
 
-sig(->)
-def test:
+def test of(->):
     obj 1 =.x 2 =.y ='o
     'o `x @get 1 == assert
     'o `z @get is_null assert
