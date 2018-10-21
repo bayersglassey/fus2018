@@ -31,5 +31,6 @@ typedef struct fus_printer fus_printer_t;
 #include "int_ops.h"
 #include "printer.h"
 #include "parser.h"
+#include "fus.h"
 
 #endif

@@ -390,22 +390,12 @@ int run_tests(fus_vm_t *vm){
 }
 
 int main(int n_args, char *args[]){
-    int err;
+    fus_t fus;
+    fus_init(&fus);
 
-    fus_core_t core;
-    fus_symtable_t symtable;
-    fus_vm_t vm;
+    if(run_tests(&fus.vm) != 0)return EXIT_FAILURE;
 
-    fus_core_init(&core);
-    fus_symtable_init(&symtable, &core);
-    fus_vm_init(&vm, &core, &symtable);
-
-    if(run_tests(&vm) != 0)return EXIT_FAILURE;
-
-    fus_vm_cleanup(&vm);
-    fus_symtable_cleanup(&symtable);
-    fus_core_cleanup(&core);
-
+    fus_cleanup(&fus);
     return EXIT_SUCCESS;
 }
 
