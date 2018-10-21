@@ -167,7 +167,7 @@ fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
                 goto err;
             }
             char c2 = token[i];
-            if(strchr("\"\\", c2)){
+            if(strchr(FUS_STR_ESCAPABLE_CHARS, c2)){
                 c = c2;
             }else if(c2 == 'n'){
                 c = '\n';

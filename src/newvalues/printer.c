@@ -46,8 +46,26 @@ void fus_printer_print_newline(fus_printer_t *printer){
 
 static void fus_printer_print_str(fus_printer_t *printer, fus_str_t *s){
     FILE *file = printer->file;
-    fprintf(file, "\"%s\" # TODO: Escape quotes & newlines",
-        s->text? s->text: "");
+
+    fprintf(file, "\"");
+
+    const char *text = s->text;
+    int len = s->len;
+    for(int i = 0; i < len; i++){
+        char c = text[i];
+        if(c == '\n'){
+            fputs("\\n", file);
+        }else if(c == '"'){
+            fputs("\\\"", file);
+        }else if(strchr(FUS_STR_ESCAPABLE_CHARS, c)){
+            putc('\\', file);
+            putc(c, file);
+        }else{
+            putc(c, file);
+        }
+    }
+
+    fprintf(file, "\"");
 }
 
 
@@ -106,7 +124,7 @@ void fus_printer_print_boxed(fus_printer_t *printer, fus_boxed_t *p){
             fprintf(file, ",");
         }
     }else if(type == FUS_BOXED_OBJ){
-        fprintf(file, "obj # TODO: Finish implementing obj");
+        fprintf(file, "obj \"TODO: Finish implementing obj\" error");
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
         fus_printer_print_str(printer, s);

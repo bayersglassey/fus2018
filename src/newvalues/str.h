@@ -7,6 +7,9 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+#define FUS_STR_ESCAPABLE_CHARS "\"\\"
+
+
 struct fus_str {
     char *text;
     int len;
