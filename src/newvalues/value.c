@@ -9,6 +9,7 @@ const char *fus_err_code_msg(fus_err_code_t code){
         "Overflow",
         "Underflow",
         "Out of Bounds",
+        "Can't Parse",
         "Lol Idunno"
     };
     if(code < 0 || code >= FUS_ERRS)return "Unknown";

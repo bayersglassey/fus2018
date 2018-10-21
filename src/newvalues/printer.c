@@ -44,6 +44,12 @@ void fus_printer_print_newline(fus_printer_t *printer){
 }
 
 
+static void fus_printer_print_str(fus_printer_t *printer, fus_str_t *s){
+    FILE *file = printer->file;
+    fprintf(file, "\"%s\" # TODO: Escape quotes & newlines",
+        s->text? s->text: "");
+}
+
 
 
 void fus_printer_print_value(fus_printer_t *printer,
@@ -100,9 +106,10 @@ void fus_printer_print_boxed(fus_printer_t *printer, fus_boxed_t *p){
             fprintf(file, ",");
         }
     }else if(type == FUS_BOXED_OBJ){
-        fprintf(file, "obj");
+        fprintf(file, "obj # TODO: Finish implementing obj");
     }else if(type == FUS_BOXED_STR){
-        fprintf(file, "TODO: Implement printing of str");
+        fus_str_t *s = &p->data.s;
+        fus_printer_print_str(printer, s);
     }else if(type == FUS_BOXED_FUN){
         fprintf(file, "fun(\"TODO: Implement printing of fun\" error)");
     }else{
@@ -144,7 +151,8 @@ void fus_printer_print_data(fus_printer_t *printer,
                 fus_printer_print_data(printer, vm, &p->data.a);
                 printer->depth--;
             }else if(type == FUS_BOXED_STR){
-                fprintf(file, "TODO: Implement printing of str");
+                fus_str_t *s = &p->data.s;
+                fus_printer_print_str(printer, s);
             }else{
                 FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
                 fprintf(file, "<UNEXPECTED>");

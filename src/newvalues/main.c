@@ -300,11 +300,16 @@ void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
         fus_symtable_get_from_string(vm->symtable, "ABC123!@#"));
 
-    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"ABC\"")), "ABC");
-    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"TWO\\nLINES\"")),
-        "TWO\nLINES");
-    FUS_TEST_STRCMP(fus_value_str_decode(fus_value_stringparse_str(vm, "\"\\\"QUOTED\\\"\"")),
-        "\"QUOTED\"");
+    fus_value_t vs1 = fus_value_stringparse_str(vm, "\"ABC\"");
+    FUS_TEST_STRCMP(fus_value_str_decode(vs1), "ABC");
+    fus_value_t vs2 = fus_value_stringparse_str(vm, "\"TWO\\nLINES\"");
+    FUS_TEST_STRCMP(fus_value_str_decode(vs2), "TWO\nLINES");
+    fus_value_t vs3 = fus_value_stringparse_str(vm, "\"\\\"QUOTED\\\"\"");
+    FUS_TEST_STRCMP(fus_value_str_decode(vs3), "\"QUOTED\"");
+
+    fus_value_detach(vm, vs1);
+    fus_value_detach(vm, vs2);
+    fus_value_detach(vm, vs3);
 
     FUS_TESTS_END()
 }

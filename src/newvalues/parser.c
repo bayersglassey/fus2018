@@ -2,6 +2,15 @@
 #include "includes.h"
 
 
+
+#define FUS_PARSER_LOG_PARSE_ERROR(TOKEN, LEN, MSG) { \
+    const char *__token = (TOKEN); \
+    int __token_len = (LEN); \
+    fprintf(stderr, "%s: ERROR: " MSG "\n", __func__); \
+    fprintf(stderr, "...token was: %.*s\n", __token_len, __token); \
+}
+
+
 void fus_parser_init(fus_parser_t *parser, fus_vm_t *vm){
     parser->vm = vm;
     fus_array_init(&parser->arr_stack, &vm->class_arr);
@@ -114,8 +123,75 @@ fus_value_t fus_value_tokenparse_sym(fus_vm_t *vm,
 fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
     const char *token, int token_len
 ){
-    /* TODO */
-    fprintf(stderr, "TODO: Implement str values\n");
-    return fus_value_int(vm, 10101010);
+    char *text = NULL;
+        /* Needs to be initialized at top of function, so we can
+        "goto err" on error, and free it */
+
+    if(token_len < 2){
+        FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+            "Token too short (must be at least 2 chars)")
+        goto err;
+    }
+
+    if(token[0] != '"' || token[token_len - 1] != '"'){
+        FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+            "Token must start & end with '\"'")
+        goto err;
+    }
+
+    /* NOTE: We allocate token_len - 2 chars for the parsed text.
+    That's guaranteed to be at least enough, since escape sequences
+    (e.g. "\n", "\\\"") are strictly longer than what they become when
+    parsed.
+    The -2 is because leading & trailing '"' are removed.
+    The +1 is for terminating NUL. */
+    size_t text_size = token_len - 2 + 1;
+    text = fus_malloc(vm->core, text_size);
+
+    int text_len = 0;
+    int i0 = 1; /* Leading '"' */
+    int i1 = token_len - 1; /* Trailing '"' */
+    for(int i = i0; i < i1; i++){
+        char c = token[i];
+        if(c == '\0'){
+            FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+                "We can't handle tokens with NUL bytes at the moment, "
+                "try again next Tuesday")
+            goto err;
+        }
+        if(c == '\\'){
+            i++;
+            if(i >= i1){
+                FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+                    "Missing escape character")
+                goto err;
+            }
+            char c2 = token[i];
+            if(strchr("\"\\", c2)){
+                c = c2;
+            }else if(c2 == 'n'){
+                c = '\n';
+            }else{
+                FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+                    "Unrecognized escape character")
+                goto err;
+            }
+        }
+        text[text_len] = c;
+        text_len++;
+    }
+    text[text_len] = '\0';
+
+    /* IT WORKED! Let's return a value. */
+    fus_value_t value = fus_value_str(vm);
+    fus_str_t *s = &value.p->data.s;
+    fus_str_reinit(s, text, text_len, text_size);
+    return value;
+
+err:
+    /* SOMETHING WENT TERRIBLY WRONG! Let's free allocated memory
+    and return an err value. */
+    fus_free(vm->core, text);
+    return fus_value_err(vm, FUS_ERR_CANT_PARSE);
 }
 

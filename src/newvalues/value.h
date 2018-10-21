@@ -59,6 +59,7 @@ typedef enum {
     FUS_ERR_OVERFLOW,
     FUS_ERR_UNDERFLOW,
     FUS_ERR_OUT_OF_BOUNDS,
+    FUS_ERR_CANT_PARSE,
     FUS_ERR_IDUNNO,
     FUS_ERRS
 } fus_err_code_t;

@@ -5,10 +5,18 @@
 
 
 void fus_str_init(fus_str_t *s, fus_vm_t *vm,
-    char *text, size_t len
+    char *text, int len, size_t size
 ){
     s->text = text;
     s->len = len;
+    s->size = size;
+}
+
+void fus_str_reinit(fus_str_t *s, char *text, int len, size_t size){
+    fus_str_cleanup(s);
+    s->text = text;
+    s->len = len;
+    s->size = size;
 }
 
 void fus_str_cleanup(fus_str_t *s){
@@ -16,7 +24,7 @@ void fus_str_cleanup(fus_str_t *s){
 }
 
 
-size_t fus_str_len(fus_str_t *s){
+int fus_str_len(fus_str_t *s){
     return s->len;
 }
 
@@ -26,7 +34,7 @@ fus_value_t fus_value_str(fus_vm_t *vm){
     /* Creates a new, empty str value. */
     fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
     fus_boxed_init(p, vm, FUS_BOXED_STR);
-    fus_str_init(&p->data.s, vm, NULL, 0);
+    fus_str_init(&p->data.s, vm, NULL, 0, 0);
     return (fus_value_t)p;
 }
 
