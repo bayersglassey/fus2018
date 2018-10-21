@@ -15,6 +15,9 @@ typedef enum fus_lexer_token_type {
     FUS_TOKEN_STR,
     FUS_TOKEN_ARR_OPEN,
     FUS_TOKEN_ARR_CLOSE,
+    FUS_TOKEN_SPLIT,
+        /* A "split" token is one which touches end of chunk, so is
+        probably "unfinished" and caller should load next chunk */
     FUS_TOKENS
 } fus_lexer_token_type_t;
 

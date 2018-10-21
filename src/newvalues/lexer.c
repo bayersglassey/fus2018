@@ -30,6 +30,15 @@ void fus_lexer_cleanup(fus_lexer_t *lexer){
 void fus_lexer_load_chunk(fus_lexer_t *lexer,
     const char *chunk, size_t chunk_size
 ){
+    if(lexer->token_type == FUS_TOKEN_SPLIT){
+        /* Since caller passes us each chunk directly,
+        we should probably have a "split token buffer" in which we
+        save current token, then append to it from the new chunk?.. */
+        fprintf(stderr, "%s: TODO: Handle \"split\" tokens\n", __func__);
+        fprintf(stderr, "...token was: %.*s\n",
+            lexer->token_len, lexer->token);
+        exit(EXIT_FAILURE);
+    }
     lexer->chunk = chunk;
     lexer->chunk_size = chunk_size;
     lexer->chunk_i = 0;
