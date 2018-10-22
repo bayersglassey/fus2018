@@ -78,6 +78,23 @@ bool fus_lexer_got(fus_lexer_t *lexer, const char *token){
  * LET THE LEXING BEGIN *
  ************************/
 
+static void fus_lexer_start_token(fus_lexer_t *lexer){
+    lexer->token = lexer->chunk + lexer->chunk_i;
+    lexer->token_len = 0;
+}
+
+static void fus_lexer_end_token(fus_lexer_t *lexer){
+    int token_startpos = lexer->token - lexer->chunk;
+    lexer->token_len = lexer->chunk_i - token_startpos;
+}
+
+static void fus_lexer_set_token(fus_lexer_t *lexer,
+    const char *token, int token_len
+){
+    lexer->token = token;
+    lexer->token_len = token_len;
+}
+
 static int fus_lexer_peek(fus_lexer_t *lexer){
     /* Peek at next character. Only ever called after encountering
     '-' (when we need to determine whether we're lexing a negative number
@@ -135,6 +152,119 @@ static int fus_lexer_eat_indent(fus_lexer_t *lexer){
     }
     lexer->indent = indent;
     return indent;
+}
+
+static void fus_lexer_eat_whitespace(fus_lexer_t *lexer){
+    /* Eats the whitespace *not* at the start of a line
+    (e.g. between tokens on the same line) */
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c == '\0' || isgraph(c))break;
+        fus_lexer_eat(lexer);
+    }
+}
+
+static void fus_lexer_eat_comment(fus_lexer_t *lexer){
+    /* eat leading '#' */
+    fus_lexer_eat(lexer);
+
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c == '\n')break;
+        fus_lexer_eat(lexer);
+    }
+}
+
+static void fus_lexer_parse_sym(fus_lexer_t *lexer){
+    fus_lexer_start_token(lexer);
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c != '_' && !isalnum(c))break;
+        fus_lexer_eat(lexer);
+    }
+    fus_lexer_end_token(lexer);
+}
+
+static void fus_lexer_parse_int(fus_lexer_t *lexer){
+    fus_lexer_start_token(lexer);
+
+    /* eat leading '-' if present */
+    if(lexer->chunk[lexer->chunk_i] == '-')fus_lexer_eat(lexer);
+
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(!isdigit(c))break;
+        fus_lexer_eat(lexer);
+    }
+    fus_lexer_end_token(lexer);
+}
+
+static void fus_lexer_parse_op(fus_lexer_t *lexer){
+    fus_lexer_start_token(lexer);
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c == '(' || c == ')' || c == ':' || c == '_'
+            || !isgraph(c) || isalnum(c))break;
+        fus_lexer_eat(lexer);
+    }
+    fus_lexer_end_token(lexer);
+}
+
+static int fus_lexer_parse_str(fus_lexer_t *lexer){
+    fus_lexer_start_token(lexer);
+
+    /* Include leading '"' */
+    fus_lexer_eat(lexer);
+
+    while(1){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c == '\0'){
+            goto err_eof;
+        }else if(c == '\n'){
+            goto err_eol;
+        }else if(c == '"'){
+            fus_lexer_eat(lexer);
+            break;
+        }else if(c == '\\'){
+            fus_lexer_eat(lexer);
+            char c = lexer->chunk[lexer->chunk_i];
+            if(c == '\0'){
+                goto err_eof;
+            }else if(c == '\n'){
+                goto err_eol;
+            }
+        }
+        fus_lexer_eat(lexer);
+    }
+    fus_lexer_end_token(lexer);
+    return 0;
+err_eol:
+    FUS_LEXER_ERROR(lexer)
+    fprintf(stderr, "Reached newline while parsing str\n");
+    return -1;
+err_eof:
+    FUS_LEXER_ERROR(lexer)
+    fprintf(stderr, "Reached end of text while parsing str\n");
+    return -1;
+}
+
+static void fus_lexer_parse_blockstr(fus_lexer_t *lexer){
+    fus_lexer_start_token(lexer);
+
+    /* Include leading ";;" */
+    fus_lexer_eat(lexer);
+    fus_lexer_eat(lexer);
+
+    while(lexer->chunk_i < lexer->chunk_size){
+        char c = lexer->chunk[lexer->chunk_i];
+        if(c == '\0'){
+            break;
+        }else if(c == '\n'){
+            break;
+        }
+        fus_lexer_eat(lexer);
+    }
+    fus_lexer_end_token(lexer);
 }
 
 void fus_lexer_next(fus_lexer_t *lexer){
