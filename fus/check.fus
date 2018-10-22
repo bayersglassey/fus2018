@@ -1,0 +1,67 @@
+
+module Check:
+
+    def test:
+        run: 2 @int @check
+        .ok assert
+        run: "X" @int @check
+        dup .ok not assert
+        .code `basic sym_eq assert
+        run: (arr 1, 2, 3,) @int @arr_of @check
+        .ok assert
+        run: (arr 1, "X", 3,) @int @arr_of @check
+        dup .ok not assert
+        .code `basic sym_eq assert
+
+    def int: obj `int =.type
+    def arr: obj `arr =.type
+    def obj: obj `obj =.type
+    def arr_of: @arr swap =.of &(handle arr_of) =.handle
+    def struct: @obj swap =.keys &(handle struct) =.handle
+
+    def ERROR_TEMPLATE:
+        obj
+            `Check =.lib
+            `unspecified =.code
+            "Typecheck failed!" =.msg
+
+    def check of(x T -> x):
+        ='T dup ='x
+        'x typeof 'T .type sym_eq not if:
+            @ERROR_TEMPLATE
+                `basic =.code
+                "Basic type mismatch" =.msg
+                'x =.x
+                'T =.T
+            error
+        'T `handle has if:
+            'x 'T ('T .handle) call(x T ->)
+
+    module handle:
+
+        def arr_of:
+            ='T ='x
+            'T .of ='T2
+            'x len int_togen for: ='i
+                'x 'i .$ ='elem
+                run: 'elem 'T2 @check
+                ='state
+                'state .ok not if:
+                    @ERROR_TEMPLATE
+                        `elem =.code
+                        "Error checking arr element" =.msg
+                        'x =.x
+                        'T =.T
+                        'i =.elem_i
+                        'elem =.elem
+                        'state .error =.error
+
+        def struct:
+            ='T ='x
+            ('x keys) ('T .keys) arr_eq not if:
+                @ERROR_TEMPLATE
+                    `struct_keys =.code
+                    "Struct keys mismatch" =.msg
+                    'x =.x
+                    'T =.T
+
