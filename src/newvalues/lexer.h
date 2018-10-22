@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 
 typedef enum fus_lexer_token_type {
@@ -31,6 +32,8 @@ typedef struct fus_lexer {
     int row; /* row within file */
     int col; /* column within file */
 
+    int indent;
+
     const char *token;
     int token_len;
     fus_lexer_token_type_t token_type;
@@ -43,9 +46,9 @@ void fus_lexer_cleanup(fus_lexer_t *lexer);
 void fus_lexer_load_chunk(fus_lexer_t *lexer,
     const char *chunk, size_t chunk_size);
 
-void fus_lexer_next(fus_lexer_t *lexer);
 bool fus_lexer_done(fus_lexer_t *lexer);
 bool fus_lexer_got(fus_lexer_t *lexer, const char *token);
 
+void fus_lexer_next(fus_lexer_t *lexer);
 
 #endif
