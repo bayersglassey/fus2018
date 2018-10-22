@@ -95,16 +95,12 @@ static void fus_lexer_set_token(fus_lexer_t *lexer,
     lexer->token_len = token_len;
 }
 
-static int fus_lexer_peek(fus_lexer_t *lexer){
+static char fus_lexer_peek(fus_lexer_t *lexer){
     /* Peek at next character. Only ever called after encountering
     '-' (when we need to determine whether we're lexing a negative number
     or an op) or ';' (when we need to determine whether we're lexing a
     string-till-end-of-line or an op). */
-
-    if(lexer->chunk_i + 1 >= lexer->chunk_size){
-        /* Return EOF to signal to caller that this is a split token. */
-        return EOF;
-    }
+    if(lexer->chunk_i + 1 >= lexer->chunk_size)return '\0';
     return lexer->chunk[lexer->chunk_i + 1];
 }
 
@@ -268,4 +264,14 @@ static void fus_lexer_parse_blockstr(fus_lexer_t *lexer){
 }
 
 void fus_lexer_next(fus_lexer_t *lexer){
+    /* do the stuff, you know that stuff */
+
+    /* ... */
+
+    /* At the VERY END of fus_lexer_next, we should check lexer->chunk_i
+    against lexer->chunk_size and decide whether current token is a split
+    token.
+    This could even affect token's type, e.g. we thought we got "-" but
+    the next chunk will start with "123" so type is int even though we
+    thought it was op. */
 }
