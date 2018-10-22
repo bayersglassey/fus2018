@@ -1,64 +1,87 @@
 
-defsig format: a -> s
-defsig tostr: x -> s
-
-
-sig(->) def test:
+def test of (->):
+    use: simple format
     arr "Thing ", 2, ": ", (obj 1 =.x 2 =.y), "!",
     @format "Thing 2: {x: 1, y: 2}!" str_eq assert
 
 
-sig format
-def format:
+
+module simple:
+    def DEFAULT_OPTS:
+        obj
+            null =.max_obj_entries
+            null =.max_arr_entries
+            50 =.max_gen_entries
+    def format: @DEFAULT_OPTS @format
+    def tostr: @DEFAULT_OPTS @tostr
+
+
+def format of(a opts -> s):
+    ='opts
     "" ='s
     @arr_togen for:
-        @tostr ''s swap str_join ='s
+        'opts @tostr ''s swap str_join ='s
     ''s
 
-sig tostr
-def tostr:
+def tostr of(x opts -> s):
+    ='opts
     obj
-        fun(drop "null") =.null
-        fun(ifelse("T")("F")) =.bool
-        fun(int_tostr) =.int
-        fun() =.str
-        fun(sym_tostr) =.sym
-        fun(drop "<fun>") =.fun
-        fun(@arr_togen @gen_tostr) =.arr
+        fun(drop drop "null") =.null
+        fun(drop ifelse("T")("F")) =.bool
+        fun(drop int_tostr) =.int
+        fun(drop) =.str
+        fun(drop sym_tostr) =.sym
+        fun(drop drop "<fun>") =.fun
         &obj_tostr =.obj
+        &arr_tostr =.arr
         &gen_tostr =.gen
-    over typeof get call tostr
+    over typeof get ''opts call(x opts -> s)
 
-sig tostr
-def obj_tostr:
+def obj_tostr of(x opts -> s):
+    ='opts
     ='o
 
+    'opts .max_obj_entries ='max_entries
+
     "{" ='s
-    T ='first
+    0 ='i
 
     'o keys @arr_togen for: ='key
+        'max_entries is_int if:
+            'i 'max_entries >= if:
+                ''s ", ..." str_join ='s break
         'o 'key get ='val
         ''s
-            'first ifelse: F ='first
-            : ", " str_join
+            'i 0 > if: ", " str_join
             'key sym_tostr str_join
             ": " str_join
-            'val @tostr str_join
+            'val 'opts @tostr str_join
         ='s
+        ''i 1 + ='i
 
     ''s "}" str_join
 
-sig tostr
-def gen_tostr:
+def arr_tostr of(x opts -> s):
+    swap @arr_togen swap
+    dup .max_arr_entries @_gen_tostr
+
+def gen_tostr of(x opts -> s):
+    dup .max_gen_entries @_gen_tostr
+
+def _gen_tostr of(x opts max_entries -> s):
+    ='max_entries
+    ='opts
 
     "[" ='s
     0 ='i
 
     for: ='val
-        'i 10 >= if: ''s ", ..." str_join ='s break
+        'max_entries is_int if:
+            'i 'max_entries >= if:
+                ''s ", ..." str_join ='s break
         ''s
             'i 0 > if: ", " str_join
-            'val @tostr str_join
+            'val 'opts @tostr str_join
         ='s
         ''i 1 + ='i
 

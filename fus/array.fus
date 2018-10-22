@@ -12,23 +12,17 @@ use: funtools prod
 
 module Array:
 
-    def
-    sig: dims -> Array
-    new:
+    def new of(dims -> Array):
         ='dims
-        'dims fun(is_int) @map @all assert
         (obj arr =.dims arr =.data) 'dims @redim
 
-    def
-    sig: Array dims -> Array
-    redim:
+    def redim of(Array dims -> Array):
+        dup fun(is_int) @map @all assert
         ='new_dims
         'new_dims =.dims
         ..data ('new_dims @prod) @resize =.data
 
-    def
-    sig: Array v -> i
-    get_i:
+    def get_i of(Array v -> i):
         # transform v (an arr of int indices for individual dimensions) into i
         # (an int index into a data arr)
         ='v ='array
@@ -43,31 +37,23 @@ module Array:
 
         ''i
 
-    def
-    sig: Array v -> value
-    get:
+    def get of(Array v -> value):
         ='v ='array
         'array 'v @get_i ='i
         'array .data 'i .$
 
-    def
-    sig: Array value v -> Array
-    set:
+    def set of(Array value v -> Array):
         ='v ='value ='array
         'array 'v @get_i ='i
         ''array ..data 'value 'i =.$ =.data
 
-    def
-    sig: Array v -> Array value
-    rip:
+    def rip of(Array v -> Array value):
         ='v ='array
         'array 'v @get_i ='i
         'array .data 'i ..$ ='value =.data
         ''value
 
-    def
-    sig(->)
-    test:
+    def test of(->):
         (arr 2, 3,) @new
             dup (arr 0, 0,) @get is_null assert
 

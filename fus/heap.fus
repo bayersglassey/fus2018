@@ -1,13 +1,14 @@
 
-defsig new: -> heap
-defsig add: heap value -> heap key
-defsig has: heap key -> bool
-defsig get: heap key -> value
-defsig set: heap value key -> heap
-defsig del: heap key -> heap
+# SIMPLE HEAP IMPLEMENTATION:
+#
+# Keys are integers, key-value pairs are stored in a big array,
+# search algorithm is linear.
+# An improved heap would e.g. use a binary tree instead of an
+# array.
 
 
-sig(->) def test:
+
+def test of(->):
     @new ='heap
     ''heap "Lawl" @add ='key1 ='heap
     ''heap "Rawr" @add ='key2 ='heap
@@ -21,30 +22,19 @@ sig(->) def test:
     'heap 'key1 @has not assert
 
 
-
-# SIMPLE HEAP IMPLEMENTATION:
-#
-# Keys are integers, key-value pairs are stored in a big array,
-# search algorithm is linear.
-# An improved heap would e.g. use a binary tree instead of an
-# array.
-
-defsig find: heap key -> index
-
-
-sig new def new:
+def new of(-> heap):
     obj
         0 =.next_key
         arr =.entries
 
-sig add def add:
+def add of(heap value -> heap key):
     ='value ='heap
     ''heap
         ..next_key dup ='key 1 + =.next_key
         ..entries (obj 'key =.key 'value =.value), =.entries
     'key
 
-sig find def find:
+def find of(heap key -> index):
     ='key ='heap
     'heap .entries ='entries
     0 'entries len do loop:
@@ -54,22 +44,22 @@ sig find def find:
     drop drop
     'i
 
-sig has def has:
+def has of(heap key -> bool):
     @find is_null not
 
-sig get def get:
+def get of(heap key -> value):
     over ='heap
     @find ='i
     'heap .entries 'i .$ .value
 
-sig set def set:
+def set of(heap key value -> heap):
     swap ='value
     over ='heap
     @find ='i
     ''heap
         ..entries 'i ..$ 'value =.value 'i =.$ =.entries
 
-sig del def del:
+def del of(heap key -> heap):
     over ='heap
     @find ='i
     ''heap
