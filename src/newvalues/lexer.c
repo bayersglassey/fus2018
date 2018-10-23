@@ -136,6 +136,13 @@ bool fus_lexer_got(fus_lexer_t *lexer, const char *token){
     fprintf(stderr, "%s: LEXER ERROR: ", __func__); \
     FUS_LEXER_INFO(LEXER, stderr)
 
+void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type){
+    fprintf(file, "%.*s", lexer->token_len, lexer->token);
+    if(print_type){
+        fprintf(file, " [%s]", fus_lexer_token_type_msg(lexer->token_type));
+    }
+}
+
 void fus_lexer_perror(fus_lexer_t *lexer){
     FUS_LEXER_ERROR(lexer)
     fprintf(stderr, "%s\n", fus_lexer_errcode_msg(lexer->errcode));

@@ -77,10 +77,21 @@ void *fus_memcpy(fus_core_t *core, void *ptr, void *srcptr, size_t n){
     return new_ptr;
 }
 
+size_t fus_strlen(fus_core_t *core, const char *s){
+    return strlen(s);
+}
+
 size_t fus_strnlen(fus_core_t *core, const char *s, size_t maxlen){
     size_t len = 0;
     while(len < maxlen && s[len] != '\0')len++;
     return len;
+}
+
+char *fus_strdup(fus_core_t *core, const char *s1){
+    size_t s_len = fus_strlen(core, s1);
+    char *s2 = fus_malloc(core, s_len + 1);
+    strcpy(s2, s1);
+    return s2;
 }
 
 char *fus_strndup(fus_core_t *core, const char *s1, size_t len){

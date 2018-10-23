@@ -73,6 +73,7 @@ bool fus_lexer_is_split(fus_lexer_t *lexer);
 bool fus_lexer_is_error(fus_lexer_t *lexer);
 bool fus_lexer_got(fus_lexer_t *lexer, const char *token);
 
+void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type);
 void fus_lexer_perror(fus_lexer_t *lexer);
 
 void fus_lexer_next(fus_lexer_t *lexer);
