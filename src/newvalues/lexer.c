@@ -3,6 +3,18 @@
 
 char *DEFAULT_FILENAME = "<no file>";
 
+const char *fus_lexer_errcode_msg(fus_lexer_errcode_t errcode){
+    static const char *msgs[] = {
+        "OK",
+        "Indentation with whitespace other than ' '",
+        "Reached end of line in str literal",
+        "Too many indents"
+    };
+    if(errcode < 0 || errcode >= FUS_LEXER_ERRCODES)return "Unknown";
+    return msgs[errcode];
+}
+
+
 void fus_lexer_init(fus_lexer_t *lexer, char *filename){
     lexer->chunk = NULL;
     lexer->chunk_size = 0;
@@ -14,10 +26,15 @@ void fus_lexer_init(fus_lexer_t *lexer, char *filename){
     lexer->col = 0;
 
     lexer->indent = 0;
+    for(int i = 0; i < FUS_LEXER_MAX_INDENTS; i++)lexer->indents[i] = 0;
+    lexer->n_indents = 0;
+    lexer->returning_indents = 0;
 
     lexer->token = NULL;
     lexer->token_len = 0;
-    lexer->token_type = FUS_TOKEN_ERR;
+    lexer->token_type = FUS_TOKEN_ERROR;
+
+    lexer->errcode = FUS_LEXER_ERRCODE_OK;
 }
 
 void fus_lexer_reset(fus_lexer_t *lexer, char *filename){
@@ -27,6 +44,17 @@ void fus_lexer_reset(fus_lexer_t *lexer, char *filename){
 
 void fus_lexer_cleanup(fus_lexer_t *lexer){
     if(lexer->filename != DEFAULT_FILENAME)free(lexer->filename);
+}
+
+void fus_lexer_set_error(fus_lexer_t *lexer, fus_lexer_errcode_t errcode){
+    /* NOTE: We preserve token and token_len, so that e.g. error messages
+    can find start of token.
+    But some kinds of errors can probably occur before we've started a
+    token.
+    So maybe we need 2 different set_error functions?..
+    One of which sets token=NULL, token_len=0?.. */
+    lexer->token_type = FUS_TOKEN_ERROR;
+    lexer->errcode = errcode;
 }
 
 void fus_lexer_load_chunk(fus_lexer_t *lexer,
@@ -72,6 +100,11 @@ bool fus_lexer_got(fus_lexer_t *lexer, const char *token){
 #define FUS_LEXER_ERROR(LEXER) \
     fprintf(stderr, "%s: LEXER ERROR: ", __func__); \
     FUS_LEXER_INFO(LEXER, stderr)
+
+static void fus_lexer_perror(fus_lexer_t *lexer){
+    FUS_LEXER_ERROR(lexer)
+    fprintf(stderr, "%s\n", fus_lexer_errcode_msg(lexer->errcode));
+}
 
 
 /************************
@@ -138,9 +171,7 @@ static int fus_lexer_eat_indent(fus_lexer_t *lexer){
             indent = 0;
             fus_lexer_eat(lexer);
         }else if(c != '\0' && isspace(c)){
-            FUS_LEXER_ERROR(lexer)
-            fprintf(stderr, "Indented with whitespace other than ' ' "
-                "(#32): #%i\n", (int)c);
+            fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_BAD_INDENT_CHAR);
             return -1;
         }else{
             break;
@@ -235,12 +266,8 @@ static int fus_lexer_parse_str(fus_lexer_t *lexer){
     fus_lexer_end_token(lexer);
     return 0;
 err_eol:
-    FUS_LEXER_ERROR(lexer)
-    fprintf(stderr, "Reached newline while parsing str\n");
-    return -1;
 err_eof:
-    FUS_LEXER_ERROR(lexer)
-    fprintf(stderr, "Reached end of text while parsing str\n");
+    fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_STR_UNFINISHED);
     return -1;
 }
 
@@ -263,10 +290,85 @@ static void fus_lexer_parse_blockstr(fus_lexer_t *lexer){
     fus_lexer_end_token(lexer);
 }
 
-void fus_lexer_next(fus_lexer_t *lexer){
-    /* do the stuff, you know that stuff */
+static int fus_lexer_push_indent(fus_lexer_t *lexer, int indent){
+    return 0;
+}
 
-    /* ... */
+static int fus_lexer_pop_indent(fus_lexer_t *lexer){
+    return 0;
+}
+
+static int fus_lexer_finish_line(fus_lexer_t *lexer){
+    /* Finish end of line / end of file.
+    Handles the end of indented blocks. */
+
+    if(fus_lexer_eat_indent(lexer) < 0)return -1;
+    int new_indent = lexer->indent;
+    while(lexer->n_indents > 0){
+        int indent = lexer->indents[lexer->n_indents-1];
+        if(new_indent <= indent){
+            if(fus_lexer_pop_indent(lexer) < 0)return -1;
+
+            /* Indentation is down past indent of last indented block,
+            so emit a fake ")" */
+            lexer->returning_indents--;
+
+        }else break;
+    }
+    return 0;
+}
+
+void fus_lexer_next(fus_lexer_t *lexer){
+    char c = '\0';
+
+    /* Eat various kinds of whitespace */
+    while(lexer->chunk_i < lexer->chunk_size){
+
+        /* Get next character */
+        c = lexer->chunk[lexer->chunk_i];
+
+        if(c == '\n' || c == '\0'){
+            /* Finish end of line / end of file */
+            if(c == '\n')fus_lexer_eat(lexer);
+            if(fus_lexer_finish_line(lexer) < 0)return;
+            if(c == '\0')break;
+        }else if(isspace(c)){
+            /* Eat whitespace */
+            fus_lexer_eat_whitespace(lexer);
+        }else if(c == '#'){
+            /* Eat comment */
+            fus_lexer_eat_comment(lexer);
+        }else if(c == ':'){
+            /* Start new indented block */
+            fus_lexer_eat(lexer);
+            lexer->returning_indents++;
+            if(fus_lexer_push_indent(lexer, lexer->indent) < 0)return;
+        }else break;
+    }
+
+    if(c == '(' || c == ')'){
+        fus_lexer_start_token(lexer);
+        fus_lexer_eat(lexer);
+        fus_lexer_end_token(lexer);
+        lexer->token_type = c == '('? FUS_TOKEN_ARR_OPEN: FUS_TOKEN_ARR_CLOSE;
+    }else if(c == '_' || isalpha(c)){
+        fus_lexer_parse_sym(lexer);
+        lexer->token_type = FUS_TOKEN_SYM;
+    }else if(isdigit(c) || (
+        c == '-' && isdigit(fus_lexer_peek(lexer))
+    )){
+        fus_lexer_parse_int(lexer);
+        lexer->token_type = FUS_TOKEN_INT;
+    }else if(c == '"'){
+        if(fus_lexer_parse_str(lexer) < 0)return;
+        lexer->token_type = FUS_TOKEN_STR;
+    }else if(c == ';' && fus_lexer_peek(lexer) == ';'){
+        fus_lexer_parse_blockstr(lexer);
+        lexer->token_type = FUS_TOKEN_STR;
+    }else{
+        fus_lexer_parse_op(lexer);
+        lexer->token_type = FUS_TOKEN_SYM;
+    }
 
     /* At the VERY END of fus_lexer_next, we should check lexer->chunk_i
     against lexer->chunk_size and decide whether current token is a split

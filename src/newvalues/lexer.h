@@ -10,7 +10,7 @@
 
 typedef enum fus_lexer_token_type {
     FUS_TOKEN_DONE,
-    FUS_TOKEN_ERR,
+    FUS_TOKEN_ERROR,
     FUS_TOKEN_INT,
     FUS_TOKEN_SYM,
     FUS_TOKEN_STR,
@@ -21,6 +21,18 @@ typedef enum fus_lexer_token_type {
         probably "unfinished" and caller should load next chunk */
     FUS_TOKENS
 } fus_lexer_token_type_t;
+
+typedef enum fus_lexer_errcode {
+    FUS_LEXER_ERRCODE_OK,
+    FUS_LEXER_ERRCODE_BAD_INDENT_CHAR,
+    FUS_LEXER_ERRCODE_STR_UNFINISHED,
+    FUS_LEXER_ERRCODE_TOO_MANY_INDENTS,
+    FUS_LEXER_ERRCODES
+} fus_lexer_errcode_t;
+
+const char *fus_lexer_errcode_msg(fus_lexer_errcode_t errcode);
+
+#define FUS_LEXER_MAX_INDENTS 64
 
 typedef struct fus_lexer {
     const char *chunk;
@@ -33,10 +45,15 @@ typedef struct fus_lexer {
     int col; /* column within file */
 
     int indent;
+    int indents[FUS_LEXER_MAX_INDENTS];
+    int n_indents;
+    int returning_indents;
 
     const char *token;
     int token_len;
     fus_lexer_token_type_t token_type;
+
+    fus_lexer_errcode_t errcode;
 } fus_lexer_t;
 
 
