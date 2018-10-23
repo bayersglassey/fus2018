@@ -452,8 +452,8 @@ int run_tests(fus_vm_t *vm){
     run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
     run_symtable_tests_full(vm, &n_tests, &n_fails);
     run_lexer_tests(vm, &n_tests, &n_fails);
-    //run_parser_tests_basic(vm, &n_tests, &n_fails);
-    //run_parser_tests_full(vm, &n_tests, &n_fails);
+    run_parser_tests_basic(vm, &n_tests, &n_fails);
+    run_parser_tests_full(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
