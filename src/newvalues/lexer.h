@@ -22,11 +22,15 @@ typedef enum fus_lexer_token_type {
     FUS_TOKENS
 } fus_lexer_token_type_t;
 
+const char *fus_lexer_token_type_msg(fus_lexer_token_type_t type);
+
 typedef enum fus_lexer_errcode {
     FUS_LEXER_ERRCODE_OK,
     FUS_LEXER_ERRCODE_BAD_INDENT_CHAR,
     FUS_LEXER_ERRCODE_STR_UNFINISHED,
     FUS_LEXER_ERRCODE_TOO_MANY_INDENTS,
+    FUS_LEXER_ERRCODE_TOO_FEW_INDENTS,
+    FUS_LEXER_ERRCODE_NEGATIVE_INDENT,
     FUS_LEXER_ERRCODES
 } fus_lexer_errcode_t;
 
@@ -63,8 +67,13 @@ void fus_lexer_cleanup(fus_lexer_t *lexer);
 void fus_lexer_load_chunk(fus_lexer_t *lexer,
     const char *chunk, size_t chunk_size);
 
-bool fus_lexer_done(fus_lexer_t *lexer);
+bool fus_lexer_is_ok(fus_lexer_t *lexer);
+bool fus_lexer_is_done(fus_lexer_t *lexer);
+bool fus_lexer_is_split(fus_lexer_t *lexer);
+bool fus_lexer_is_error(fus_lexer_t *lexer);
 bool fus_lexer_got(fus_lexer_t *lexer, const char *token);
+
+void fus_lexer_perror(fus_lexer_t *lexer);
 
 void fus_lexer_next(fus_lexer_t *lexer);
 

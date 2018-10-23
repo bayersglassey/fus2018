@@ -24,6 +24,9 @@
     printf(FUS_TESTS_DIVIDER "\n"); \
     printf("BEGIN: %s\n", title);
 
+#define FUS_TEST_SUBTITLE(SUBTITLE) \
+    printf("  /* " SUBTITLE " */\n");
+
 #define FUS_TESTS_PASSED() \
     printf("Tests passed: %i/%i [%s]\n", n_tests - n_fails, n_tests, \
         n_fails == 0? "OK": "FAIL");
@@ -80,6 +83,15 @@
     const char *__x = (X); \
     const char *__y = (Y); \
     FUS_TEST_("!strcmp(" #X ", " #Y ")", __x && __y && !strcmp(__x, __y)) \
+    if(__x == NULL)printf("    NOTE: lhs is NULL\n"); \
+    if(__y == NULL)printf("    NOTE: rhs is NULL\n"); \
+}
+
+#define FUS_TEST_STRNCMP(X, Y, N) { \
+    const char *__x = (X); \
+    const char *__y = (Y); \
+    int __n = (N); \
+    FUS_TEST_("!strncmp(" #X ", " #Y ", " #N ")", __x && __y && !strncmp(__x, __y, __n)) \
     if(__x == NULL)printf("    NOTE: lhs is NULL\n"); \
     if(__y == NULL)printf("    NOTE: rhs is NULL\n"); \
 }
@@ -186,50 +198,111 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_lexer_t lexer;
     fus_lexer_init(&lexer, NULL);
 
-    const char *text =
-        "def test:\n"
-        "    arr \"Thing \", 2, \": \", (obj 1 =.x 2 =.y), \"!\",\n"
-        "    @format \"Thing 2: {x: 1, y: 2}!\" str_eq assert";
+    #define FUS_TEST_LEXER_TEXT \
+        "def test:\n" \
+        "    arr \"Thing \", 2, \": \", (obj 1 =.x 2 =.y), \"!\",\n" \
+        "    @format \"Thing 2: {x: 1, y: 2}!\" str_eq assert"
 
-    fus_lexer_load_chunk(&lexer, text, strlen(text));
+    #define FUS_TEST_LEXER_FULL_LEX(LEXER) \
+        while(fus_lexer_is_ok(&lexer))fus_lexer_next(LEXER);
 
-    #define FUS_TEST_LEXER_GOT(TEXT, TYPE) \
-        fus_lexer_next(&lexer); \
-        FUS_TEST(fus_lexer_got(&lexer, TEXT)) \
-        FUS_TEST_EQ_INT(lexer.token_type, FUS_TOKEN_##TYPE)
+    {
+        /* Here we test a full lex when chunk includes terminating NUL byte.
+        (We achieve that by using strlen(chunk) + 1) */
+        FUS_TEST_SUBTITLE("Full lex, NUL-terminated")
 
-    FUS_TEST_LEXER_GOT("def", SYM);
-    FUS_TEST_LEXER_GOT("test", SYM);
-    FUS_TEST_LEXER_GOT("(", ARR_OPEN);
-    FUS_TEST_LEXER_GOT(  "arr", SYM);
-    FUS_TEST_LEXER_GOT(  "\"Thing \"", STR);
-    FUS_TEST_LEXER_GOT(  ",", SYM);
-    FUS_TEST_LEXER_GOT(  "2", INT);
-    FUS_TEST_LEXER_GOT(  ",", SYM);
-    FUS_TEST_LEXER_GOT(  "\": \"", STR);
-    FUS_TEST_LEXER_GOT(  ",", SYM);
-    FUS_TEST_LEXER_GOT(  "(", ARR_OPEN);
-    FUS_TEST_LEXER_GOT(    "obj", SYM);
-    FUS_TEST_LEXER_GOT(    "1", INT);
-    FUS_TEST_LEXER_GOT(    "=.", SYM);
-    FUS_TEST_LEXER_GOT(    "x", SYM);
-    FUS_TEST_LEXER_GOT(    "2", INT);
-    FUS_TEST_LEXER_GOT(    "=.", SYM);
-    FUS_TEST_LEXER_GOT(    "y", SYM);
-    FUS_TEST_LEXER_GOT(  ")", ARR_CLOSE);
-    FUS_TEST_LEXER_GOT(  ",", SYM);
-    FUS_TEST_LEXER_GOT(  "\"!\"", STR);
-    FUS_TEST_LEXER_GOT(  ",", SYM);
-    FUS_TEST_LEXER_GOT(  "@", SYM);
-    FUS_TEST_LEXER_GOT(  "format", SYM);
-    FUS_TEST_LEXER_GOT(  "\"Thing 2: {x: 1, y: 2}!\"", STR);
-    FUS_TEST_LEXER_GOT(  "str_eq", SYM);
-    FUS_TEST_LEXER_GOT(  "assert", SYM);
-    FUS_TEST_LEXER_GOT(")", ARR_CLOSE);
+        const char *chunk = FUS_TEST_LEXER_TEXT;
+        fus_lexer_t lexer;
+        fus_lexer_init(&lexer, NULL);
+        fus_lexer_load_chunk(&lexer, chunk, strlen(chunk) + 1);
 
-    FUS_TEST(fus_lexer_done(&lexer))
+        FUS_TEST_LEXER_FULL_LEX(&lexer)
+        FUS_TEST(fus_lexer_is_done(&lexer))
+        FUS_TEST(fus_lexer_got(&lexer, ""))
 
-    fus_lexer_cleanup(&lexer);
+        fus_lexer_cleanup(&lexer);
+    }
+
+    {
+        /* Here we test a full lex where token is split, but chunk ends
+        with whitespace (the space in FUS_TEST_LEXER_TEXT " "), so the
+        "split" token is empty. */
+        FUS_TEST_SUBTITLE("Full lex, split token, whitespace")
+
+        const char *chunk = FUS_TEST_LEXER_TEXT " ";
+        fus_lexer_t lexer;
+        fus_lexer_init(&lexer, NULL);
+        fus_lexer_load_chunk(&lexer, chunk, strlen(chunk));
+
+        FUS_TEST_LEXER_FULL_LEX(&lexer)
+        FUS_TEST(fus_lexer_is_split(&lexer))
+        FUS_TEST(fus_lexer_got(&lexer, ""))
+
+        fus_lexer_cleanup(&lexer);
+    }
+
+    {
+        /* Here we test a full lex where the "assert" token is split */
+        FUS_TEST_SUBTITLE("Full lex, split token, non-whitespace")
+
+        const char *chunk = FUS_TEST_LEXER_TEXT;
+        fus_lexer_t lexer;
+        fus_lexer_init(&lexer, NULL);
+        fus_lexer_load_chunk(&lexer, chunk, strlen(chunk));
+
+        FUS_TEST_LEXER_FULL_LEX(&lexer)
+        FUS_TEST(fus_lexer_is_split(&lexer))
+        FUS_TEST(fus_lexer_got(&lexer, "assert"))
+
+        fus_lexer_cleanup(&lexer);
+    }
+
+    {
+        /* Here we explicitly test every token of a full lex */
+        FUS_TEST_SUBTITLE("Full lex, token-by-token")
+
+        const char *chunk = FUS_TEST_LEXER_TEXT;
+        fus_lexer_t lexer;
+        fus_lexer_init(&lexer, NULL);
+        fus_lexer_load_chunk(&lexer, chunk, strlen(chunk) + 1);
+
+        #define FUS_TEST_LEXER_GOT(TEXT, TYPE) \
+            FUS_TEST(fus_lexer_got(&lexer, TEXT)) \
+            FUS_TEST_EQ_INT(lexer.token_type, FUS_TOKEN_##TYPE) \
+            fus_lexer_next(&lexer);
+
+        FUS_TEST_LEXER_GOT("def", SYM);
+        FUS_TEST_LEXER_GOT("test", SYM);
+        FUS_TEST_LEXER_GOT("(", ARR_OPEN);
+        FUS_TEST_LEXER_GOT(  "arr", SYM);
+        FUS_TEST_LEXER_GOT(  "\"Thing \"", STR);
+        FUS_TEST_LEXER_GOT(  ",", SYM);
+        FUS_TEST_LEXER_GOT(  "2", INT);
+        FUS_TEST_LEXER_GOT(  ",", SYM);
+        FUS_TEST_LEXER_GOT(  "\": \"", STR);
+        FUS_TEST_LEXER_GOT(  ",", SYM);
+        FUS_TEST_LEXER_GOT(  "(", ARR_OPEN);
+        FUS_TEST_LEXER_GOT(    "obj", SYM);
+        FUS_TEST_LEXER_GOT(    "1", INT);
+        FUS_TEST_LEXER_GOT(    "=.", SYM);
+        FUS_TEST_LEXER_GOT(    "x", SYM);
+        FUS_TEST_LEXER_GOT(    "2", INT);
+        FUS_TEST_LEXER_GOT(    "=.", SYM);
+        FUS_TEST_LEXER_GOT(    "y", SYM);
+        FUS_TEST_LEXER_GOT(  ")", ARR_CLOSE);
+        FUS_TEST_LEXER_GOT(  ",", SYM);
+        FUS_TEST_LEXER_GOT(  "\"!\"", STR);
+        FUS_TEST_LEXER_GOT(  ",", SYM);
+        FUS_TEST_LEXER_GOT(  "@", SYM);
+        FUS_TEST_LEXER_GOT(  "format", SYM);
+        FUS_TEST_LEXER_GOT(  "\"Thing 2: {x: 1, y: 2}!\"", STR);
+        FUS_TEST_LEXER_GOT(  "str_eq", SYM);
+        FUS_TEST_LEXER_GOT(  "assert", SYM);
+        FUS_TEST_LEXER_GOT(")", ARR_CLOSE);
+        FUS_TEST(fus_lexer_is_done(&lexer))
+
+        fus_lexer_cleanup(&lexer);
+    }
 
     FUS_TESTS_END()
 }
