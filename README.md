@@ -41,18 +41,22 @@ TODO: Fight Haskell and win.
     drop
 
 
-## "Newvalues" Test Suite
+## "Newvalues"
 
 A revamp of the basic datastructure for fus values is under way.
 Previously they were a struct; now they are a tagged pointer.
 
-Compile:
+Compile & Run Test Suite:
 
-    ./compile_newvalues
+    ./compile_newvalues test && ./main
 
-Run:
+Compile & Run Parser:
 
-    ./main
+    # Parse a fus file:
+    ./compile_newvalues parse && ./main fus/sql.fus
+
+    # With ANSI colors!
+    ./compile_newvalues parse -DFUS_COLOR && ./main fus/sql.fus
 
 
 ## Getting started
