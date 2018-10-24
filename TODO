@@ -51,3 +51,10 @@ fus_int_decode, fus_sym_decode, fus_bool_decode:
     down with an abort, or whatever... hmmmmm.
     Current approach where we get nice debug output is maybe superior option.
 
+Oct 23, 2018:
+-------------
+
+HAVE A LOOK AT THIS LEXER PROBLEM:
+    ./compile_newvalues parse && ./main fus/lexer_problem.fus
+...ADD A TEST FOR IT.
+
