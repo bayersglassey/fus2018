@@ -15,6 +15,7 @@ color brightblue "(=|'|)'"
 
 # Obj Get/Rip/Set/Has
 color blue "((=|\?|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
+color brightblue "((=|\?|\.|)\.)[0-9]+\>"
 #color brightblue "(=|\.|)\."
 
 # Arr Get/Rip/Set/Has

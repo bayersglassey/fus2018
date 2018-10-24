@@ -57,7 +57,7 @@ Obj
 
 Arr
 
-    arr len , push pop lpush lpop split join repeat .$ ..$ =.$ ?.$
+    arr .0 len , push pop lpush lpop split join tuple repeat .$ ..$ =.$ ?.$
     arr_togen
 
 Fun
