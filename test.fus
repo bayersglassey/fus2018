@@ -1,12 +1,2 @@
 
-# ./compile -DFUS_DEBUG_COMPILER_FRAMES && ./main
-
-
-module M:
-    sig: x -> y
-    def f: 10 +
-
-sig(->)
-def g: 3 @(M f) p
-
-@g
+1 2 + p
