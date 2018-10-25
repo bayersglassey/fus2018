@@ -10,6 +10,7 @@ typedef struct fus {
     fus_lexer_t lexer;
     fus_symtable_t symtable;
     fus_vm_t vm;
+    fus_printer_t printer;
 } fus_t;
 
 void fus_init(fus_t *fus);
