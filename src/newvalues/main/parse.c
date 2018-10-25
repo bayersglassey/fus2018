@@ -45,21 +45,27 @@ static int parse(fus_t *fus, const char *filename, const char *text){
     fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
 
-    int i = 0;
+    int token_i = 0;
     int row = lexer->row;
     while(fus_lexer_is_ok(lexer)){
         if(lexer->row > row){
             printf("\n");
             for(int i = 0; i < lexer->indent; i++)printf(" ");
             row = lexer->row;
-        }else if(i > 0)printf(" ");
+        }else if(token_i > 0)printf(" ");
         IFTTY(stdout) printf(fus_lexer_get_token_color(lexer));
         fus_lexer_print_token(lexer, stdout, false);
         IFTTY(stdout) printf(ANSI_COLOR_RESET);
         fus_lexer_next(lexer);
-        i++;
+        token_i++;
     }
     printf("\n");
+
+    if(!fus_lexer_done(lexer)){
+        fprintf(stderr, "Lexer finished with unexpected state: %s\n",
+            fus_lexer_token_msg(lexer->token_type));
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }
@@ -93,6 +99,5 @@ int main(int n_args, char *args[]){
 
     fus_cleanup(&fus);
     free(buffer);
-    fprintf(stderr, "OK\n");
     return status;
 }

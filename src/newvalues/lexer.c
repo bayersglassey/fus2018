@@ -25,7 +25,8 @@ const char *fus_lexer_errcode_msg(fus_lexer_errcode_t errcode){
         "Reached end of line in str literal",
         "Too many indents",
         "Too few indents (impossible?!)",
-        "Negative indent (what!)"
+        "Negative indent (what!)",
+        "Something went wrong, idunno"
     };
     if(errcode < 0 || errcode >= FUS_LEXER_ERRCODES)return "Unknown";
     return msgs[errcode];
@@ -143,9 +144,11 @@ void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type){
     }
 }
 
-void fus_lexer_perror(fus_lexer_t *lexer){
+void fus_lexer_perror(fus_lexer_t *lexer, const char *msg){
     FUS_LEXER_ERROR(lexer)
-    fprintf(stderr, "%s\n", fus_lexer_errcode_msg(lexer->errcode));
+    const char *errcode_msg = fus_lexer_errcode_msg(lexer->errcode);
+    if(msg)fprintf(stderr, "%s (%s)\n", msg, errcode_msg);
+    else fprintf(stderr, "%s\n", errcode_msg);
 }
 
 
