@@ -4,7 +4,12 @@ then
     echo "Usage:"
     echo "    $(basename "$0") MAIN [GCC_ARGS...]"
     echo "Where:"
-    echo "    MAIN is one of: test parse"
+    echo "    MAIN is one of:"
+    for F in src/newvalues/main/*.c
+    do
+        F=$(basename "$F")
+        echo "        ${F%%.c}"
+    done
     exit 1
 fi
 
