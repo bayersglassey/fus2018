@@ -110,19 +110,9 @@ void fus_printer_print_boxed(fus_printer_t *printer, fus_boxed_t *p){
     fus_boxed_type_t type = p->type;
     if(type == FUS_BOXED_ARR){
         fprintf(file, "arr");
-
         fus_arr_t *a = &p->data.a;
-        int len = a->values.len;
-        fus_value_t *values = FUS_ARR_VALUES(*a);
-        for(int i = 0; i < len; i++){
-            fus_printer_print_newline(printer);
-
-            printer->depth++;
-            fus_printer_print_value(printer, p->vm, values[i]);
-            printer->depth--;
-
-            fprintf(file, ",");
-        }
+        if(a->values.len > 0)fus_printer_print_newline(printer);
+        fus_printer_print_arr(printer, p->vm, a);
     }else if(type == FUS_BOXED_OBJ){
         fprintf(file, "obj \"TODO: Finish implementing obj\" error");
     }else if(type == FUS_BOXED_STR){
@@ -133,6 +123,23 @@ void fus_printer_print_boxed(fus_printer_t *printer, fus_boxed_t *p){
     }else{
         FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
         fprintf(file, "(\"Got weird boxed value\" error)");
+    }
+}
+
+void fus_printer_print_arr(fus_printer_t *printer,
+    fus_vm_t *vm, fus_arr_t *a
+){
+    FILE *file = printer->file;
+    int len = a->values.len;
+    fus_value_t *values = FUS_ARR_VALUES(*a);
+    for(int i = 0; i < len; i++){
+        if(i > 0)fus_printer_print_newline(printer);
+
+        printer->depth++;
+        fus_printer_print_value(printer, vm, values[i]);
+        printer->depth--;
+
+        fprintf(file, ",");
     }
 }
 
