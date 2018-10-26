@@ -27,13 +27,8 @@ def resize:
 
     ='new_len ='xs
     null 'new_len repeat ='new_xs
-    0 ('xs len 'new_len @min) do:
-        over over < while
-        swap dup ='i 1 + swap
-
+    'xs len 'new_len @min int_for: ='i
         ''new_xs ('xs 'i .$) 'i =.$ ='new_xs
-        loop
-    drop drop
 
     ''new_xs
 

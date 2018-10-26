@@ -1,28 +1,15 @@
 
-def sig(int -> gen) int_togen:
-    gen takes(n):
-        ='n
-        0 ='i
-        do:
-            'i 'n < while 'i out
-            ''i 1 + ='i loop
-
 def sig(xs f ->xs) map:
-    over is_arr if:
-        ='f
-        ='xs
-        'xs len @int_togen for:
-            ='i
-            ''xs 'i ..$ 'f call(x -> y) 'i =.$ ='xs
-        ''xs
-    else: gen takes(xs f):
-        ='f
-        for: 'f call(x -> y) out
+    ='f ='xs
+    'xs len int_for: ='i
+        ''xs 'i ..$
+            'f call(x -> y)
+        'i =.$ ='xs
+    ''xs
 
 def sig(xs x f -> x) fold:
     ='f ='x ='xs
-    'xs len @int_togen for:
-        ='i
+    'xs len int_for: ='i
         ''x ('xs 'i .$) 'f call(x y -> z) ='x
     ''x
 
@@ -47,12 +34,6 @@ def sig(->) test:
         lpop 20 == assert
         lpop 30 == assert
     len 0 == assert
-
-    gen(1 out 2 out 3 out) fun(10 *) @map
-        >> 10 == assert
-        >> 20 == assert
-        >> 30 == assert
-    done assert
 
     (arr T, T, T,) @all assert
     (arr T, F, T,) @all not assert

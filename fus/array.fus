@@ -29,7 +29,7 @@ module Array:
         'array .dims ='dims
         0 ='i
 
-        'v len @int_togen for:
+        'v len int_for: ='v_i
             ''i
                 'dims 'v_i .$ *
                 'v 'v_i .$ +
