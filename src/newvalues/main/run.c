@@ -30,9 +30,37 @@ static void exec(fus_lexer_t *lexer, fus_state_t *state){
                 lexer->token, lexer->token_len);
             fus_arr_push(&state->stack, value);
         }else if(type == FUS_TOKEN_SYM){
-            fus_value_t value = fus_value_tokenparse_sym(state->vm,
-                lexer->token, lexer->token_len);
-            fus_arr_push(&state->stack, value);
+            if(fus_lexer_got(lexer, "`")){
+                fus_lexer_next(lexer);
+                if(lexer->token_type != FUS_TOKEN_SYM){
+                    fus_lexer_perror(lexer, "Expected sym after \"`\"");
+                    fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
+                    return;
+                }
+                fus_value_t value = fus_value_tokenparse_sym(state->vm,
+                    lexer->token, lexer->token_len);
+                fus_arr_push(&state->stack, value);
+            }else if(fus_lexer_got(lexer, "+")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(&state->stack, &value2);
+                fus_arr_pop(&state->stack, &value1);
+                fus_value_t value3 = fus_value_int_add(state->vm,
+                    value1, value2);
+                fus_arr_push(&state->stack, value3);
+            }else if(fus_lexer_got(lexer, "*")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(&state->stack, &value2);
+                fus_arr_pop(&state->stack, &value1);
+                fus_value_t value3 = fus_value_int_mul(state->vm,
+                    value1, value2);
+                fus_arr_push(&state->stack, value3);
+            }else{
+                fus_lexer_perror(lexer, "Builtin not found");
+                fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
+                return;
+            }
         }else if(type == FUS_TOKEN_STR){
             fus_value_t value = fus_value_tokenparse_str(state->vm,
                 lexer->token, lexer->token_len);
@@ -57,28 +85,26 @@ static void exec(fus_lexer_t *lexer, fus_state_t *state){
 
 
 static int run(fus_t *fus, const char *filename, const char *text){
+    int status = EXIT_SUCCESS;
+
     fus_lexer_t *lexer = &fus->lexer;
     fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
 
-    {
-        fus_state_t state;
-        fus_state_init(&state, &fus->vm);
+    fus_state_t state;
+    fus_state_init(&state, &fus->vm);
 
-        exec(lexer, &state);
-        fus_printer_print_data(&fus->printer, &fus->vm, &state.stack);
-
-        fus_state_cleanup(&state);
-    }
+    exec(lexer, &state);
+    fus_printer_print_arr(&fus->printer, &fus->vm, &state.stack);
+    printf("\n");
 
     if(!fus_lexer_is_done(lexer)){
-        fprintf(stderr, "%s: Lexer finished with unexpected state: %s\n",
-            __func__, fus_lexer_token_type_msg(lexer->token_type));
-        fus_lexer_perror(lexer, "Oh no!");
-        return EXIT_FAILURE;
+        fus_lexer_perror(lexer, "Lexer finished with status != done");
+        status = EXIT_FAILURE;
     }
 
-    return EXIT_SUCCESS;
+    fus_state_cleanup(&state);
+    return status;
 }
 
 int main(int n_args, char *args[]){

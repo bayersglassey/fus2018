@@ -127,10 +127,15 @@ bool fus_lexer_got(fus_lexer_t *lexer, const char *token){
 
 #define FUS_LEXER_INFO(LEXER, F) { \
     fus_lexer_t *__lexer = (LEXER); \
-    fprintf((F), "%s: row %i: col %i: ", \
+    int __token_len = __lexer->token_len; \
+    const char *__dots = ""; \
+    if(__token_len > 10){__token_len = 10; __dots = "...";} \
+    fprintf((F), "%s: row %i: col %i: %s token \"%.*s\"%s: ", \
         __lexer->filename, \
         __lexer->row + 1, \
-        __lexer->col - __lexer->token_len + 1); \
+        __lexer->col - __lexer->token_len + 1, \
+        fus_lexer_token_type_msg(__lexer->token_type), \
+        __token_len, __lexer->token, __dots); \
 }
 
 #define FUS_LEXER_ERROR(LEXER) \
@@ -145,7 +150,7 @@ void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type){
 }
 
 void fus_lexer_perror(fus_lexer_t *lexer, const char *msg){
-    FUS_LEXER_ERROR(lexer)
+    FUS_LEXER_INFO(lexer, stderr)
     const char *errcode_msg = fus_lexer_errcode_msg(lexer->errcode);
     if(msg)fprintf(stderr, "%s (%s)\n", msg, errcode_msg);
     else fprintf(stderr, "%s\n", errcode_msg);
