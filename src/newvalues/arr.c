@@ -30,6 +30,24 @@ void fus_arr_push(fus_arr_t *a, fus_value_t value){
     FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
 }
 
+void fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr){
+    /* Bounds check */
+    if(a->values.len <= 0){
+        // Would be nice, but we don't have a vm...
+        // Should all fus_arr_* take a fus_boxed_t instead of fus_arr_t ???
+        // *value_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+        fprintf(stderr, "%s: ERROR: Attempted to pop from empty arr\n",
+            __func__);
+        exit(EXIT_FAILURE); // !!! TODO: This function shouldn't be allowed to exit()...
+    }
+
+    /* Get value from last array element */
+    *value_ptr = FUS_ARR_VALUES(*a)[a->values.len - 1];
+
+    /* Resize array */
+    fus_array_pop(&a->values);
+}
+
 
 
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
@@ -109,6 +127,32 @@ void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
     /* Get arr and do the push */
     fus_arr_t *a = &value_a.p->data.a;
     fus_arr_push(a, value);
+
+    /* Return */
+    *value_a_ptr = value_a;
+}
+
+void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t *value_ptr
+){
+    /* Represents a transfer of ownership of last value of value_a
+    to value_ptr. */
+
+    /* Typecheck */
+    fus_value_t value_a = *value_a_ptr;
+    if(!fus_value_is_arr(value_a)){
+        fus_value_detach(vm, value_a);
+        *value_a_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        *value_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_arr_mkunique(&value_a.p);
+
+    /* Get arr and do the pop */
+    fus_arr_t *a = &value_a.p->data.a;
+    fus_arr_pop(a, value_ptr);
 
     /* Return */
     *value_a_ptr = value_a;
