@@ -56,6 +56,39 @@ static void exec(fus_lexer_t *lexer, fus_state_t *state){
                 fus_value_t value3 = fus_value_int_mul(state->vm,
                     value1, value2);
                 fus_arr_push(&state->stack, value3);
+            }else if(fus_lexer_got(lexer, "arr")){
+                fus_value_t value = fus_value_arr(state->vm);
+                fus_arr_push(&state->stack, value);
+            }else if(fus_lexer_got(lexer, ",") || fus_lexer_got(lexer, "push")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(&state->stack, &value2);
+                fus_arr_pop(&state->stack, &value1);
+                fus_value_arr_push(state->vm, &value1, value2);
+                fus_arr_push(&state->stack, value1);
+            }else if(fus_lexer_got(lexer, "len")){
+                fus_value_t value;
+                fus_arr_pop(&state->stack, &value);
+                fus_value_t value_len = fus_value_arr_len(state->vm, value);
+                fus_arr_push(&state->stack, value_len);
+                fus_value_detach(state->vm, value);
+            }else if(fus_lexer_got(lexer, "swap")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(&state->stack, &value2);
+                fus_arr_pop(&state->stack, &value1);
+                fus_arr_push(&state->stack, value2);
+                fus_arr_push(&state->stack, value1);
+            }else if(fus_lexer_got(lexer, "dup")){
+                fus_value_t value;
+                fus_arr_pop(&state->stack, &value);
+                fus_arr_push(&state->stack, value);
+                fus_arr_push(&state->stack, value);
+                fus_value_attach(state->vm, value);
+            }else if(fus_lexer_got(lexer, "drop")){
+                fus_value_t value;
+                fus_arr_pop(&state->stack, &value);
+                fus_value_detach(state->vm, value);
             }else{
                 fus_lexer_perror(lexer, "Builtin not found");
                 fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);

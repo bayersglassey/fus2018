@@ -41,6 +41,7 @@ void fus_printer_print_tabs(fus_printer_t *printer){
 
 void fus_printer_print_newline(fus_printer_t *printer){
     fprintf(printer->file, printer->newline);
+    fus_printer_print_tabs(printer);
 }
 
 
@@ -153,7 +154,6 @@ void fus_printer_print_data(fus_printer_t *printer,
     for(int i = 0; i < len; i++){
         if(i != 0){
             fus_printer_print_newline(printer);
-            fus_printer_print_tabs(printer);
         }
 
         fus_value_t value = values[i];
@@ -171,7 +171,6 @@ void fus_printer_print_data(fus_printer_t *printer,
             if(type == FUS_BOXED_ARR){
                 fprintf(file, ":");
                 fus_printer_print_newline(printer);
-                fus_printer_print_tabs(printer);
                 printer->depth++;
                 fus_printer_print_data(printer, vm, &p->data.a);
                 printer->depth--;
