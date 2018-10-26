@@ -21,6 +21,7 @@ void fus_parser_dump(fus_parser_t *parser, FILE *file);
 void fus_parser_push_arr(fus_parser_t *parser);
 void fus_parser_pop_arr(fus_parser_t *parser);
 void fus_parser_push_value(fus_parser_t *parser, fus_value_t value);
+void fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr);
 
 
 #define FUS_PARSER_DECLS(T) \

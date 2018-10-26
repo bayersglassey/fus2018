@@ -71,6 +71,9 @@ void fus_parser_pop_arr(fus_parser_t *parser){
 void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
     fus_arr_push(&parser->arr, value);
 }
+void fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
+    fus_arr_pop(&parser->arr, value_ptr);
+}
 
 
 
