@@ -11,7 +11,6 @@ module simple:
         obj
             null =.max_obj_entries
             null =.max_arr_entries
-            50 =.max_gen_entries
     def format: @DEFAULT_OPTS @format
     def tostr: @DEFAULT_OPTS @tostr
 
@@ -19,7 +18,7 @@ module simple:
 def format of(a opts -> s):
     ='opts
     "" ='s
-    @arr_togen for:
+    arr_for:
         'opts @tostr ''s swap str_join ='s
     ''s
 
@@ -34,22 +33,21 @@ def tostr of(x opts -> s):
         fun(drop drop "<fun>") =.fun
         &obj_tostr =.obj
         &arr_tostr =.arr
-        &gen_tostr =.gen
     over typeof get ''opts call(x opts -> s)
 
 def obj_tostr of(x opts -> s):
     ='opts
     ='o
 
+    'o keys ='keys
     'opts .max_obj_entries ='max_entries
-
     "{" ='s
-    0 ='i
 
-    'o keys @arr_togen for: ='key
+    'keys len int_for: ='i
         'max_entries is_int if:
             'i 'max_entries >= if:
                 ''s ", ..." str_join ='s break
+        'keys 'i .$ ='key
         'o 'key get ='val
         ''s
             'i 0 > if: ", " str_join
@@ -57,33 +55,25 @@ def obj_tostr of(x opts -> s):
             ": " str_join
             'val 'opts @tostr str_join
         ='s
-        ''i 1 + ='i
 
     ''s "}" str_join
 
 def arr_tostr of(x opts -> s):
-    swap @arr_togen swap
-    dup .max_arr_entries @_gen_tostr
-
-def gen_tostr of(x opts -> s):
-    dup .max_gen_entries @_gen_tostr
-
-def _gen_tostr of(x opts max_entries -> s):
-    ='max_entries
     ='opts
+    ='a
 
+    'opts .max_arr_entries ='max_entries
     "[" ='s
-    0 ='i
 
-    for: ='val
+    'a len int_for: ='i
         'max_entries is_int if:
             'i 'max_entries >= if:
                 ''s ", ..." str_join ='s break
+        'a 'i .$ ='val
         ''s
             'i 0 > if: ", " str_join
             'val 'opts @tostr str_join
         ='s
-        ''i 1 + ='i
 
     ''s "]" str_join
 
