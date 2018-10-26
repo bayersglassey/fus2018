@@ -1,0 +1,254 @@
+
+module Geom:
+
+    module Color:
+
+        def mkcolor: obj swap =.b swap =.g swap =.r
+
+        def blk:   0   0   0 @mkcolor
+        def red: 255   0   0 @mkcolor
+        def grn:   0 255   0 @mkcolor
+        def blu:   0   0 255 @mkcolor
+        def wht: 255 255 255 @mkcolor
+
+    module Vec:
+
+        def mkvec: tuple 4
+
+        def    O:  0  0  0  0 @mkvec
+        def    A:  1  0  0  0 @mkvec
+        def    B:  0  1  0  0 @mkvec
+        def    C:  0  0  1  0 @mkvec
+        def    D:  0  0  0  1 @mkvec
+        def   NA: -1  0  0  0 @mkvec
+        def   NB:  0 -1  0  0 @mkvec
+        def   AB:  1  1  0  0 @mkvec
+        def AACC:  2  0  2  0 @mkvec
+
+        def vec_nmul:
+            ='n ='v
+            'v len int_togen for: ='i
+                ''v 'i ..$ 'n * 'i =.$ ='v
+            ''v
+
+        def vec_rot:
+            ='n ='v
+            'n int_togen for: ='i
+                ''v
+                    dup .0 ='a
+                    dup .1 ='b
+                    dup .2 ='c
+                    dup .3 ='d
+                    'd --   =.0
+                    'a      =.1
+                    'b 'd + =.2
+                    'c      =.3
+                ='v
+            ''v
+
+        def vec_add:
+            ='w ='v
+            'v len int_togen for: ='i
+                ''v 'i ..$ 'w 'i .$ + 'i =.$ ='v
+            ''v
+
+        def vec_sub:
+            ='w ='v
+            'v len int_togen for: ='i
+                ''v 'i ..$ 'w 'i .$ - 'i =.$ ='v
+            ''v
+
+        def vec_eq:
+            ='w ='v
+            'v len int_togen for: ='i
+                'v 'i .$ 'w 'i .$ != if: F return
+            T
+
+        def vec_mul:
+            ='w ='v
+                        'v 'w .0 @vec_nmul
+                            'v 1 @vec_rot
+                            'w .1
+                        @vec_nmul
+                    @vec_add
+                        'v 2 @vec_rot
+                        'w .2
+                    @vec_nmul
+                @vec_add
+                    'v 3 @vec_rot
+                    'w .3
+                @vec_nmul
+            @vec_add
+
+        def test:
+            @A @B @vec_add @AB @vec_eq assert
+            @A 1 @vec_rot @B @vec_eq assert
+            @A 0 @vec_rot @A @vec_eq assert
+            @D 1 @vec_rot @C @A @vec_sub @vec_eq assert
+
+                    1 2 3 4 @mkvec
+                    # rotate by -1, stretch by 10:
+                    0 10 0 -10 @mkvec
+                @vec_mul
+                20 (30 10 +) 40 -10 @mkvec
+            @vec_eq assert
+
+    module Trf:
+
+        use: Vec A
+
+        def mktrf: obj
+            @A =.add
+            0 =.rot
+            F =.flip
+
+        def trf_add: ...
+        def trf_sub: ...
+        def trf_rot: ...
+
+        # TODO
+
+    module Prismel:
+
+        # SEE: fus/geom.fus
+
+        use: Trf mktrf
+
+        def mkprismel: obj null =.images @mktrf =.trf
+        def mkrect: tuple 4
+        def mkimages: tuple 3
+
+        def prismel_sq:
+            @mkprismel
+                arr
+                     0 -2  2  2 @mkrect,
+                arr
+                    -1 -2  3  1 @mkrect,
+                     0 -3  1  3 @mkrect,
+                arr
+                    -2 -2  3  1 @mkrect,
+                    -1 -3  1  3 @mkrect,
+            @mkimages =.images
+
+        def prismel_tri:
+            @mkprismel
+                arr
+                     0 -1  2  1 @mkrect,
+                arr
+                     0 -2  1  2 @mkrect,
+                arr
+                    -1 -2  2  1 @mkrect,
+            @mkimages =.images
+
+        def prismel_diam:
+            @mkprismel
+                arr
+                     1 -1  2  1 @mkrect,
+                arr
+                     0 -1  1  1 @mkrect,
+                     1 -2  1  1 @mkrect,
+                     2 -3  1  1 @mkrect,
+                arr
+                     0 -3  1  2 @mkrect,
+            @mkimages =.images
+
+    module Shape:
+
+        #####################################################
+        # WARNING: UNFINISHED CONVERSION FROM WEBFUS SYNTAX #
+        #####################################################
+
+        use: Vec: A B C D vec_rot vec_add vec_sub vec_mul
+        use: Trf: trf_add trf_sub trf_rot
+        use: Prismel: prismel_sq prismel_tri prismel_diam
+
+        def sq: @prismel_sq swap =.trf
+        def tri: @prismel_tri swap =.trf
+        def diam: @prismel_diam swap =.trf
+
+        def mkshape of(t -> shape):
+            obj fun of(Shape Trf -> Shape)(drop) =.transform
+
+        def transform of(Shape Trf -> Shape):
+            over .transform call(Shape Trf -> Shape)
+
+        def curvy_sq_eighth:
+
+            #  +---+---+-
+            #  |   |   | \
+            #   \ / \ /   -+
+            #    |   |     |
+            #    +---+-   /
+            #    |   | \ |
+            #    |   |  -+
+            #    |   | /
+            #    *---+-
+
+            @mkshape
+            swap =.sq
+            swap =.tri
+            swap =.A
+            fun of(Shape Trf -> Shape):
+                ='t ='shape
+
+                'shape .A ='A
+                'A 3 @vec_rot ='D
+
+                # How in blazes was this yield stuff supposed to
+                # work again?.. (this file was copypastemodified from
+                # webfus)
+                'sq 't @transform yield
+                ''t 'A @trf_add 'D @trf_add ='t
+                'tri 't -3 @trf_rot @transform yield
+                'sq 't -1 @trf_rot @transform yield
+                'tri 't 2 @trf_rot @transform yield
+                'tri 't 4 @trf_rot @transform yield
+                ''t 'A @trf_sub ='t
+                'tri 't 2 @trf_rot @transform yield
+                done return
+            =.transform
+
+        def curvy_sq_quarter: scope:
+
+            vars: sq tri A B C D t eighth
+            arg ='sq
+            arg ='tri
+            arg ='A
+            arg ='t
+
+            @curvy_sq_eighth 'sq & 'tri & 'A & ='eighth
+
+            'eighth 't & yield
+
+                    ''t
+                        'A
+                        0 0 2 2 @mkvec
+                    @vec_mul
+                @trf_add
+            6 @trf_rot ='t
+
+            'eighth 't & yield
+            done return
+
+        def curvy_sq: scope:
+
+            vars: sq tri A B C D t quarter
+            arg ='sq
+            arg ='tri
+            arg ='A
+            arg ='t
+
+            @curvy_sq_quarter 'sq & 'tri & 'A & ='quarter
+
+            0 4 do:
+                over over < while
+
+                'quarter 't & yield
+
+                ''t 'A @trf_add 3 @trf_rot ='t
+                ''A 3 @vec_rot ='A
+
+                swap 1 + swap loop
+            done return
+
+

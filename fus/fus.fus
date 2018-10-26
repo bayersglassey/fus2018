@@ -1,0 +1,72 @@
+
+# "FUS IN FUS"
+#
+# This file is valid fus, but uses a simplified subset of the full
+# language, making it easy to parse using C, and thereby bootstrap
+# up to the full language.
+
+
+##########
+# PARSER #
+##########
+
+def parser_new: obj
+    arr =.files
+
+
+
+########
+# FILE #
+########
+
+def file_new of(filepath -> file): obj
+    swap =.filepath
+    arr =.defs
+
+def file_get_def of(file def_name -> def_i):
+
+def file_add_def of(file def_name -> file def_i):
+    ='def
+    ..defs ''def, =.defs
+
+
+#######
+# DEF #
+#######
+
+def def_new of(def_i name -> def): obj
+    swap =.name
+    swap =.i
+    arr =.refs
+
+def def_new_ref of(def_i name -> ref): obj
+    swap =.name
+    swap =.def_i
+
+def def_get_ref of(def name -> ref):
+    ='name
+    dup .refs arr_togen for: ='ref
+        'ref .name 'name sym_eq if: 'ref return
+    null
+
+def def_add_ref of(def def_i name -> def ref):
+    ='name ='def_i ='def
+    'def 'name @get_ref is_null if: ''def null return
+    'def_i 'name @new_ref ='ref
+
+    # Return:
+    ''def ..refs 'ref, =.refs
+    ''ref
+
+def def_test of(->):
+    # Create 2 defs:
+    0 `A @new ='A
+    1 `B @new ='B
+
+    # Add a ref to B from A:
+    'A `b @get_ref is_null assert
+    ''A 1 `b @add_ref is_null not assert ='A
+    ''A 1 `b @add_ref is_null assert ='A
+    'A `b @get_ref is_null not assert
+
+

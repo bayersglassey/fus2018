@@ -1,0 +1,96 @@
+
+module Stream:
+
+    def new of(text -> stream):
+        ='text
+        obj
+            'text =.text
+            0 =.start
+            'text len =.end
+
+    def len:
+        ='stream
+        'stream .end 'stream .start -
+
+    def head:
+        ='stream
+        'stream .text 'stream .start .$
+
+    def tail:
+        ='stream
+        ''stream ..start 1 + =.start
+
+
+module Regex:
+
+    use: Stream len ='stream_len
+    use: Stream head ='stream_head
+    use: Stream tail ='stream_tail
+
+    def mkresult of(stream regex -> result ???):
+        obj
+            swap =.stream
+            swap =.regex
+
+    def node:
+        obj
+            fun of(node stream -> results ???):
+                ='stream ='node arr
+            =.run
+
+    def node_apply of(node final_regex -> regex):
+        # Ummm sigs don't match?
+        over .run call(node stream -> regex)
+
+    def exact of(c next_regex -> node):
+        ='next_regex
+        ='c
+        @node
+            'next_regex =.next_regex
+            'c =.c
+            fun of(node stream -> results ???):
+                ='node
+                ='stream
+                arr ='a
+                'stream @stream_len 0 > if:
+                    'stream @stream_head 'node .c str_eq if:
+                        ''a
+                                'node .next_regex
+                                'stream @stream_tail
+                            @mkresult,
+                        ='a
+                ''a
+            =.run
+
+    def run of(final_regex node -> match):
+        ='node ='final_regex
+        
+
+    def succeed: ='stream (arr `success,)
+    def checkall: ='stream .....
+    def match: @succeed @run
+    def fullmatch: @checkall @run
+
+    def test of(->):
+
+        # "abc"
+        (arr "a" @exact, "b" @exact, "c" @exact,) @seq
+            dup "abc" @fullmatch assert
+            dup "abx" @fullmatch not assert
+            dup "xbc" @fullmatch not assert
+            dup "" @fullmatch not assert
+        drop
+
+        # "a(b|c)a*"
+        (arr
+            "a" @exact,
+            (arr "b" @exact, "c" @exact,) @choice,
+            "a" @exact @star,
+        )
+            dup "ab" @fullmatch assert
+            dup "ac" @fullmatch assert
+            dup "aba" @fullmatch assert
+            dup "abaa" @fullmatch assert
+            dup "xb" @fullmatch not assert
+            dup "" @fullmatch not assert
+        drop
