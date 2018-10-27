@@ -24,6 +24,8 @@ typedef struct fus_obj fus_obj_t;
 typedef struct fus_str fus_str_t;
 typedef struct fus_fun fus_fun_t;
 typedef struct fus_printer fus_printer_t;
+typedef struct fus_state fus_state_t;
+typedef struct fus fus_t;
 #include "value.h"
 #include "vm.h"
 #include "arr.h"
@@ -32,6 +34,7 @@ typedef struct fus_printer fus_printer_t;
 #include "int_ops.h"
 #include "printer.h"
 #include "parser.h"
+#include "runner.h"
 #include "fus.h"
 
 #endif
