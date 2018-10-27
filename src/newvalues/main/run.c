@@ -11,11 +11,9 @@ static int run(fus_t *fus, const char *filename, const char *text){
     fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
 
-    fus_state_t state;
-    fus_state_init(&state, &fus->vm);
-
-    fus_state_exec_lexer(&state, lexer);
-    fus_printer_print_arr(&fus->printer, &fus->vm, &state.stack);
+    fus_state_t *state = &fus->state;
+    fus_state_exec_lexer(state, lexer);
+    fus_printer_print_arr(&fus->printer, &fus->vm, &state->stack);
     printf("\n");
 
     if(!fus_lexer_is_done(lexer)){
@@ -23,7 +21,6 @@ static int run(fus_t *fus, const char *filename, const char *text){
         status = EXIT_FAILURE;
     }
 
-    fus_state_cleanup(&state);
     return status;
 }
 

@@ -10,6 +10,7 @@ struct fus {
     fus_lexer_t lexer;
     fus_symtable_t symtable;
     fus_vm_t vm;
+    fus_state_t state;
     fus_printer_t printer;
 };
 
