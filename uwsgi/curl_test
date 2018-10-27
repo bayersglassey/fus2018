@@ -1,0 +1,10 @@
+
+if [ -z "$1" ]
+then
+    PORT="9090"
+else
+    PORT="$1"
+    shift
+fi
+
+curl -X POST --data-binary @test.fus localhost:"$PORT"
