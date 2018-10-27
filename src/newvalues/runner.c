@@ -16,7 +16,7 @@ void fus_state_cleanup(fus_state_t *state){
 }
 
 
-static void exec(fus_lexer_t *lexer, fus_state_t *state){
+void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
     int arr_depth = 0;
     while(fus_lexer_is_ok(lexer)){
         fus_lexer_token_type_t type = lexer->token_type;
@@ -109,29 +109,5 @@ static void exec(fus_lexer_t *lexer, fus_state_t *state){
         }
         fus_lexer_next(lexer);
     }
-}
-
-
-int fus_run_text(fus_t *fus, const char *filename, const char *text){
-    int status = EXIT_SUCCESS;
-
-    fus_lexer_t *lexer = &fus->lexer;
-    fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
-    fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
-
-    fus_state_t state;
-    fus_state_init(&state, &fus->vm);
-
-    exec(lexer, &state);
-    fus_printer_print_arr(&fus->printer, &fus->vm, &state.stack);
-    printf("\n");
-
-    if(!fus_lexer_is_done(lexer)){
-        fus_lexer_perror(lexer, "Lexer finished with status != done");
-        status = EXIT_FAILURE;
-    }
-
-    fus_state_cleanup(&state);
-    return status;
 }
 

@@ -17,7 +17,7 @@ struct fus_state {
 void fus_state_init(fus_state_t *state, fus_vm_t *vm);
 void fus_state_cleanup(fus_state_t *state);
 
-int fus_run_text(fus_t *fus, const char *filename, const char *text);
+void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer);
 
 
 #endif
