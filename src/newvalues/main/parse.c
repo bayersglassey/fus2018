@@ -61,9 +61,9 @@ static int parse(fus_t *fus, const char *filename, const char *text){
     }
     printf("\n");
 
-    if(!fus_lexer_done(lexer)){
+    if(!fus_lexer_is_done(lexer)){
         fprintf(stderr, "Lexer finished with unexpected state: %s\n",
-            fus_lexer_token_msg(lexer->token_type));
+            fus_lexer_token_type_msg(lexer->token_type));
         return EXIT_FAILURE;
     }
 
