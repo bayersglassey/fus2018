@@ -43,6 +43,8 @@ typedef struct fus_lexer {
     const char *chunk;
     size_t chunk_size;
     int chunk_i; /* position within chunk */
+    bool chunk_is_final;
+        /* end of chunk is end of file, even if no terminating NUL */
 
     char *filename;
     int pos; /* position within file */
@@ -65,9 +67,10 @@ typedef struct fus_lexer {
 void fus_lexer_init(fus_lexer_t *lexer, char *filename);
 void fus_lexer_reset(fus_lexer_t *lexer, char *filename);
 void fus_lexer_cleanup(fus_lexer_t *lexer);
+void fus_lexer_set_error(fus_lexer_t *lexer, fus_lexer_errcode_t errcode);
 void fus_lexer_load_chunk(fus_lexer_t *lexer,
     const char *chunk, size_t chunk_size);
-void fus_lexer_set_error(fus_lexer_t *lexer, fus_lexer_errcode_t errcode);
+void fus_lexer_mark_final(fus_lexer_t *lexer);
 
 bool fus_lexer_is_ok(fus_lexer_t *lexer);
 bool fus_lexer_is_done(fus_lexer_t *lexer);

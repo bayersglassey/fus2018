@@ -37,6 +37,7 @@ void fus_lexer_init(fus_lexer_t *lexer, char *filename){
     lexer->chunk = NULL;
     lexer->chunk_size = 0;
     lexer->chunk_i = 0;
+    lexer->chunk_is_final = false;
 
     lexer->filename = filename? filename: DEFAULT_FILENAME;
     lexer->pos = 0;
@@ -93,6 +94,10 @@ void fus_lexer_load_chunk(fus_lexer_t *lexer,
     lexer->chunk_i = 0;
 
     fus_lexer_next(lexer);
+}
+
+void fus_lexer_mark_final(fus_lexer_t *lexer){
+    lexer->chunk_is_final = true;
 }
 
 bool fus_lexer_is_ok(fus_lexer_t *lexer){
@@ -449,13 +454,21 @@ void fus_lexer_next(fus_lexer_t *lexer){
     }
 
     if(lexer->chunk_i >= lexer->chunk_size){
-        /* We're at end of chunk after having processed nothing but
-        whitespace. So we clear the token: it's "split" in the sense
-        that we need another chunk, but we should start that new
-        chunk by just continuing to lex whitespace. */
-        lexer->token = NULL;
-        lexer->token_len = 0;
-        lexer->token_type = FUS_TOKEN_SPLIT;
+        if(lexer->chunk_is_final){
+            /* We're at end of chunk after having processed nothing but
+            whitespace. So we declare success! */
+            lexer->token = NULL;
+            lexer->token_len = 0;
+            lexer->token_type = FUS_TOKEN_DONE;
+        }else{
+            /* We're at end of chunk after having processed nothing but
+            whitespace. So we clear the token: it's "split" in the sense
+            that we need another chunk, but we should start that new
+            chunk by just continuing to lex whitespace. */
+            lexer->token = NULL;
+            lexer->token_len = 0;
+            lexer->token_type = FUS_TOKEN_SPLIT;
+        }
     }else if(c == '(' || c == ')'){
         fus_lexer_start_token(lexer);
         fus_lexer_eat(lexer);
@@ -484,7 +497,7 @@ void fus_lexer_next(fus_lexer_t *lexer){
         lexer->token_type = FUS_TOKEN_SYM;
     }
 
-    if(lexer->chunk_i >= lexer->chunk_size){
+    if(lexer->chunk_i >= lexer->chunk_size && !lexer->chunk_is_final){
         /* If we hit end of chunk, signal split token.
         We leave lexer->token, lexer->token_len alone, because
         they are the first half of the split token. */

@@ -224,6 +224,24 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     }
 
     {
+        /* Here we test a full lex when chunk doesn't include terminating
+        NUL byte, but we mark it as final. */
+        FUS_TEST_SUBTITLE("Full lex, no NUL, marked final")
+
+        const char *chunk = FUS_TEST_LEXER_TEXT;
+        fus_lexer_t lexer;
+        fus_lexer_init(&lexer, NULL);
+        fus_lexer_load_chunk(&lexer, chunk, strlen(chunk));
+        fus_lexer_mark_final(&lexer);
+
+        FUS_TEST_LEXER_FULL_LEX(&lexer)
+        FUS_TEST(fus_lexer_is_done(&lexer))
+        FUS_TEST(fus_lexer_got(&lexer, ""))
+
+        fus_lexer_cleanup(&lexer);
+    }
+
+    {
         /* Here we test a full lex where token is split, but chunk ends
         with whitespace (the space in FUS_TEST_LEXER_TEXT " "), so the
         "split" token is empty. */
