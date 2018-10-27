@@ -1,8 +1,9 @@
 
 if [ -z "$1" ]
 then
-    echo "Usage:"
+    echo "Usage (pick one):"
     echo "    $(basename "$0") MAIN [GCC_ARGS...]"
+    echo "    $(basename "$0") uwsgi [GCC_ARGS...]"
     echo "Where:"
     echo "    MAIN is one of:"
     for F in src/newvalues/main/*.c
@@ -13,10 +14,22 @@ then
     exit 1
 fi
 
-MAIN="$1"
-shift
-gcc -g -std=c99 -Wall -Werror -Wno-unused \
-    -o main \
+CFLAGS="-g -std=c99 -Wall -Werror -Wno-unused"
+OUTFILE="main"
+
+if [ "$1" = "uwsgi" ]
+then
+    shift
+    MAIN_C="src/newvalues/uwsgi/plugin.c"
+    CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
+    OUTFILE="plugin.so"
+else
+    MAIN_C="src/newvalues/main/$1.c"
+    shift
+fi
+
+gcc $CFLAGS \
+    -o "$OUTFILE" \
     src/newvalues/*.c \
-    src/newvalues/main/"$MAIN".c \
+    "$MAIN_C" \
     $@

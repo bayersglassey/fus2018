@@ -1,0 +1,14 @@
+
+if [ -z "$1" ]
+then
+    echo "Usage:"
+    echo "    $(basename "$0") SOCKET"
+    echo "Where:"
+    echo "    SOCKET is passed to uwsgi's --http-socket, e.g. :9090"
+    exit 1
+fi
+
+SOCKET="$1"
+shift
+
+uwsgi --dlopen ./plugin.so --symcall fus_plugin --http-socket "$SOCKET" --http-socket-modifier1 18
