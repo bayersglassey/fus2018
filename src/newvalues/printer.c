@@ -20,6 +20,8 @@
 
 
 void fus_printer_init(fus_printer_t *printer){
+    printer->debug = 0;
+
     fus_printer_set_file(printer, stdout);
 
     printer->buffer_len = 0;
@@ -47,15 +49,18 @@ void fus_printer_set_file(fus_printer_t *printer, FILE *file){
     fus_printer_set_flush(printer, &fus_printer_flush_file, file);
 }
 
-void fus_printer_flush_file(fus_printer_t *printer){
+int fus_printer_flush_file(fus_printer_t *printer){
     FILE *file = printer->data;
     printer->buffer[printer->buffer_len] = '\0';
-    fputs(printer->buffer, file);
+    return fputs(printer->buffer, file);
 }
 
-void fus_printer_flush(fus_printer_t *printer){
-    printer->flush(printer);
+int fus_printer_flush(fus_printer_t *printer){
+    if(printer->debug >= 1)fprintf(stderr, "FLUSHING: [%.*s]\n",
+        printer->buffer_len, printer->buffer);
+    int ret = printer->flush(printer);
     printer->buffer_len = 0;
+    return ret;
 }
 
 
@@ -63,6 +68,9 @@ void fus_printer_flush(fus_printer_t *printer){
 void fus_printer_write(fus_printer_t *printer, const char *text,
     int text_len
 ){
+    if(printer->debug >= 1)fprintf(stderr,
+        "WRITING: [%.*s]\n", text_len, text);
+
     if(printer->buffer_len + text_len > printer->buffer_maxlen){
         fus_printer_flush(printer);
     }
@@ -74,8 +82,12 @@ void fus_printer_write(fus_printer_t *printer, const char *text,
         fprintf(stderr, "Text was: %.*s\n", text_len, text);
         text_len = printer->buffer_maxlen - printer->buffer_len;
     }
-    strncpy(printer->buffer, text, text_len);
+
+    strncpy(printer->buffer + printer->buffer_len, text, text_len);
     printer->buffer_len += text_len;
+
+    if(printer->debug >= 2)fprintf(stderr, "BUFFER: [%.*s]\n",
+        printer->buffer_len, printer->buffer);
 }
 
 void fus_printer_write_char(fus_printer_t *printer, char c){
@@ -93,7 +105,7 @@ void fus_printer_write_long_int(fus_printer_t *printer, long int i){
     bool neg = i < 0;
     if(neg)i = -i;
     while(i){
-        char digit = (i % 10) - '0';
+        char digit = (i % 10) + '0';
         i /= 10;
         s--;
         *s = digit;
@@ -259,23 +271,23 @@ void fus_printer_write_data(fus_printer_t *printer,
 
 
 
-void fus_printer_print_value(fus_printer_t *printer,
+int fus_printer_print_value(fus_printer_t *printer,
     fus_vm_t *vm, fus_value_t value
 ){
     fus_printer_write_value(printer, vm, value);
-    fus_printer_flush(printer);
+    return fus_printer_flush(printer);
 }
 
-void fus_printer_print_arr(fus_printer_t *printer,
+int fus_printer_print_arr(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a
 ){
     fus_printer_write_arr(printer, vm, a);
-    fus_printer_flush(printer);
+    return fus_printer_flush(printer);
 }
 
-void fus_printer_print_data(fus_printer_t *printer,
+int fus_printer_print_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a
 ){
     fus_printer_write_data(printer, vm, a);
-    fus_printer_flush(printer);
+    return fus_printer_flush(printer);
 }

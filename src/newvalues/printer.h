@@ -8,9 +8,11 @@
 
 #define FUS_PRINTER_BUFSIZE 4096
 
-typedef void fus_printer_flush_t(fus_printer_t *printer);
+typedef int fus_printer_flush_t(fus_printer_t *printer);
 
 struct fus_printer {
+    int debug; /* Debug level 0, 1, or 2 */
+
     fus_printer_flush_t *flush; /* callback */
     void *data; /* data for callback, e.g. FILE* */
 
@@ -29,8 +31,8 @@ void fus_printer_cleanup(fus_printer_t *printer);
 void fus_printer_set_flush(fus_printer_t *printer,
     fus_printer_flush_t *flush, void *data);
 void fus_printer_set_file(fus_printer_t *printer, FILE *file);
-void fus_printer_flush_file(fus_printer_t *printer);
-void fus_printer_flush(fus_printer_t *printer);
+int fus_printer_flush_file(fus_printer_t *printer);
+int fus_printer_flush(fus_printer_t *printer);
 
 void fus_printer_write(fus_printer_t *printer, const char *text,
     int text_len);
@@ -50,11 +52,11 @@ void fus_printer_write_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
 
 
-void fus_printer_print_value(fus_printer_t *printer,
+int fus_printer_print_value(fus_printer_t *printer,
     fus_vm_t *vm, fus_value_t value);
-void fus_printer_print_arr(fus_printer_t *printer,
+int fus_printer_print_arr(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
-void fus_printer_print_data(fus_printer_t *printer,
+int fus_printer_print_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
 
 #endif
