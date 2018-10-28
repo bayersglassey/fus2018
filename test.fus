@@ -5,7 +5,7 @@
     3 4 +  # 7
 *  # 21
 
-999 drop
+-999 drop
 
 arr 1, 2, 3,
 dup len swap

@@ -120,7 +120,8 @@ bool fus_value_is_str(fus_value_t value){
 
 void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file){
     fus_printer_t printer;
-    fus_printer_init(&printer, file);
+    fus_printer_init(&printer);
+    fus_printer_set_file(&printer, file);
     fus_printer_print_value(&printer, vm, value);
     fus_printer_cleanup(&printer);
 }

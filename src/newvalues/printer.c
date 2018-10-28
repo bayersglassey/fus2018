@@ -19,9 +19,12 @@
 
 
 
-void fus_printer_init(fus_printer_t *printer, FILE *file){
-    /* Initialize with reasonable defaults */
-    printer->file = file;
+void fus_printer_init(fus_printer_t *printer){
+    fus_printer_set_file(printer, stdout);
+
+    printer->buffer_len = 0;
+    printer->buffer_maxlen = FUS_PRINTER_BUFSIZE - 1;
+
     printer->depth = 0;
     printer->tab = "  ";
     printer->newline = "\n";
@@ -32,41 +35,226 @@ void fus_printer_cleanup(fus_printer_t *printer){
 }
 
 
-void fus_printer_print_tabs(fus_printer_t *printer){
+
+void fus_printer_set_flush(fus_printer_t *printer,
+    fus_printer_flush_t *flush, void *data
+){
+    printer->flush = flush;
+    printer->data = data;
+}
+
+void fus_printer_set_file(fus_printer_t *printer, FILE *file){
+    fus_printer_set_flush(printer, &fus_printer_flush_file, file);
+}
+
+void fus_printer_flush_file(fus_printer_t *printer){
+    FILE *file = printer->data;
+    printer->buffer[printer->buffer_len] = '\0';
+    fputs(printer->buffer, file);
+}
+
+void fus_printer_flush(fus_printer_t *printer){
+    printer->flush(printer);
+    printer->buffer_len = 0;
+}
+
+
+
+void fus_printer_write(fus_printer_t *printer, const char *text,
+    int text_len
+){
+    if(printer->buffer_len + text_len > printer->buffer_maxlen){
+        fus_printer_flush(printer);
+    }
+    if(printer->buffer_len + text_len > printer->buffer_maxlen){
+        fprintf(stderr, "%s: Text is too long, will be truncated! "
+            "%i + %i > %i \n",
+            __func__,
+            printer->buffer_len, text_len, printer->buffer_maxlen);
+        fprintf(stderr, "Text was: %.*s\n", text_len, text);
+        text_len = printer->buffer_maxlen - printer->buffer_len;
+    }
+    strncpy(printer->buffer, text, text_len);
+    printer->buffer_len += text_len;
+}
+
+void fus_printer_write_char(fus_printer_t *printer, char c){
+    fus_printer_write(printer, &c, 1);
+}
+
+void fus_printer_write_text(fus_printer_t *printer, const char *text){
+    fus_printer_write(printer, text, strlen(text));
+}
+
+void fus_printer_write_long_int(fus_printer_t *printer, long int i){
+    char buffer[20];
+    char *s = &buffer[20 - 1];
+    *s = '\0';
+    bool neg = i < 0;
+    if(neg)i = -i;
+    while(i){
+        char digit = (i % 10) - '0';
+        i /= 10;
+        s--;
+        *s = digit;
+    }
+    if(neg){
+        s--;
+        *s = '-';
+    }
+    fus_printer_write_text(printer, s);
+}
+
+void fus_printer_write_tabs(fus_printer_t *printer){
     int depth = printer->depth;
     for(int i = 0; i < depth; i++){
-        fprintf(printer->file, printer->tab);
+        fus_printer_write_text(printer, printer->tab);
     }
 }
 
-void fus_printer_print_newline(fus_printer_t *printer){
-    fprintf(printer->file, printer->newline);
-    fus_printer_print_tabs(printer);
+void fus_printer_write_newline(fus_printer_t *printer){
+    fus_printer_write_text(printer, printer->newline);
+    fus_printer_write_tabs(printer);
 }
 
 
-static void fus_printer_print_str(fus_printer_t *printer, fus_str_t *s){
-    FILE *file = printer->file;
-
-    fprintf(file, "\"");
+static void fus_printer_write_str(fus_printer_t *printer, fus_str_t *s){
+    fus_printer_write_text(printer, "\"");
 
     const char *text = s->text;
     int len = s->len;
     for(int i = 0; i < len; i++){
         char c = text[i];
         if(c == '\n'){
-            fputs("\\n", file);
+            fus_printer_write_text(printer, "\\n");
         }else if(c == '"'){
-            fputs("\\\"", file);
+            fus_printer_write_text(printer, "\\\"");
         }else if(strchr(FUS_STR_ESCAPABLE_CHARS, c)){
-            putc('\\', file);
-            putc(c, file);
+            fus_printer_write_text(printer, "\\");
+            fus_printer_write_char(printer, c);
         }else{
-            putc(c, file);
+            fus_printer_write_char(printer, c);
         }
     }
 
-    fprintf(file, "\"");
+    fus_printer_write_text(printer, "\"");
+}
+
+
+
+void fus_printer_write_value(fus_printer_t *printer,
+    fus_vm_t *vm, fus_value_t value
+){
+    if(FUS_IS_BOXED(value)){
+        fus_printer_write_boxed(printer, value.p);
+        return;
+    }
+
+    if(FUS_IS_NULL(value)){
+        fus_printer_write_text(printer, "null");
+    }else if(FUS_IS_TRUE(value)){
+        fus_printer_write_text(printer, "T");
+    }else if(FUS_IS_FALSE(value)){
+        fus_printer_write_text(printer, "F");
+    }else if(FUS_IS_INT(value)){
+        fus_unboxed_t i = FUS_GET_PAYLOAD(value.i);
+        fus_printer_write_long_int(printer, i);
+    }else if(FUS_IS_SYM(value)){
+        int sym_i = FUS_GET_PAYLOAD(value.i);
+        fus_symtable_entry_t *entry = fus_symtable_get_entry(
+            vm->symtable, sym_i);
+        if(entry->is_name){
+            fus_printer_write_char(printer, '`');
+            fus_printer_write_text(printer, entry->token);
+        }else{
+            fus_printer_write_text(printer, "(` ");
+            fus_printer_write_text(printer, entry->token);
+            fus_printer_write_text(printer, ")");
+        }
+    }else if(FUS_IS_ERR(value)){
+        fus_printer_write_text(printer, "err");
+    }else{
+        FUS_PRINTER_LOG_UNEXPECTED_VALUE(vm, value)
+        fus_printer_write_text(printer, "(\"Got a weird value\" error)");
+    }
+}
+
+void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
+    fus_boxed_type_t type = p->type;
+    if(type == FUS_BOXED_ARR){
+        fus_printer_write_text(printer, "arr");
+        fus_arr_t *a = &p->data.a;
+        if(a->values.len > 0)fus_printer_write_newline(printer);
+        fus_printer_write_arr(printer, p->vm, a);
+    }else if(type == FUS_BOXED_OBJ){
+        fus_printer_write_text(printer, "obj \"TODO: Finish implementing obj\" error");
+    }else if(type == FUS_BOXED_STR){
+        fus_str_t *s = &p->data.s;
+        fus_printer_write_str(printer, s);
+    }else if(type == FUS_BOXED_FUN){
+        fus_printer_write_text(printer, "fun(\"TODO: Implement printing of fun\" error)");
+    }else{
+        FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
+        fus_printer_write_text(printer, "(\"Got weird boxed value\" error)");
+    }
+}
+
+void fus_printer_write_arr(fus_printer_t *printer,
+    fus_vm_t *vm, fus_arr_t *a
+){
+    int len = a->values.len;
+    fus_value_t *values = FUS_ARR_VALUES(*a);
+    for(int i = 0; i < len; i++){
+        if(i > 0)fus_printer_write_newline(printer);
+
+        printer->depth++;
+        fus_printer_write_value(printer, vm, values[i]);
+        printer->depth--;
+
+        fus_printer_write_text(printer, ",");
+    }
+}
+
+void fus_printer_write_data(fus_printer_t *printer,
+    fus_vm_t *vm, fus_arr_t *a
+){
+    int len = a->values.len;
+    fus_value_t *values = FUS_ARR_VALUES(*a);
+    for(int i = 0; i < len; i++){
+        if(i != 0){
+            fus_printer_write_newline(printer);
+        }
+
+        fus_value_t value = values[i];
+        if(FUS_IS_INT(value)){
+            fus_unboxed_t i = FUS_GET_PAYLOAD(value.i);
+            fus_printer_write_long_int(printer, i);
+        }else if(FUS_IS_SYM(value)){
+            int sym_i = FUS_GET_PAYLOAD(value.i);
+            fus_symtable_entry_t *entry = fus_symtable_get_entry(
+                vm->symtable, sym_i);
+            fus_printer_write_text(printer, entry->token);
+        }else if(FUS_IS_BOXED(value)){
+            fus_boxed_t *p = value.p;
+            fus_boxed_type_t type = p->type;
+            if(type == FUS_BOXED_ARR){
+                fus_printer_write_text(printer, ":");
+                fus_printer_write_newline(printer);
+                printer->depth++;
+                fus_printer_write_data(printer, vm, &p->data.a);
+                printer->depth--;
+            }else if(type == FUS_BOXED_STR){
+                fus_str_t *s = &p->data.s;
+                fus_printer_write_str(printer, s);
+            }else{
+                FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
+                fus_printer_write_text(printer, "<UNEXPECTED>");
+            }
+        }else{
+            FUS_PRINTER_LOG_UNEXPECTED_VALUE(vm, value)
+            fus_printer_write_text(printer, "<UNEXPECTED>");
+        }
+    }
 }
 
 
@@ -74,117 +262,20 @@ static void fus_printer_print_str(fus_printer_t *printer, fus_str_t *s){
 void fus_printer_print_value(fus_printer_t *printer,
     fus_vm_t *vm, fus_value_t value
 ){
-    if(FUS_IS_BOXED(value)){
-        fus_printer_print_boxed(printer, value.p);
-        return;
-    }
-
-    FILE *file = printer->file;
-    if(FUS_IS_NULL(value)){
-        fprintf(file, "null");
-    }else if(FUS_IS_TRUE(value)){
-        fprintf(file, "T");
-    }else if(FUS_IS_FALSE(value)){
-        fprintf(file, "F");
-    }else if(FUS_IS_INT(value)){
-        fus_unboxed_t i = FUS_GET_PAYLOAD(value.i);
-        fprintf(file, "%li", i);
-    }else if(FUS_IS_SYM(value)){
-        int sym_i = FUS_GET_PAYLOAD(value.i);
-        fus_symtable_entry_t *entry = fus_symtable_get_entry(
-            vm->symtable, sym_i);
-        if(entry->is_name){
-            fprintf(file, "`%s", entry->token);
-        }else{
-            fprintf(file, "(` %s)", entry->token);
-        }
-    }else if(FUS_IS_ERR(value)){
-        fprintf(file, "err");
-    }else{
-        FUS_PRINTER_LOG_UNEXPECTED_VALUE(vm, value)
-        fprintf(file, "(\"Got a weird value\" error)");
-    }
-}
-
-void fus_printer_print_boxed(fus_printer_t *printer, fus_boxed_t *p){
-    FILE *file = printer->file;
-    fus_boxed_type_t type = p->type;
-    if(type == FUS_BOXED_ARR){
-        fprintf(file, "arr");
-        fus_arr_t *a = &p->data.a;
-        if(a->values.len > 0)fus_printer_print_newline(printer);
-        fus_printer_print_arr(printer, p->vm, a);
-    }else if(type == FUS_BOXED_OBJ){
-        fprintf(file, "obj \"TODO: Finish implementing obj\" error");
-    }else if(type == FUS_BOXED_STR){
-        fus_str_t *s = &p->data.s;
-        fus_printer_print_str(printer, s);
-    }else if(type == FUS_BOXED_FUN){
-        fprintf(file, "fun(\"TODO: Implement printing of fun\" error)");
-    }else{
-        FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
-        fprintf(file, "(\"Got weird boxed value\" error)");
-    }
+    fus_printer_write_value(printer, vm, value);
+    fus_printer_flush(printer);
 }
 
 void fus_printer_print_arr(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a
 ){
-    FILE *file = printer->file;
-    int len = a->values.len;
-    fus_value_t *values = FUS_ARR_VALUES(*a);
-    for(int i = 0; i < len; i++){
-        if(i > 0)fus_printer_print_newline(printer);
-
-        printer->depth++;
-        fus_printer_print_value(printer, vm, values[i]);
-        printer->depth--;
-
-        fprintf(file, ",");
-    }
+    fus_printer_write_arr(printer, vm, a);
+    fus_printer_flush(printer);
 }
 
 void fus_printer_print_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a
 ){
-    FILE *file = printer->file;
-
-    int len = a->values.len;
-    fus_value_t *values = FUS_ARR_VALUES(*a);
-    for(int i = 0; i < len; i++){
-        if(i != 0){
-            fus_printer_print_newline(printer);
-        }
-
-        fus_value_t value = values[i];
-        if(FUS_IS_INT(value)){
-            fus_unboxed_t i = FUS_GET_PAYLOAD(value.i);
-            fprintf(file, "%li", i);
-        }else if(FUS_IS_SYM(value)){
-            int sym_i = FUS_GET_PAYLOAD(value.i);
-            fus_symtable_entry_t *entry = fus_symtable_get_entry(
-                vm->symtable, sym_i);
-            fprintf(file, "%s", entry->token);
-        }else if(FUS_IS_BOXED(value)){
-            fus_boxed_t *p = value.p;
-            fus_boxed_type_t type = p->type;
-            if(type == FUS_BOXED_ARR){
-                fprintf(file, ":");
-                fus_printer_print_newline(printer);
-                printer->depth++;
-                fus_printer_print_data(printer, vm, &p->data.a);
-                printer->depth--;
-            }else if(type == FUS_BOXED_STR){
-                fus_str_t *s = &p->data.s;
-                fus_printer_print_str(printer, s);
-            }else{
-                FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
-                fprintf(file, "<UNEXPECTED>");
-            }
-        }else{
-            FUS_PRINTER_LOG_UNEXPECTED_VALUE(vm, value)
-            fprintf(file, "<UNEXPECTED>");
-        }
-    }
+    fus_printer_write_data(printer, vm, a);
+    fus_printer_flush(printer);
 }
-

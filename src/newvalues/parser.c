@@ -31,7 +31,8 @@ void fus_parser_dump(fus_parser_t *parser, FILE *file){
     fprintf(file, "    ");
     {
         fus_printer_t printer;
-        fus_printer_init(&printer, file);
+        fus_printer_init(&printer);
+        fus_printer_set_file(&printer, file);
         printer.depth = 2;
 
         fus_printer_print_data(&printer, parser->vm, &parser->arr);

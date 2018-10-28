@@ -7,7 +7,7 @@ void fus_init(fus_t *fus){
     fus_symtable_init(&fus->symtable, &fus->core);
     fus_vm_init(&fus->vm, &fus->core, &fus->symtable);
     fus_state_init(&fus->state, &fus->vm);
-    fus_printer_init(&fus->printer, stdout);
+    fus_printer_init(&fus->printer);
 }
 
 void fus_cleanup(fus_t *fus){
