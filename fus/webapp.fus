@@ -1,0 +1,33 @@
+
+def app_new of(request -> app):
+    obj
+        swap =.request
+        0 =.line_i
+
+def app_write_head of(app -> app status headers):
+    200
+    arr "Content-Type: text/plain",
+
+def app_write_body of(app -> app body_chunk):
+    # NOTE: the returned body_chunk is a str or null.
+    # This function can be called multiple times;
+    # it indicates to the uwsgi plugin that there are no
+    # more chunks by returning a body_chunk of null.
+
+    ='app
+    'app .line_i ='i
+
+    # Generate a chunk of text to be written to the response body:
+    'i 10 < ifelse:
+        "Line: "
+        'i int_tostr str_concat
+        "\n" str_concat
+        ='chunk
+    :
+        'i 10 == ifelse: "Done!\n" ='chunk
+        : null ='chunk
+
+    # Return:
+    ''app
+        ..line_i 1 + =.line_i
+    'chunk
