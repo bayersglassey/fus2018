@@ -128,7 +128,7 @@ Step 1: [Write a plugin](/uwsgi) for [UWSGI](https://uwsgi-docs.readthedocs.io/e
 
 Step 2: [Write a web app](/fus/webapp.fus)
 
-...the plugin actually works, but the server doesn't yet. ;)
+There is some work to be done before this really works.
 For one thing, the plugin currently just allows you to POST fus source code which
 is evaluated and returned.
 That's cool and all, but really the plugin needs to turn a UWSGI request
@@ -136,6 +136,8 @@ into a fus object, pass that to server.fus, and let that decide what to return.
 
 
 ## Getting started
+
+### NOTE: Examples in this section may not work until the "newvalues" stuff is merged back in.
 
 Compile:
 
@@ -146,15 +148,15 @@ Run:
     ./main
     # runs ./test.fus
 
-    ./main -f fus/heap.fus
-    # run a different file (fus/heap.fus in this case)
+    ./main -f fus/math.fus
+    # run a different file (fus/math.fus in this case)
 
     ./main -c '1 2 + 3 * p'
     # run code directly (do some math and print the result)
 
-    ./main -c 'load(fus heap) @(heap test)'
-    # load and use another file (fus/heap.fus in this case) and calling a function from it
+    ./main -c 'load(fus math) @(math test)'
+    # load and use another file (fus/math.fus in this case) and calling a function from it
 
-    ./main -c 'load(fus heap) use(heap test) @test'
-    # like "using heap::test;" in C++, or "from heap import test" in Python
+    ./main -c 'load(fus math) use(math test) @test'
+    # like "using math::test;" in C++, or "from math import test" in Python
 
