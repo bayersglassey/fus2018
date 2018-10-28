@@ -3,6 +3,13 @@
 #include "../includes.h"
 
 
+static int flush_to_request_body(fus_printer_t *printer){
+    struct wsgi_request *request = printer->data;
+    if(uwsgi_response_write_body_do(request, printer->buffer, printer->buffer_len))return -1;
+    return printer->buffer_len;
+}
+
+
 static int run(fus_t *fus, const char *body, int body_len){
     fus_lexer_t *lexer = &fus->lexer;
     fus_lexer_load_chunk(lexer, body, body_len);
@@ -10,9 +17,6 @@ static int run(fus_t *fus, const char *body, int body_len){
 
     fus_state_t *state = &fus->state;
     fus_state_exec_lexer(state, lexer);
-
-    fus_printer_print_arr(&fus->printer, &fus->vm, &state->stack);
-    printf("\n");
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
@@ -52,6 +56,12 @@ static int serve(fus_t *fus, struct wsgi_request *request){
 
     /* Run body as fus code */
     run(fus, body, body_len);
+
+    /* Write result to request body */
+    fus_printer_set_flush(&fus->printer, &flush_to_request_body, request);
+    fus_printer_write_arr(&fus->printer, &fus->vm, &fus->state.stack);
+    fus_printer_write_char(&fus->printer, '\n');
+    if(fus_printer_flush(&fus->printer) < 0)return -1;
 
     return UWSGI_OK;
 }
