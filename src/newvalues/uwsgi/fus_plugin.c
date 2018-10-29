@@ -66,7 +66,7 @@ static int serve(fus_t *fus, struct wsgi_request *request){
     return UWSGI_OK;
 }
 
-int fus_plugin(struct wsgi_request *request){
+int uwsgi_fus_request(struct wsgi_request *request){
     fus_t fus;
     fus_init(&fus);
 
@@ -75,4 +75,18 @@ int fus_plugin(struct wsgi_request *request){
     fus_cleanup(&fus);
     return UWSGI_OK;
 }
+
+
+
+static struct uwsgi_option uwsgi_fus_options[] = {
+    //{"fus", no_argument, 0, "load fus app", uwsgi_opt_set_str, &uwsgi_fus_filename, 0},
+    {0, 0, 0, 0},
+};
+
+struct uwsgi_plugin fus_plugin = {
+    .name = "fus",
+    .modifier1 = 18,
+    .options = uwsgi_fus_options,
+    .request = uwsgi_fus_request,
+};
 

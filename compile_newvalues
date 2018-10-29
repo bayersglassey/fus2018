@@ -20,9 +20,9 @@ OUTFILE="main"
 if [ "$1" = "uwsgi" ]
 then
     shift
-    MAIN_C="src/newvalues/uwsgi/plugin.c"
+    MAIN_C="src/newvalues/uwsgi/fus_plugin.c"
     CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
-    OUTFILE="plugin.so"
+    OUTFILE="fus_plugin.so"
 else
     MAIN_C="src/newvalues/main/$1.c"
     shift

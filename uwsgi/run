@@ -8,4 +8,4 @@ else
 fi
 
 
-uwsgi --dlopen ./plugin.so --symcall fus_plugin --http-socket "$SOCKET" --http-socket-modifier1 18
+uwsgi --plugin fus --http-socket "$SOCKET" --http-socket-modifier1 18

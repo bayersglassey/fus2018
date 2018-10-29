@@ -1,13 +1,13 @@
 # Uwsgi Plugin
 
-This uses uwsgi's [symcall](https://uwsgi-docs.readthedocs.io/en/latest/Symcall.html) option.
-It's really just a hacky test for now, but it works!
+Fus plugin for the [UWSGI](https://uwsgi-docs.readthedocs.io/en/latest/) application server.
+Just a test for now, but it works!
 
 From the repo's root directory, try:
 
     uwsgi/compile
 
-This should generate ``plugin.so``.
+This should generate ``fus_plugin.so``.
 You can then run it with:
 
     uwsgi/run
