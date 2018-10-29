@@ -16,6 +16,7 @@ struct fus_arr {
 
 
 void fus_arr_init(fus_arr_t *a, fus_vm_t *vm);
+void fus_arr_copy(fus_arr_t *a, fus_arr_t *a2);
 void fus_arr_cleanup(fus_arr_t *a);
 
 fus_array_len_t fus_arr_len(fus_arr_t *a);

@@ -117,6 +117,10 @@ bool fus_value_is_str(fus_value_t value){
     return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_STR;
 }
 
+bool fus_value_is_obj(fus_value_t value){
+    return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_OBJ;
+}
+
 
 void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file){
     fus_printer_t printer;

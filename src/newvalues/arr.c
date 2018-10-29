@@ -7,6 +7,11 @@ void fus_arr_init(fus_arr_t *a, fus_vm_t *vm){
     fus_array_init(&a->values, &vm->class_value);
 }
 
+void fus_arr_copy(fus_arr_t *a, fus_arr_t *a2){
+    /* Acts like arr_init for a */
+    fus_array_copy(&a->values, &a2->values);
+}
+
 void fus_arr_cleanup(fus_arr_t *a){
     fus_array_cleanup(&a->values);
 }
@@ -61,7 +66,7 @@ void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
     if(p->refcount > 1){
         fus_boxed_detach(p);
         fus_boxed_t *new_p = fus_value_arr(p->vm).p;
-        fus_array_copy(&new_p->data.a.values, &p->data.a.values);
+        fus_arr_copy(&new_p->data.a, &p->data.a);
         *p_ptr = new_p;
     }
 }

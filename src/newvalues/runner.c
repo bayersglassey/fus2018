@@ -54,6 +54,9 @@ void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
             }else if(fus_lexer_got(lexer, "arr")){
                 fus_value_t value = fus_value_arr(state->vm);
                 fus_arr_push(&state->stack, value);
+            }else if(fus_lexer_got(lexer, "obj")){
+                fus_value_t value = fus_value_obj(state->vm);
+                fus_arr_push(&state->stack, value);
             }else if(fus_lexer_got(lexer, ",") || fus_lexer_got(lexer, "push")){
                 fus_value_t value1;
                 fus_value_t value2;

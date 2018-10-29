@@ -30,6 +30,7 @@ typedef struct fus fus_t;
 #include "vm.h"
 #include "arr.h"
 #include "str.h"
+#include "obj.h"
 #include "boxed.h"
 #include "int_ops.h"
 #include "printer.h"

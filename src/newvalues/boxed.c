@@ -65,8 +65,7 @@ void fus_boxed_cleanup(fus_boxed_t *p){
         fus_arr_cleanup(a);
     }else if(type == FUS_BOXED_OBJ){
         fus_obj_t *o = &p->data.o;
-        fus_array_cleanup(&o->keys);
-        fus_array_cleanup(&o->values);
+        fus_obj_cleanup(o);
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
         fus_str_cleanup(s);
