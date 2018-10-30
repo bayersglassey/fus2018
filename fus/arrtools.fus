@@ -1,6 +1,5 @@
 
-sig: x0 x1 add -> xs
-def range:
+def range of(x0 x1 add -> xs):
     # Example: 0 3 1 @range -> arr 0, 1, 2,
     ='add
     arr ='a
@@ -18,8 +17,7 @@ def range:
     ''a
 
 
-sig: xs len -> xs
-def resize:
+def resize of(xs len -> xs):
 
     def min:
         ='y ='x
@@ -34,22 +32,15 @@ def resize:
 
 
 
-defsig step: arr state val i -> arr state
-
-sig: arr state step -> arr state
-def for:
+def for of(arr state step -> arr state):
     ='step
     0 ='i
-    do:
-        over len 'i > while
+    over len int_for: ='i
         over 'i .$ 'i
-        'step call step
-        ''i 1 + ='i
-        loop
+        'step call(arr state val i -> arr state)
 
 
-sig(->)
-def test:
+def test of(->):
     0 3 1 @range
     lpop 0 == assert
     lpop 1 == assert
@@ -75,7 +66,7 @@ def test:
 
     arr 20, 30, 40,
     obj 0 =.sum 1 =.prod
-    sig step fun:
+    fun of(arr state val i -> arr state):
         drop ='val
         ..sum 'val + =.sum
         ..prod 'val * =.prod

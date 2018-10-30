@@ -1,5 +1,5 @@
 
-def sig(xs f ->xs) map:
+def map of(xs f ->xs):
     ='f ='xs
     'xs len int_for: ='i
         ''xs 'i ..$
@@ -7,27 +7,27 @@ def sig(xs f ->xs) map:
         'i =.$ ='xs
     ''xs
 
-def sig(xs x f -> x) fold:
+def fold of(xs x f -> x):
     ='f ='x ='xs
     'xs len int_for: ='i
         ''x ('xs 'i .$) 'f call(x y -> z) ='x
     ''x
 
-def sig(xs -> bool) all:
+def all of(xs -> bool):
     T fun(and) @fold
 
-def sig(xs -> bool) any:
+def any of(xs -> bool):
     F fun(or) @fold
 
-def sig(xs -> int) sum:
+def sum of(xs -> int):
     0 fun(+) @fold
 
-def sig(xs -> int) prod:
+def prod of(xs -> int):
     1 fun(*) @fold
 
 
 
-def sig(->) test:
+def test of(->):
 
     (arr 1, 2, 3,) fun(10 *) @map
         lpop 10 == assert
