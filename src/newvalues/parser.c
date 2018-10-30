@@ -187,10 +187,7 @@ fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
     text[text_len] = '\0';
 
     /* IT WORKED! Let's return a value. */
-    fus_value_t value = fus_value_str(vm);
-    fus_str_t *s = &value.p->data.s;
-    fus_str_reinit(vm, s, text, text_len, text_size);
-    return value;
+    return fus_value_str(vm, text, text_len, text_size);
 
 err:
     /* SOMETHING WENT TERRIBLY WRONG! Let's free allocated memory

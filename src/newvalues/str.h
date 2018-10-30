@@ -14,6 +14,8 @@ struct fus_str {
     char *text;
     int len;
     size_t size;
+        /* If text != NULL && size == 0, then str doesn't own its text
+        (e.g. text was a C string literal) */
 };
 
 
@@ -24,7 +26,8 @@ void fus_str_cleanup(fus_vm_t *vm, fus_str_t *s);
 
 int fus_str_len(fus_vm_t *vm, fus_str_t *s);
 
-fus_value_t fus_value_str(fus_vm_t *vm);
+fus_value_t fus_value_str(fus_vm_t *vm,
+    char *text, int len, size_t size);
 fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value);
 const char *fus_value_str_decode(fus_value_t value);
 
