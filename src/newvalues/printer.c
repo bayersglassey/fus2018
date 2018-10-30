@@ -196,10 +196,17 @@ void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
     if(type == FUS_BOXED_ARR){
         fus_printer_write_text(printer, "arr");
         fus_arr_t *a = &p->data.a;
-        if(a->values.len > 0)fus_printer_write_newline(printer);
-        fus_printer_write_arr(printer, p->vm, a);
+        if(a->values.len > 0){
+            fus_printer_write_newline(printer);
+            fus_printer_write_arr(printer, p->vm, a);
+        }
     }else if(type == FUS_BOXED_OBJ){
-        fus_printer_write_text(printer, "obj \"TODO: Finish implementing obj\" error");
+        fus_printer_write_text(printer, "obj");
+        fus_obj_t *o = &p->data.o;
+        if(o->keys.len > 0){
+            fus_printer_write_newline(printer);
+            fus_printer_write_obj(printer, p->vm, o);
+        }
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
         fus_printer_write_str(printer, s);
