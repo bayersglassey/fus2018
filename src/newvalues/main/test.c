@@ -133,12 +133,14 @@ void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Arr tests (basic)")
 
+    /* Create an empty arr */
     fus_value_t vx = fus_value_arr(vm);
     FUS_TEST(fus_value_is_arr(vx))
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 1)
 
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx)), 0)
 
+    /* Create an arr and push simple (unboxed) values onto it */
     fus_value_t vx2 = vx;
     fus_value_arr_push(vm, &vx2, fus_value_int(vm, 10));
     FUS_TEST(fus_value_is_arr(vx2))
@@ -149,9 +151,13 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
 
+    /* Simulate "dup"ing vx2 by attaching it */
     fus_value_attach(vm, vx2);
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
 
+    /* Since vx2 now has refcount=2, if we push something onto it, it gets
+    split into old (pre-push, vx2) and new (post-push, vx3) versions, each
+    with refcount=1. */
     fus_value_t vx3 = vx2;
     fus_value_arr_push(vm, &vx3, fus_value_int(vm, 20));
     FUS_TEST(fus_value_is_arr(vx3))
@@ -160,12 +166,21 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
 
+    /* Make sure vx2 and vx3 have correct elements */
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx2, 0)), 10)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx3)), 2)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 0)), 10)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 1)), 20)
 
+    /* Test printing an arr */
+    fus_printer_t printer;
+    fus_printer_init(&printer);
+    printf("Printing vx3:\n");
+    fus_printer_print_arr(&printer, vm, &vx3.p->data.a); printf("\n");
+    fus_printer_cleanup(&printer);
+
+    /* Make sure detaching arrays frees them */
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vm, vx2);
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
@@ -182,9 +197,18 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
     fus_value_arr_push(vm, &vx, fus_value_int(vm, 20));
 
+    /* Push one arr (vx) onto another arr (vy) */
     fus_value_t vy = fus_value_arr(vm);
     fus_value_arr_push(vm, &vy, vx);
 
+    /* Push a second copy of vx onto vy.
+    Pushing just transfers ownership, it doesn't increase refcount itself.
+    So we have to manually call attach on the pushee (vx). */
+    fus_value_arr_push(vm, &vy, vx);
+    fus_value_attach(vm, vx);
+
+    /* Make sure detaching the containing arr correctly frees up the
+    contained one too */
     FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vm, vy);
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
@@ -202,12 +226,6 @@ void run_str_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
     fus_value_detach(vm, vx);
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
-
-    FUS_TESTS_END()
-}
-
-void run_obj_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
-    FUS_TESTS_BEGIN("Obj tests (basic)")
 
     FUS_TESTS_END()
 }
@@ -353,18 +371,23 @@ void run_symtable_tests_basic(fus_core_t *core, int *n_tests_ptr, int *n_fails_p
 
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 0);
 
+    /* Add a symbol x, throw every conceivable function call at it */
     int sym_i_x = fus_symtable_add_from_string(&table, "x");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
     FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "x"), sym_i_x);
     FUS_TEST_EQ_INT(fus_symtable_get_or_add_from_string(&table, "x"), sym_i_x);
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 1);
 
+    /* Add new symbol y, its index should be different from existing
+    symbol x */
     int sym_i_y = fus_symtable_add_from_string(&table, "y");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 2);
     FUS_TEST_NE_INT(sym_i_x, sym_i_y);
 
     FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "x"), sym_i_x);
 
+    /* Add a new symbol, make sure our string comparisons are correct
+    (don't laugh, they were wrong at first... strncmp is an odd beast...) */
     int sym_i_lala = fus_symtable_add_from_string(&table, "LA LA $#@$");
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 3);
     FUS_TEST_EQ_INT(fus_symtable_get_from_string(&table, "LA LA"), -1);
@@ -382,9 +405,11 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_symtable_t *table = vm->symtable;
 
+    /* Make sym value x */
     int sym_i_x = fus_symtable_get_or_add_from_string(table, "x");
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_x)), sym_i_x)
 
+    /* Make sym value y */
     int sym_i_y = fus_symtable_get_or_add_from_string(table, "y");
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_y)), sym_i_y)
 
@@ -396,9 +421,16 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
+void run_obj_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Obj tests (basic)")
+
+    FUS_TESTS_END()
+}
+
 void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Parser tests (values)")
 
+    /* Test int parsing */
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "0")), 0);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "1")), 1);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "10")), 10);
@@ -407,17 +439,21 @@ void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-999")), -999);
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-0")), 0);
 
+    /* Test sym parsing */
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "x")),
         fus_symtable_get_from_string(vm->symtable, "x"));
     FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
         fus_symtable_get_from_string(vm->symtable, "ABC123!@#"));
 
+    /* Test str parsing */
     fus_value_t vs1 = fus_value_stringparse_str(vm, "\"ABC\"");
     FUS_TEST_STRCMP(fus_value_str_decode(vs1), "ABC");
     fus_value_t vs2 = fus_value_stringparse_str(vm, "\"TWO\\nLINES\"");
     FUS_TEST_STRCMP(fus_value_str_decode(vs2), "TWO\nLINES");
     fus_value_t vs3 = fus_value_stringparse_str(vm, "\"\\\"QUOTED\\\"\"");
     FUS_TEST_STRCMP(fus_value_str_decode(vs3), "\"QUOTED\"");
+
+    /* TODO: Test arr parsing??? I guess it's tested by parser_tests_full */
 
     fus_value_detach(vm, vs1);
     fus_value_detach(vm, vs2);
@@ -432,6 +468,8 @@ void run_parser_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_parser_t parser;
     fus_parser_init(&parser, vm);
 
+    /* Pass by hand all the things which would usually be passed
+    by something iterating over a fus_lexer_t, testing as we go */
     FUS_TEST_EQ_INT(parser.arr_stack.len, 0)
     FUS_TEST_EQ_INT(parser.arr.values.len, 0)
     fus_parser_stringparse_sym  (&parser, "def");
@@ -488,9 +526,9 @@ int run_tests(fus_vm_t *vm){
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
     run_str_tests_basic(vm, &n_tests, &n_fails);
-    run_obj_tests_basic(vm, &n_tests, &n_fails);
     run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
     run_symtable_tests_full(vm, &n_tests, &n_fails);
+    run_obj_tests_basic(vm, &n_tests, &n_fails);
     run_lexer_tests(vm, &n_tests, &n_fails);
     run_parser_tests_basic(vm, &n_tests, &n_fails);
     run_parser_tests_full(vm, &n_tests, &n_fails);
