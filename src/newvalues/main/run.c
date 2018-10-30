@@ -48,7 +48,7 @@ int main(int n_args, char *args[]){
 
     fus_t fus;
     fus_init(&fus);
-    fus.printer.file = stderr;
+    fus_printer_set_file(&fus.printer, stderr);
 
     int status = run(&fus, filename, text);
 

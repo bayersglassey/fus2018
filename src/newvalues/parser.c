@@ -14,12 +14,12 @@
 void fus_parser_init(fus_parser_t *parser, fus_vm_t *vm){
     parser->vm = vm;
     fus_array_init(&parser->arr_stack, &vm->class_arr);
-    fus_arr_init(&parser->arr, vm);
+    fus_arr_init(vm, &parser->arr);
 }
 
 void fus_parser_cleanup(fus_parser_t *parser){
     fus_array_cleanup(&parser->arr_stack);
-    fus_arr_cleanup(&parser->arr);
+    fus_arr_cleanup(parser->vm, &parser->arr);
 }
 
 void fus_parser_dump(fus_parser_t *parser, FILE *file){
@@ -53,7 +53,7 @@ void fus_parser_push_arr(fus_parser_t *parser){
     *arr_stack_last = parser->arr;
 
     /* Initialize parser->arr to a fresh arr */
-    fus_arr_init(&parser->arr, parser->vm);
+    fus_arr_init(parser->vm, &parser->arr);
 }
 void fus_parser_pop_arr(fus_parser_t *parser){
     /* Wrap parser->arr into an arr value */
@@ -67,13 +67,13 @@ void fus_parser_pop_arr(fus_parser_t *parser){
     fus_array_pop(&parser->arr_stack);
 
     /* Push arr value onto parser->arr */
-    fus_arr_push(&parser->arr, value_arr);
+    fus_arr_push(parser->vm, &parser->arr, value_arr);
 }
 void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
-    fus_arr_push(&parser->arr, value);
+    fus_arr_push(parser->vm, &parser->arr, value);
 }
 void fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
-    fus_arr_pop(&parser->arr, value_ptr);
+    fus_arr_pop(parser->vm, &parser->arr, value_ptr);
 }
 
 
@@ -189,7 +189,7 @@ fus_value_t fus_value_tokenparse_str(fus_vm_t *vm,
     /* IT WORKED! Let's return a value. */
     fus_value_t value = fus_value_str(vm);
     fus_str_t *s = &value.p->data.s;
-    fus_str_reinit(s, text, text_len, text_size);
+    fus_str_reinit(vm, s, text, text_len, text_size);
     return value;
 
 err:

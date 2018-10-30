@@ -13,9 +13,9 @@ struct fus_obj {
 };
 
 
-void fus_obj_init(fus_obj_t *o, fus_vm_t *vm);
-void fus_obj_copy(fus_obj_t *o, fus_obj_t *o2);
-void fus_obj_cleanup(fus_obj_t *o);
+void fus_obj_init(fus_vm_t *vm, fus_obj_t *o);
+void fus_obj_copy(fus_vm_t *vm, fus_obj_t *o, fus_obj_t *o2);
+void fus_obj_cleanup(fus_vm_t *vm, fus_obj_t *o);
 
 void fus_boxed_obj_mkunique(fus_boxed_t **p_ptr);
 

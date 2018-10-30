@@ -3,31 +3,31 @@
 #include "includes.h"
 
 
-void fus_arr_init(fus_arr_t *a, fus_vm_t *vm){
+void fus_arr_init(fus_vm_t *vm, fus_arr_t *a){
     fus_array_init(&a->values, &vm->class_value);
 }
 
-void fus_arr_copy(fus_arr_t *a, fus_arr_t *a2){
+void fus_arr_copy(fus_vm_t *vm, fus_arr_t *a, fus_arr_t *a2){
     /* Acts like arr_init for a */
     fus_array_copy(&a->values, &a2->values);
 }
 
-void fus_arr_cleanup(fus_arr_t *a){
+void fus_arr_cleanup(fus_vm_t *vm, fus_arr_t *a){
     fus_array_cleanup(&a->values);
 }
 
 
 
-fus_array_len_t fus_arr_len(fus_arr_t *a){
+fus_array_len_t fus_arr_len(fus_vm_t *vm, fus_arr_t *a){
     return a->values.len;
 }
 
-fus_value_t fus_arr_get(fus_arr_t *a, int i){
+fus_value_t fus_arr_get(fus_vm_t *vm, fus_arr_t *a, int i){
     fus_value_t value = FUS_ARR_VALUES(*a)[i];
     return value;
 }
 
-void fus_arr_push(fus_arr_t *a, fus_value_t value){
+void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
     /* Resize array */
     fus_array_push(&a->values);
 
@@ -35,7 +35,7 @@ void fus_arr_push(fus_arr_t *a, fus_value_t value){
     FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
 }
 
-void fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr){
+void fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
     /* Bounds check */
     if(a->values.len <= 0){
         // Would be nice, but we don't have a vm...
@@ -66,7 +66,7 @@ void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
     if(p->refcount > 1){
         fus_boxed_detach(p);
         fus_boxed_t *new_p = fus_value_arr(p->vm).p;
-        fus_arr_copy(&new_p->data.a, &p->data.a);
+        fus_arr_copy(p->vm, &new_p->data.a, &p->data.a);
         *p_ptr = new_p;
     }
 }
@@ -78,7 +78,7 @@ fus_value_t fus_value_arr(fus_vm_t *vm){
     /* Creates a new, empty arr value. */
     fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
     fus_boxed_init(p, vm, FUS_BOXED_ARR);
-    fus_arr_init(&p->data.a, vm);
+    fus_arr_init(vm, &p->data.a);
     return (fus_value_t)p;
 }
 
@@ -93,7 +93,7 @@ fus_value_t fus_value_arr_from_arr(fus_vm_t *vm, fus_arr_t *a){
 fus_value_t fus_value_arr_len(fus_vm_t *vm, fus_value_t value){
     /* Return len of arr value as a new int value */
     if(!fus_value_is_arr(value))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-    return fus_value_int(vm, fus_arr_len(&value.p->data.a));
+    return fus_value_int(vm, fus_arr_len(vm, &value.p->data.a));
 }
 
 fus_value_t fus_value_arr_get(fus_vm_t *vm, fus_value_t value_a,
@@ -102,10 +102,10 @@ fus_value_t fus_value_arr_get(fus_vm_t *vm, fus_value_t value_a,
     /* Return element i of value_a. Increases element's refcount. */
     if(!fus_value_is_arr(value_a))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_arr_t *a = &value_a.p->data.a;
-    if(i < 0 || i >= fus_arr_len(a)){
+    if(i < 0 || i >= fus_arr_len(vm, a)){
         return fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
     }
-    fus_value_t value = fus_arr_get(a, i);
+    fus_value_t value = fus_arr_get(vm, a, i);
     fus_value_attach(vm, value);
     return value;
 }
@@ -131,7 +131,7 @@ void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Get arr and do the push */
     fus_arr_t *a = &value_a.p->data.a;
-    fus_arr_push(a, value);
+    fus_arr_push(vm, a, value);
 
     /* Return */
     *value_a_ptr = value_a;
@@ -157,7 +157,7 @@ void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Get arr and do the pop */
     fus_arr_t *a = &value_a.p->data.a;
-    fus_arr_pop(a, value_ptr);
+    fus_arr_pop(vm, a, value_ptr);
 
     /* Return */
     *value_a_ptr = value_a;
@@ -172,11 +172,12 @@ void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
 void fus_class_init_arr(fus_class_t *class, void *ptr){
     fus_arr_t *a = ptr;
     fus_vm_t *vm = class->data;
-    fus_arr_init(a, vm);
+    fus_arr_init(vm, a);
 }
 
 void fus_class_cleanup_arr(fus_class_t *class, void *ptr){
     fus_arr_t *a = ptr;
-    fus_arr_cleanup(a);
+    fus_vm_t *vm = class->data;
+    fus_arr_cleanup(vm, a);
 }
 

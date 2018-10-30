@@ -4,7 +4,7 @@
 
 
 
-void fus_str_init(fus_str_t *s, fus_vm_t *vm,
+void fus_str_init(fus_vm_t *vm, fus_str_t *s,
     char *text, int len, size_t size
 ){
     s->text = text;
@@ -12,19 +12,17 @@ void fus_str_init(fus_str_t *s, fus_vm_t *vm,
     s->size = size;
 }
 
-void fus_str_reinit(fus_str_t *s, char *text, int len, size_t size){
-    fus_str_cleanup(s);
-    s->text = text;
-    s->len = len;
-    s->size = size;
+void fus_str_reinit(fus_vm_t *vm, fus_str_t *s, char *text, int len, size_t size){
+    fus_str_cleanup(vm, s);
+    fus_str_init(vm, s, text, len, size);
 }
 
-void fus_str_cleanup(fus_str_t *s){
+void fus_str_cleanup(fus_vm_t *vm, fus_str_t *s){
     free(s->text);
 }
 
 
-int fus_str_len(fus_str_t *s){
+int fus_str_len(fus_vm_t *vm, fus_str_t *s){
     return s->len;
 }
 
@@ -34,14 +32,14 @@ fus_value_t fus_value_str(fus_vm_t *vm){
     /* Creates a new, empty str value. */
     fus_boxed_t *p = fus_malloc(vm->core, sizeof(*p));
     fus_boxed_init(p, vm, FUS_BOXED_STR);
-    fus_str_init(&p->data.s, vm, NULL, 0, 0);
+    fus_str_init(vm, &p->data.s, NULL, 0, 0);
     return (fus_value_t)p;
 }
 
 fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value){
     /* Return len of str value as a new int value */
     if(!fus_value_is_str(value))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-    return fus_value_int(vm, fus_str_len(&value.p->data.s));
+    return fus_value_int(vm, fus_str_len(vm, &value.p->data.s));
 }
 
 const char *fus_value_str_decode(fus_value_t value){

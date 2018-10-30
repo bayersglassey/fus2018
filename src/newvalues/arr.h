@@ -15,14 +15,14 @@ struct fus_arr {
 };
 
 
-void fus_arr_init(fus_arr_t *a, fus_vm_t *vm);
-void fus_arr_copy(fus_arr_t *a, fus_arr_t *a2);
-void fus_arr_cleanup(fus_arr_t *a);
+void fus_arr_init(fus_vm_t *vm, fus_arr_t *a);
+void fus_arr_copy(fus_vm_t *vm, fus_arr_t *a, fus_arr_t *a2);
+void fus_arr_cleanup(fus_vm_t *vm, fus_arr_t *a);
 
-fus_array_len_t fus_arr_len(fus_arr_t *a);
-fus_value_t fus_arr_get(fus_arr_t *a, int i);
-void fus_arr_push(fus_arr_t *a, fus_value_t value);
-void fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr);
+fus_array_len_t fus_arr_len(fus_vm_t *vm, fus_arr_t *a);
+fus_value_t fus_arr_get(fus_vm_t *vm, fus_arr_t *a, int i);
+void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value);
+void fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr);
 
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr);
 

@@ -59,16 +59,17 @@ void fus_boxed_cleanup(fus_boxed_t *p){
         fflush(stderr);
     }
     fus_boxed_type_t type = p->type;
-    p->vm->n_boxed--;
+    fus_vm_t *vm = p->vm;
+    vm->n_boxed--;
     if(type == FUS_BOXED_ARR){
         fus_arr_t *a = &p->data.a;
-        fus_arr_cleanup(a);
+        fus_arr_cleanup(vm, a);
     }else if(type == FUS_BOXED_OBJ){
         fus_obj_t *o = &p->data.o;
-        fus_obj_cleanup(o);
+        fus_obj_cleanup(vm, o);
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
-        fus_str_cleanup(s);
+        fus_str_cleanup(vm, s);
     }else if(type == FUS_BOXED_FUN){
         /* TODO... */
     }else{
