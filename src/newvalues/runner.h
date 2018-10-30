@@ -10,7 +10,7 @@
 struct fus_state {
     fus_vm_t *vm;
     fus_arr_t stack;
-    //fus_obj_t vars;
+    fus_obj_t vars;
 };
 
 

@@ -7,12 +7,12 @@
 void fus_state_init(fus_state_t *state, fus_vm_t *vm){
     state->vm = vm;
     fus_arr_init(vm, &state->stack);
-    //fus_obj_init(&state->vars, vm);
+    fus_obj_init(vm, &state->vars);
 }
 
 void fus_state_cleanup(fus_state_t *state){
     fus_arr_cleanup(state->vm, &state->stack);
-    //fus_obj_cleanup(&state->vars);
+    fus_obj_cleanup(state->vm, &state->vars);
 }
 
 
