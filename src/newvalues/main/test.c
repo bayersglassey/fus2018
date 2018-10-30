@@ -192,6 +192,26 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
+void run_str_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Str tests")
+
+    fus_value_t vx = fus_value_str(vm, "ASD", 3, 0);
+    fus_value_t vx_len = fus_value_str_len(vm, vx);
+    FUS_TEST_EQ_INT(fus_value_int_decode(vx_len), 3)
+
+    FUS_TEST_EQ_INT(vm->n_boxed, 1)
+    fus_value_detach(vm, vx);
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
+
+    FUS_TESTS_END()
+}
+
+void run_obj_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Obj tests (basic)")
+
+    FUS_TESTS_END()
+}
+
 void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Lexer tests")
 
@@ -467,6 +487,8 @@ int run_tests(fus_vm_t *vm){
     run_unboxed_tests(vm, &n_tests, &n_fails);
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
+    run_str_tests_basic(vm, &n_tests, &n_fails);
+    run_obj_tests_basic(vm, &n_tests, &n_fails);
     run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
     run_symtable_tests_full(vm, &n_tests, &n_fails);
     run_lexer_tests(vm, &n_tests, &n_fails);
