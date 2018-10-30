@@ -10,6 +10,7 @@ const char *fus_err_code_msg(fus_err_code_t code){
         "Underflow",
         "Out of Bounds",
         "Can't Parse",
+        "Missing key",
         "Lol Idunno"
     };
     if(code < 0 || code >= FUS_ERRS)return "Unknown";
@@ -108,6 +109,14 @@ void fus_value_detach(fus_vm_t *vm, fus_value_t value){
     }
 }
 
+
+bool fus_value_is_int(fus_value_t value){return FUS_IS_INT(value);}
+bool fus_value_is_sym(fus_value_t value){return FUS_IS_SYM(value);}
+bool fus_value_is_null(fus_value_t value){return FUS_IS_NULL(value);}
+bool fus_value_is_true(fus_value_t value){return FUS_IS_TRUE(value);}
+bool fus_value_is_false(fus_value_t value){return FUS_IS_FALSE(value);}
+bool fus_value_is_bool(fus_value_t value){return FUS_IS_BOOL(value);}
+bool fus_value_is_err(fus_value_t value){return FUS_IS_ERR(value);}
 
 bool fus_value_is_arr(fus_value_t value){
     return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_ARR;

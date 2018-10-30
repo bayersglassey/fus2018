@@ -60,6 +60,7 @@ typedef enum {
     FUS_ERR_UNDERFLOW,
     FUS_ERR_OUT_OF_BOUNDS,
     FUS_ERR_CANT_PARSE,
+    FUS_ERR_MISSING_KEY,
     FUS_ERR_IDUNNO,
     FUS_ERRS
 } fus_err_code_t;
@@ -112,6 +113,13 @@ fus_value_t fus_value_eq(fus_vm_t *vm,
 void fus_value_attach(fus_vm_t *vm, fus_value_t value);
 void fus_value_detach(fus_vm_t *vm, fus_value_t value);
 
+bool fus_value_is_int(fus_value_t value);
+bool fus_value_is_sym(fus_value_t value);
+bool fus_value_is_null(fus_value_t value);
+bool fus_value_is_true(fus_value_t value);
+bool fus_value_is_false(fus_value_t value);
+bool fus_value_is_bool(fus_value_t value);
+bool fus_value_is_err(fus_value_t value);
 bool fus_value_is_arr(fus_value_t value);
 bool fus_value_is_str(fus_value_t value);
 bool fus_value_is_obj(fus_value_t value);
