@@ -89,22 +89,18 @@ fus_value_t fus_value_obj_from_obj(fus_vm_t *vm, fus_obj_t *o){
     return (fus_value_t)p;
 }
 
-fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o,
-    fus_value_t value_sym
-){
-    /* Return element at key value_sym of value_a.
+fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o, int sym_i){
+    /* Return element at index sym_i of value_a.
     Increases element's refcount. */
     if(!fus_value_is_obj(value_o))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-    if(!fus_value_is_sym(value_sym))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_obj_t *o = &value_o.p->data.o;
-    int sym_i = fus_value_sym_decode(value_sym);
     fus_value_t value = fus_obj_get(vm, o, sym_i);
     fus_value_attach(vm, value);
     return value;
 }
 
-void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr,
-    fus_value_t value_sym, fus_value_t value
+void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr, int sym_i,
+    fus_value_t value
 ){
     /* Represents a transfer of ownership of value to value_o.
     So refcounts of value and value_o are unchanged
@@ -112,7 +108,7 @@ void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr,
 
     /* Typecheck */
     fus_value_t value_o = *value_o_ptr;
-    if(!fus_value_is_obj(value_o) || !fus_value_is_sym(value_sym)){
+    if(!fus_value_is_obj(value_o)){
         fus_value_detach(vm, value_o);
         fus_value_detach(vm, value);
         *value_o_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
@@ -121,9 +117,6 @@ void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr,
 
     /* Uniqueness guarantee */
     fus_boxed_obj_mkunique(&value_o.p);
-
-    /* Find sym_i */
-    int sym_i = fus_value_sym_decode(value_sym);
 
     /* Get obj and set key-value pair */
     fus_obj_t *o = &value_o.p->data.o;

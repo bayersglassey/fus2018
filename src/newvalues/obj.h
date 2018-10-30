@@ -25,10 +25,9 @@ void fus_boxed_obj_mkunique(fus_boxed_t **p_ptr);
 
 fus_value_t fus_value_obj(fus_vm_t *vm);
 fus_value_t fus_value_obj_from_obj(fus_vm_t *vm, fus_obj_t *o);
-fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o,
-    fus_value_t value_sym);
-void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr,
-    fus_value_t value_sym, fus_value_t value);
+fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o, int sym_i);
+void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr, int sym_i,
+    fus_value_t value);
 
 
 #endif
