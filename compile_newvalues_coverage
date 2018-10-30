@@ -1,1 +1,15 @@
-./compile_newvalues test --coverage $@ && ./main && gcov *.gcda
+
+CMD="$1"
+
+if [ "$CMD" = "clean" ]
+then
+    echo "Removing: " *.{gcda,gcno,gcov}
+    rm *.{gcda,gcno,gcov}
+elif [ -z "$CMD" ]
+then
+    ./compile_newvalues test --coverage $@ && ./main && gcov *.gcda
+else
+    echo "Usage (one of):"
+    echo "    $(basename $0)"
+    echo "    $(basename $0) clean"
+fi
