@@ -424,6 +424,41 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 void run_obj_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Obj tests (basic)")
 
+    /* Get some symbols */
+    fus_symtable_t *table = vm->symtable;
+    int sx = fus_symtable_get_or_add_from_string(table, "x");
+    int sy = fus_symtable_get_or_add_from_string(table, "y");
+    fus_value_t vsx = fus_value_sym(vm, sx);
+    fus_value_t vsy = fus_value_sym(vm, sy);
+
+    /* Make an obj, set some key-value pairs on it */
+    fus_value_t vo = fus_value_obj(vm);
+    fus_value_obj_set(vm, &vo, vsx, fus_value_int(vm, 10));
+    fus_value_obj_set(vm, &vo, vsy, fus_value_int(vm, 20));
+
+    /* Test printing an obj */
+    fus_printer_t printer;
+    fus_printer_init(&printer);
+    printf("Printing vo:\n");
+    fus_printer_print_obj(&printer, vm, &vo.p->data.o); printf("\n");
+    fus_printer_cleanup(&printer);
+
+    /* Get the correct values back */
+    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, vsx)), 10);
+    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, vsy)), 20);
+
+    /* Update an existing key-value pair */
+    fus_value_obj_set(vm, &vo, vsx, fus_value_int(vm, 30));
+
+    /* Get the correct values back */
+    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, vsx)), 30);
+    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, vsy)), 20);
+
+    /* Make sure detaching frees the obj */
+    FUS_TEST_EQ_INT(vm->n_boxed, 1)
+    fus_value_detach(vm, vo);
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
+
     FUS_TESTS_END()
 }
 

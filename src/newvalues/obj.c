@@ -3,19 +3,56 @@
 
 
 void fus_obj_init(fus_vm_t *vm, fus_obj_t *o){
-    fus_arr_init(vm, &o->keys);
+    fus_array_init(&o->keys, &vm->class_sym_i);
     fus_arr_init(vm, &o->values);
 }
 
 void fus_obj_copy(fus_vm_t *vm, fus_obj_t *o, fus_obj_t *o2){
     /* Acts like obj_init for o */
-    fus_arr_copy(vm, &o->keys, &o2->keys);
+    fus_array_copy(&o->keys, &o2->keys);
     fus_arr_copy(vm, &o->values, &o2->values);
 }
 
 void fus_obj_cleanup(fus_vm_t *vm, fus_obj_t *o){
-    fus_arr_cleanup(vm, &o->keys);
+    fus_array_cleanup(&o->keys);
     fus_arr_cleanup(vm, &o->values);
+}
+
+int fus_obj_find(fus_vm_t *vm, fus_obj_t *o, int sym_i){
+    int keys_len = o->keys.len;
+    int *keys = FUS_ARRAY_GET_REF(o->keys, 0);
+    for(int i = 0; i < keys_len; i++){
+        int key = keys[i];
+        if(key == sym_i)return i;
+    }
+    return -1;
+}
+
+fus_value_t fus_obj_get(fus_vm_t *vm, fus_obj_t *o, int sym_i){
+    int i = fus_obj_find(vm, o, sym_i);
+    if(i < 0)return fus_value_err(vm, FUS_ERR_MISSING_KEY);
+    fus_value_t *values = FUS_ARR_VALUES(o->values);
+    fus_value_t value = values[i];
+    fus_value_attach(vm, value);
+    return value;
+}
+
+void fus_obj_set(fus_vm_t *vm, fus_obj_t *o, int sym_i, fus_value_t value){
+    /* Transfers ownership of value */
+
+    int i = fus_obj_find(vm, o, sym_i);
+    if(i >= 0){
+        /* Detach old value, replace with new value */
+        fus_value_t *values = FUS_ARR_VALUES(o->values);
+        fus_value_detach(vm, values[i]);
+        values[i] = value;
+    }else{
+        /* Push new key & value */
+        fus_array_push(&o->keys);
+        int *keys = FUS_ARRAY_GET_REF(o->keys, 0);
+        keys[o->keys.len - 1] = sym_i;
+        fus_arr_push(vm, &o->values, value);
+    }
 }
 
 
@@ -50,4 +87,48 @@ fus_value_t fus_value_obj_from_obj(fus_vm_t *vm, fus_obj_t *o){
     fus_boxed_init(p, vm, FUS_BOXED_OBJ);
     p->data.o = *o;
     return (fus_value_t)p;
+}
+
+fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o,
+    fus_value_t value_sym
+){
+    /* Return element at key value_sym of value_a.
+    Increases element's refcount. */
+    if(!fus_value_is_obj(value_o))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!fus_value_is_sym(value_sym))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_obj_t *o = &value_o.p->data.o;
+    int sym_i = fus_value_sym_decode(value_sym);
+    fus_value_t value = fus_obj_get(vm, o, sym_i);
+    fus_value_attach(vm, value);
+    return value;
+}
+
+void fus_value_obj_set(fus_vm_t *vm, fus_value_t *value_o_ptr,
+    fus_value_t value_sym, fus_value_t value
+){
+    /* Represents a transfer of ownership of value to value_o.
+    So refcounts of value and value_o are unchanged
+    (Except in case of error, when they are both decremented) */
+
+    /* Typecheck */
+    fus_value_t value_o = *value_o_ptr;
+    if(!fus_value_is_obj(value_o) || !fus_value_is_sym(value_sym)){
+        fus_value_detach(vm, value_o);
+        fus_value_detach(vm, value);
+        *value_o_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_obj_mkunique(&value_o.p);
+
+    /* Find sym_i */
+    int sym_i = fus_value_sym_decode(value_sym);
+
+    /* Get obj and set key-value pair */
+    fus_obj_t *o = &value_o.p->data.o;
+    fus_obj_set(vm, o, sym_i, value);
+
+    /* Return */
+    *value_o_ptr = value_o;
 }
