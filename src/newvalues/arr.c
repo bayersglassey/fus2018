@@ -40,12 +40,8 @@ void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
 void fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
     /* Bounds check */
     if(a->values.len <= 0){
-        // Would be nice, but we don't have a vm...
-        // Should all fus_arr_* take a fus_boxed_t instead of fus_arr_t ???
-        // *value_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
-        fprintf(stderr, "%s: ERROR: Attempted to pop from empty arr\n",
-            __func__);
-        exit(EXIT_FAILURE); // !!! TODO: This function shouldn't be allowed to exit()...
+        *value_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+        return;
     }
 
     /* Get value from last array element */
