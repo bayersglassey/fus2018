@@ -29,7 +29,6 @@ void fus_parser_cleanup(fus_parser_t *parser){
 }
 
 void fus_parser_dump(fus_parser_t *parser, FILE *file){
-    /* TODO */
     fprintf(file, "PARSER:\n");
     fprintf(file, "  arr_stack length: %i\n", parser->arr_stack.len);
 
@@ -61,7 +60,7 @@ int fus_parser_parse_lexer(fus_parser_t *parser, fus_lexer_t *lexer){
             if(fus_parser_tokenparse_sym(parser,
                 lexer->token, lexer->token_len) < 0)return -1;
         }else if(type == FUS_TOKEN_STR){
-            if(fus_parser_tokenparse_sym(parser,
+            if(fus_parser_tokenparse_str(parser,
                 lexer->token, lexer->token_len) < 0)return -1;
         }else if(type == FUS_TOKEN_ARR_OPEN){
             arr_depth++;

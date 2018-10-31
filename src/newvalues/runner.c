@@ -16,27 +16,59 @@ void fus_state_cleanup(fus_state_t *state){
 }
 
 
-void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
+int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
+    int status = -1;
+
+    fus_parser_t parser;
+    fus_parser_init(&parser, state->vm);
+
+    if(fus_parser_parse_lexer(&parser, lexer) < 0)goto err;
+    fus_parser_dump(&parser, stderr);
+    if(fus_state_exec_data(state, &parser.arr) < 0)goto err;
+
+    status = 0; /* OK! */
+err:
+    fus_parser_cleanup(&parser);
+    return status;
+}
+
+int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
     fus_vm_t *vm = state->vm;
+    fus_symtable_t *symtable = vm->symtable;
     int arr_depth = 0;
-    while(fus_lexer_is_ok(lexer)){
-        fus_lexer_token_type_t type = lexer->token_type;
-        if(type == FUS_TOKEN_INT){
-            fus_value_t value = fus_value_tokenparse_int(vm,
-                lexer->token, lexer->token_len);
-            fus_arr_push(vm, &state->stack, value);
-        }else if(type == FUS_TOKEN_SYM){
-            if(fus_lexer_got(lexer, "`")){
-                fus_lexer_next(lexer);
-                if(lexer->token_type != FUS_TOKEN_SYM){
-                    fus_lexer_perror(lexer, "Expected sym after \"`\"");
-                    fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
-                    return;
-                }
-                fus_value_t value = fus_value_tokenparse_sym(vm,
-                    lexer->token, lexer->token_len);
+    fus_value_t *token_values = FUS_ARR_VALUES(*data);
+    int token_values_len = data->values.len;
+    for(int i = 0; i < token_values_len; i++){
+        fus_value_t token_value = token_values[i];
+
+        #define FUS_STATE_NEXT_VALUE() \
+            i++; \
+            if(i >= token_values_len){ \
+                fprintf(stderr, "%s: Missing arg after: %s\n", \
+                    __func__, token); \
+                return -1; \
+            } \
+            token_value = token_values[i];
+
+        #define FUS_STATE_EXPECT(T) \
+            if(!fus_value_is_##T(token_value)){ \
+                fprintf(stderr, "%s: Expected " #T " after: %s\n", \
+                    __func__, token); \
+                return -1; \
+            }
+
+        if(fus_value_is_int(token_value) || fus_value_is_str(token_value)){
+            fus_value_attach(vm, token_value);
+            fus_arr_push(vm, &state->stack, token_value);
+        }else if(fus_value_is_sym(token_value)){
+            int sym_i = fus_value_sym_decode(token_value);
+            const char *token = fus_symtable_get_token(symtable, sym_i);
+            if(!strcmp(token, "`")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                fus_value_t value = fus_value_stringparse_sym(vm, token);
                 fus_arr_push(vm, &state->stack, value);
-            }else if(fus_lexer_got(lexer, "+")){
+            }else if(!strcmp(token, "+")){
                 fus_value_t value1;
                 fus_value_t value2;
                 fus_arr_pop(vm, &state->stack, &value2);
@@ -44,7 +76,7 @@ void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
                 fus_value_t value3 = fus_value_int_add(vm,
                     value1, value2);
                 fus_arr_push(vm, &state->stack, value3);
-            }else if(fus_lexer_got(lexer, "*")){
+            }else if(!strcmp(token, "*")){
                 fus_value_t value1;
                 fus_value_t value2;
                 fus_arr_pop(vm, &state->stack, &value2);
@@ -52,20 +84,20 @@ void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
                 fus_value_t value3 = fus_value_int_mul(vm,
                     value1, value2);
                 fus_arr_push(vm, &state->stack, value3);
-            }else if(fus_lexer_got(lexer, "arr")){
+            }else if(!strcmp(token, "arr")){
                 fus_value_t value = fus_value_arr(vm);
                 fus_arr_push(vm, &state->stack, value);
-            }else if(fus_lexer_got(lexer, "obj")){
+            }else if(!strcmp(token, "obj")){
                 fus_value_t value = fus_value_obj(vm);
                 fus_arr_push(vm, &state->stack, value);
-            }else if(fus_lexer_got(lexer, ",") || fus_lexer_got(lexer, "push")){
+            }else if(!strcmp(token, ",") || !strcmp(token, "push")){
                 fus_value_t value_a;
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_arr_pop(vm, &state->stack, &value_a);
                 fus_value_arr_push(vm, &value_a, value);
                 fus_arr_push(vm, &state->stack, value_a);
-            }else if(fus_lexer_got(lexer, "=.")){
+            }else if(!strcmp(token, "=.")){
 
                 /* I don't think we want to deal with split tokens here...
                 Let's definitely wrap up the tokens in an arr, and make that
@@ -81,53 +113,42 @@ void fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
                 fus_arr_pop(vm, &state->stack, &value_o);
                 fus_value_obj_set(vm, &value_o, sym_i, value);
                 fus_arr_push(vm, &state->stack, value_o);
-            }else if(fus_lexer_got(lexer, "len")){
+            }else if(!strcmp(token, "len")){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_value_t value_len = fus_value_arr_len(vm, value);
                 fus_arr_push(vm, &state->stack, value_len);
                 fus_value_detach(vm, value);
-            }else if(fus_lexer_got(lexer, "swap")){
+            }else if(!strcmp(token, "swap")){
                 fus_value_t value1;
                 fus_value_t value2;
                 fus_arr_pop(vm, &state->stack, &value2);
                 fus_arr_pop(vm, &state->stack, &value1);
                 fus_arr_push(vm, &state->stack, value2);
                 fus_arr_push(vm, &state->stack, value1);
-            }else if(fus_lexer_got(lexer, "dup")){
+            }else if(!strcmp(token, "dup")){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_arr_push(vm, &state->stack, value);
                 fus_arr_push(vm, &state->stack, value);
                 fus_value_attach(vm, value);
-            }else if(fus_lexer_got(lexer, "drop")){
+            }else if(!strcmp(token, "drop")){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_value_detach(vm, value);
             }else{
-                fus_lexer_perror(lexer, "Builtin not found");
-                fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
-                return;
+                fprintf(stderr, "%s: Builtin not found: %s\n",
+                    __func__, token);
+                return -1;
             }
-        }else if(type == FUS_TOKEN_STR){
-            fus_value_t value = fus_value_tokenparse_str(vm,
-                lexer->token, lexer->token_len);
-            fus_arr_push(vm, &state->stack, value);
-        }else if(type == FUS_TOKEN_ARR_OPEN){
-            arr_depth++;
-        }else if(type == FUS_TOKEN_ARR_CLOSE){
-            if(arr_depth <= 0){
-                fus_lexer_perror(lexer, "Too many close parens");
-                fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
-                return;
-            }
-            arr_depth--;
+        }else if(fus_value_is_arr(token_value)){
+            if(fus_state_exec_data(state, &token_value.p->data.a))return -1;
         }else{
-            fus_lexer_perror(lexer, "Can't exec token");
-            fus_lexer_set_error(lexer, FUS_LEXER_ERRCODE_IDUNNO);
-            return;
+            fprintf(stderr, "%s: Unexpected type in data to be run: %s\n",
+                __func__, fus_value_type_msg(token_value));
+            return -1;
         }
-        fus_lexer_next(lexer);
     }
+    return 0;
 }
 

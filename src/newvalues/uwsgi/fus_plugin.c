@@ -16,7 +16,7 @@ static int run(fus_t *fus, const char *body, int body_len){
     fus_lexer_mark_final(lexer);
 
     fus_state_t *state = &fus->state;
-    fus_state_exec_lexer(state, lexer);
+    if(fus_state_exec_lexer(state, lexer) < 0)return -1;
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
