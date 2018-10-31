@@ -130,23 +130,6 @@ bool fus_lexer_got(fus_lexer_t *lexer, const char *token){
  * DEBUGGING *
  *************/
 
-#define FUS_LEXER_INFO(LEXER, F) { \
-    fus_lexer_t *__lexer = (LEXER); \
-    int __token_len = __lexer->token_len; \
-    const char *__dots = ""; \
-    if(__token_len > 10){__token_len = 10; __dots = "...";} \
-    fprintf((F), "%s: row %i: col %i: %s token \"%.*s\"%s: ", \
-        __lexer->filename, \
-        __lexer->row + 1, \
-        __lexer->col - __lexer->token_len + 1, \
-        fus_lexer_token_type_msg(__lexer->token_type), \
-        __token_len, __lexer->token, __dots); \
-}
-
-#define FUS_LEXER_ERROR(LEXER) \
-    fprintf(stderr, "%s: LEXER ERROR: ", __func__); \
-    FUS_LEXER_INFO(LEXER, stderr)
-
 void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type){
     fprintf(file, "%.*s", lexer->token_len, lexer->token);
     if(print_type){
@@ -154,11 +137,23 @@ void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type){
     }
 }
 
+void fus_lexer_pinfo(fus_lexer_t *lexer, FILE *file){
+    int token_len = lexer->token_len;
+    const char *dots = "";
+    if(token_len > 10){token_len = 10; dots = "...";}
+    fprintf(file, "%s: row %i: col %i: %s token \"%.*s\"%s",
+        lexer->filename,
+        lexer->row + 1,
+        lexer->col - lexer->token_len + 1,
+        fus_lexer_token_type_msg(lexer->token_type),
+        token_len, lexer->token, dots);
+}
+
 void fus_lexer_perror(fus_lexer_t *lexer, const char *msg){
-    FUS_LEXER_INFO(lexer, stderr)
+    fus_lexer_pinfo(lexer, stderr);
     const char *errcode_msg = fus_lexer_errcode_msg(lexer->errcode);
-    if(msg)fprintf(stderr, "%s (%s)\n", msg, errcode_msg);
-    else fprintf(stderr, "%s\n", errcode_msg);
+    if(msg)fprintf(stderr, ": %s (%s)\n", msg, errcode_msg);
+    else fprintf(stderr, ": %s\n", errcode_msg);
 }
 
 
