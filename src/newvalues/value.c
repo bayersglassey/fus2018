@@ -3,6 +3,18 @@
 #include "includes.h"
 
 
+const char *fus_value_type_msg(fus_value_t value){
+    if(fus_value_is_int(value))return "int";
+    else if(fus_value_is_sym(value))return "sym";
+    else if(fus_value_is_null(value))return "null";
+    else if(fus_value_is_bool(value))return "bool";
+    else if(fus_value_is_arr(value))return "arr";
+    else if(fus_value_is_str(value))return "str";
+    else if(fus_value_is_obj(value))return "obj";
+    else if(fus_value_is_fun(value))return "fun";
+    else return "unknown";
+}
+
 const char *fus_err_code_msg(fus_err_code_t code){
     static const char *codes[FUS_ERRS] = {
         "Wrong type",
@@ -117,17 +129,17 @@ bool fus_value_is_true(fus_value_t value){return FUS_IS_TRUE(value);}
 bool fus_value_is_false(fus_value_t value){return FUS_IS_FALSE(value);}
 bool fus_value_is_bool(fus_value_t value){return FUS_IS_BOOL(value);}
 bool fus_value_is_err(fus_value_t value){return FUS_IS_ERR(value);}
-
 bool fus_value_is_arr(fus_value_t value){
     return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_ARR;
 }
-
 bool fus_value_is_str(fus_value_t value){
     return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_STR;
 }
-
 bool fus_value_is_obj(fus_value_t value){
     return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_OBJ;
+}
+bool fus_value_is_fun(fus_value_t value){
+    return FUS_IS_BOXED(value) && value.p->type == FUS_BOXED_FUN;
 }
 
 

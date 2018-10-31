@@ -65,6 +65,7 @@ typedef enum {
     FUS_ERRS
 } fus_err_code_t;
 
+const char *fus_value_type_msg(fus_value_t value);
 const char *fus_err_code_msg(fus_err_code_t code);
 
 
@@ -123,6 +124,7 @@ bool fus_value_is_err(fus_value_t value);
 bool fus_value_is_arr(fus_value_t value);
 bool fus_value_is_str(fus_value_t value);
 bool fus_value_is_obj(fus_value_t value);
+bool fus_value_is_fun(fus_value_t value);
 
 void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file);
 void fus_value_print(fus_vm_t *vm, fus_value_t value);
