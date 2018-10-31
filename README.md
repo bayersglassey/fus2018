@@ -119,6 +119,11 @@ Compile & Run Parser:
     # With ANSI colors!
     ./compile_newvalues parse -DFUS_COLOR && ./main fus/sql.fus
 
+Compile & Run "Runner":
+
+    # Parse and execute a fus file:
+    ./compile_newvalues run && ./main fus/test.fus
+
 
 ## UWSGI plugin
 
