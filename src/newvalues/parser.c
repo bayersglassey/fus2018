@@ -10,6 +10,12 @@
     fprintf(stderr, "...token was: %.*s\n", __token_len, __token); \
 }
 
+#define FUS_PARSER_LEXER_ERROR(PARSER, LEXER, MSG) \
+    fprintf(stderr, "%s: ", __func__); \
+    fus_lexer_pinfo((LEXER), stderr); \
+    fprintf(stderr, MSG);
+
+
 
 void fus_parser_init(fus_parser_t *parser, fus_vm_t *vm){
     parser->vm = vm;
@@ -43,8 +49,46 @@ void fus_parser_dump(fus_parser_t *parser, FILE *file){
 }
 
 
+int fus_parser_parse_lexer(fus_parser_t *parser, fus_lexer_t *lexer){
+    fus_vm_t *vm = parser->vm;
+    int arr_depth = 0;
+    while(fus_lexer_is_ok(lexer)){
+        fus_lexer_token_type_t type = lexer->token_type;
+        if(type == FUS_TOKEN_INT){
+            if(fus_parser_tokenparse_int(parser,
+                lexer->token, lexer->token_len) < 0)return -1;
+        }else if(type == FUS_TOKEN_SYM){
+            if(fus_parser_tokenparse_sym(parser,
+                lexer->token, lexer->token_len) < 0)return -1;
+        }else if(type == FUS_TOKEN_STR){
+            if(fus_parser_tokenparse_sym(parser,
+                lexer->token, lexer->token_len) < 0)return -1;
+        }else if(type == FUS_TOKEN_ARR_OPEN){
+            arr_depth++;
+            if(fus_parser_push_arr(parser) < 0)return -1;
+        }else if(type == FUS_TOKEN_ARR_CLOSE){
+            if(arr_depth <= 0){
+                FUS_PARSER_LEXER_ERROR(parser, lexer,
+                    "Too many close parens")
+                return -1;
+            }
+            arr_depth--;
+            if(fus_parser_pop_arr(parser) < 0)return -1;
+        }else{
+            /* TODO: Move error stuff from lexer onto parser */
+            FUS_PARSER_LEXER_ERROR(parser, lexer, "Can't parse token")
+            return -1;
+        }
+        fus_lexer_next(lexer);
+    }
+    /* Do we return anything special (or set a field) if lexer has a
+    split token?.. or do we rely on caller to check?
+    I think we rely on caller. */
+    return 0;
+}
 
-void fus_parser_push_arr(fus_parser_t *parser){
+
+int fus_parser_push_arr(fus_parser_t *parser){
     /* Push parser->arr onto arr_stack */
     /* TODO: This should all be taken care of by fus_array_push */
     fus_array_push(&parser->arr_stack);
@@ -54,8 +98,19 @@ void fus_parser_push_arr(fus_parser_t *parser){
 
     /* Initialize parser->arr to a fresh arr */
     fus_arr_init(parser->vm, &parser->arr);
+
+    return 0;
 }
-void fus_parser_pop_arr(fus_parser_t *parser){
+int fus_parser_pop_arr(fus_parser_t *parser){
+    if(parser->arr_stack.len <= 0){
+        /* TODO: Parser should have an errcode (like lexer).
+        If parser is not OK, its major methods (push/pop_arr,
+        push/pop_value) should be no-ops? */
+        fprintf(stderr, "%s: Tried to pop from empty array\n",
+            __func__);
+        return -1;
+    }
+
     /* Wrap parser->arr into an arr value */
     fus_value_t value_arr = fus_value_arr_from_arr(parser->vm, &parser->arr);
 
@@ -68,12 +123,17 @@ void fus_parser_pop_arr(fus_parser_t *parser){
 
     /* Push arr value onto parser->arr */
     fus_arr_push(parser->vm, &parser->arr, value_arr);
+
+    return 0;
 }
-void fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
+int fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
+    if(fus_value_is_err(value))return -1;
     fus_arr_push(parser->vm, &parser->arr, value);
+    return 0;
 }
-void fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
+int fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
     fus_arr_pop(parser->vm, &parser->arr, value_ptr);
+    return 0;
 }
 
 
@@ -82,15 +142,15 @@ void fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
     fus_value_t fus_value_stringparse_##T(fus_vm_t *vm, const char *token){ \
         return fus_value_tokenparse_##T(vm, token, strlen(token)); \
     } \
-    void fus_parser_stringparse_##T(fus_parser_t *parser, const char *token){ \
-        fus_parser_tokenparse_##T(parser, token, strlen(token)); \
+    int fus_parser_stringparse_##T(fus_parser_t *parser, const char *token){ \
+        return fus_parser_tokenparse_##T(parser, token, strlen(token)); \
     } \
-    void fus_parser_tokenparse_##T(fus_parser_t *parser, \
+    int fus_parser_tokenparse_##T(fus_parser_t *parser, \
         const char *token, int token_len \
     ){ \
         fus_value_t value = fus_value_tokenparse_##T(parser->vm, \
             token, token_len); \
-        fus_parser_push_value(parser, value); \
+        return fus_parser_push_value(parser, value); \
     }
 
 FUS_PARSER_DEFS(int)

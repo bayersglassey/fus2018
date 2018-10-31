@@ -278,8 +278,8 @@ void fus_printer_write_data(fus_printer_t *printer,
             fus_boxed_type_t type = p->type;
             if(type == FUS_BOXED_ARR){
                 fus_printer_write_text(printer, ":");
-                fus_printer_write_newline(printer);
                 printer->depth++;
+                fus_printer_write_newline(printer);
                 fus_printer_write_data(printer, vm, &p->data.a);
                 printer->depth--;
             }else if(type == FUS_BOXED_STR){

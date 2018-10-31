@@ -101,6 +101,12 @@
     /* Not sure if I want this macro in the core library */
 
 
+#define FUS_TEST_LEXER_TEXT \
+    "def test:\n" \
+    "    arr \"Thing \", 2, \": \", (obj 1 =.x 2 =.y), \"!\",\n" \
+    "    @format \"Thing 2: {x: 1, y: 2}!\" str_eq assert"
+
+
 
 void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Unboxed int/null/bool tests")
@@ -235,11 +241,6 @@ void run_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_lexer_t lexer;
     fus_lexer_init(&lexer, NULL);
-
-    #define FUS_TEST_LEXER_TEXT \
-        "def test:\n" \
-        "    arr \"Thing \", 2, \": \", (obj 1 =.x 2 =.y), \"!\",\n" \
-        "    @format \"Thing 2: {x: 1, y: 2}!\" str_eq assert"
 
     #define FUS_TEST_LEXER_FULL_LEX(LEXER) \
         while(fus_lexer_is_ok(&lexer))fus_lexer_next(LEXER);
@@ -550,6 +551,35 @@ void run_parser_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_END()
 }
 
+void run_parser_lexer_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Parser tests (with lexer)")
+
+    const char *chunk = FUS_TEST_LEXER_TEXT;
+
+    /* Set up lexer */
+    fus_lexer_t lexer;
+    fus_lexer_init(&lexer, NULL);
+    fus_lexer_load_chunk(&lexer, chunk, strlen(chunk) + 1);
+
+    /* Set up parser */
+    fus_parser_t parser;
+    fus_parser_init(&parser, vm);
+
+    {
+        fus_parser_parse_lexer(&parser, &lexer);
+        FUS_TEST(fus_lexer_is_done(&lexer))
+    }
+
+    /* Clean up parser */
+    fus_parser_dump(&parser, stdout);
+    fus_parser_cleanup(&parser);
+
+    /* Clean up lexer */
+    fus_lexer_cleanup(&lexer);
+
+    FUS_TESTS_END()
+}
+
 int run_tests(fus_vm_t *vm){
     /* Returns number of failures */
     int n_tests = 0;
@@ -565,6 +595,7 @@ int run_tests(fus_vm_t *vm){
     run_lexer_tests(vm, &n_tests, &n_fails);
     run_parser_tests_basic(vm, &n_tests, &n_fails);
     run_parser_tests_full(vm, &n_tests, &n_fails);
+    run_parser_lexer_tests(vm, &n_tests, &n_fails);
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
