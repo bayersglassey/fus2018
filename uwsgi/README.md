@@ -17,3 +17,7 @@ To see this in action, with uwsgi still running, open another terminal window an
 
     uwsgi/curl_test
 
+
+## Source Code
+
+It's in [src/newvalues/uwsgi](/src/newvalues/uwsgi).
