@@ -159,25 +159,39 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     /* Simulate "dup"ing vx2 by attaching it */
     fus_value_attach(vm, vx2);
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
+    fus_value_attach(vm, vx2);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 3)
 
-    /* Since vx2 now has refcount=2, if we push something onto it, it gets
-    split into old (pre-push, vx2) and new (post-push, vx3) versions, each
-    with refcount=1. */
+    /* Since vx2 now has refcount>1, if we push something onto it, it gets
+    split into old (pre-push, vx2) and new (post-push, vx3) versions */
     fus_value_t vx3 = vx2;
     fus_value_arr_push(vm, &vx3, fus_value_int(vm, 20));
     FUS_TEST(fus_value_is_arr(vx3))
     FUS_TEST(vx3.p != vx2.p)
 
-    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 2)
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
 
-    /* Make sure vx2 and vx3 have correct elements */
+    /* Since vx2 still has refcount>1, if we pop something from it, it gets
+    split into old (pre-pop, vx2) and new (post-pop, vx4) versions */
+    fus_value_t vx4 = vx2;
+    fus_value_t vpopped;
+    fus_value_arr_pop(vm, &vx4, &vpopped);
+    FUS_TEST(fus_value_is_arr(vx4))
+    FUS_TEST(vx4.p != vx3.p)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vpopped), 10)
+
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vx4), 1)
+
+    /* Make sure vx2, vx3, and v4 have correct elements */
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx2, 0)), 10)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx3)), 2)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 0)), 10)
     FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 1)), 20)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx4)), 0)
 
     /* Test printing an arr */
     fus_printer_t printer;
@@ -187,10 +201,12 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_printer_cleanup(&printer);
 
     /* Make sure detaching arrays frees them */
-    FUS_TEST_EQ_INT(vm->n_boxed, 2)
+    FUS_TEST_EQ_INT(vm->n_boxed, 3)
     fus_value_detach(vm, vx2);
-    FUS_TEST_EQ_INT(vm->n_boxed, 1)
+    FUS_TEST_EQ_INT(vm->n_boxed, 2)
     fus_value_detach(vm, vx3);
+    FUS_TEST_EQ_INT(vm->n_boxed, 1)
+    fus_value_detach(vm, vx4);
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     FUS_TESTS_END()
