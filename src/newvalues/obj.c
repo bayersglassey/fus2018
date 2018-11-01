@@ -11,6 +11,11 @@ void fus_obj_copy(fus_vm_t *vm, fus_obj_t *o, fus_obj_t *o2){
     /* Acts like obj_init for o */
     fus_array_copy(&o->keys, &o2->keys);
     fus_arr_copy(vm, &o->values, &o2->values);
+
+    /* Attach all values */
+    fus_value_t *values = FUS_ARR_VALUES(o2->values);
+    int values_len = o2->values.values.len;
+    for(int i = 0; i < values_len; i++)fus_value_attach(vm, values[i]);
 }
 
 void fus_obj_cleanup(fus_vm_t *vm, fus_obj_t *o){

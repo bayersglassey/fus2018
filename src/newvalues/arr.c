@@ -10,6 +10,11 @@ void fus_arr_init(fus_vm_t *vm, fus_arr_t *a){
 void fus_arr_copy(fus_vm_t *vm, fus_arr_t *a, fus_arr_t *a2){
     /* Acts like arr_init for a */
     fus_array_copy(&a->values, &a2->values);
+
+    /* Attach all values */
+    fus_value_t *values = FUS_ARR_VALUES(*a2);
+    int values_len = a2->values.len;
+    for(int i = 0; i < values_len; i++)fus_value_attach(vm, values[i]);
 }
 
 void fus_arr_cleanup(fus_vm_t *vm, fus_arr_t *a){
