@@ -83,6 +83,10 @@ fus_unboxed_t fus_value_int_decode(fus_value_t value){
 
 
 
+fus_value_t fus_value_null(fus_vm_t *vm){
+    return FUS_VALUE_NULL;
+}
+
 fus_value_t fus_value_bool(fus_vm_t *vm, bool b){
     return b? FUS_VALUE_TRUE: FUS_VALUE_FALSE;
 }

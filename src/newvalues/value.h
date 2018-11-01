@@ -103,6 +103,7 @@ int fus_value_sym_decode(fus_value_t value);
 fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i);
 fus_unboxed_t fus_value_int_decode(fus_value_t value);
 
+fus_value_t fus_value_null(fus_vm_t *vm);
 fus_value_t fus_value_bool(fus_vm_t *vm, bool b);
 bool fus_value_bool_decode(fus_value_t value);
 
