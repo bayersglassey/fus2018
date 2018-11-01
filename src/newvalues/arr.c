@@ -42,11 +42,11 @@ void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
     FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
 }
 
-void fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
+int fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
     /* Bounds check */
     if(a->values.len <= 0){
         *value_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
-        return;
+        return -1;
     }
 
     /* Get value from last array element */
@@ -54,6 +54,8 @@ void fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
 
     /* Resize array */
     fus_array_pop(&a->values);
+
+    return 0;
 }
 
 
@@ -164,7 +166,12 @@ void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Get arr and do the pop */
     fus_arr_t *a = &value_a.p->data.a;
-    fus_arr_pop(vm, a, value_ptr);
+    if(fus_arr_pop(vm, a, value_ptr) < 0){
+        fus_value_detach(vm, value_a);
+        *value_a_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+        /* fus_arr_pop already set *value_ptr to an err value */
+        return;
+    }
 
     /* Return */
     *value_a_ptr = value_a;

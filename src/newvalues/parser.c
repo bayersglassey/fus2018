@@ -131,8 +131,7 @@ int fus_parser_push_value(fus_parser_t *parser, fus_value_t value){
     return 0;
 }
 int fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
-    fus_arr_pop(parser->vm, &parser->arr, value_ptr);
-    return 0;
+    return fus_arr_pop(parser->vm, &parser->arr, value_ptr);
 }
 
 
