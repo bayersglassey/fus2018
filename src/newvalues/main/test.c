@@ -215,25 +215,57 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Arr tests (intermediate)")
 
-    fus_value_t vx = fus_value_arr(vm);
-    fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
-    fus_value_arr_push(vm, &vx, fus_value_int(vm, 20));
+    {
+        fus_value_t vx = fus_value_arr(vm);
+        fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
+        fus_value_arr_push(vm, &vx, fus_value_int(vm, 20));
 
-    /* Push one arr (vx) onto another arr (vy) */
-    fus_value_t vy = fus_value_arr(vm);
-    fus_value_arr_push(vm, &vy, vx);
+        /* Push one arr (vx) onto another arr (vy) */
+        fus_value_t vy = fus_value_arr(vm);
+        fus_value_arr_push(vm, &vy, vx);
 
-    /* Push a second copy of vx onto vy.
-    Pushing just transfers ownership, it doesn't increase refcount itself.
-    So we have to manually call attach on the pushee (vx). */
-    fus_value_arr_push(vm, &vy, vx);
-    fus_value_attach(vm, vx);
+        /* Push a second copy of vx onto vy.
+        Pushing just transfers ownership, it doesn't increase refcount itself.
+        So we have to manually call attach on the pushee (vx). */
+        fus_value_arr_push(vm, &vy, vx);
+        fus_value_attach(vm, vx);
 
-    /* Make sure detaching the containing arr correctly frees up the
-    contained one too */
-    FUS_TEST_EQ_INT(vm->n_boxed, 2)
-    fus_value_detach(vm, vy);
-    FUS_TEST_EQ_INT(vm->n_boxed, 0)
+        /* Make sure detaching the containing arr correctly frees up the
+        contained one too */
+        FUS_TEST_EQ_INT(vm->n_boxed, 2)
+        fus_value_detach(vm, vy);
+        FUS_TEST_EQ_INT(vm->n_boxed, 0)
+    }
+
+    {
+        fus_value_t vx = fus_value_arr(vm);
+        fus_value_arr_push(vm, &vx, fus_value_int(vm, 10));
+        fus_value_arr_push(vm, &vx, fus_value_int(vm, 20));
+
+        /* Push one arr (vx) onto another arr (vy) */
+        fus_value_t vy = fus_value_arr(vm);
+        fus_value_arr_push(vm, &vy, vx);
+
+        /* Push a second copy of vx onto vy. */
+        fus_value_arr_push(vm, &vy, vx);
+        fus_value_attach(vm, vx);
+
+        /* Get a "dup" of vy */
+        fus_value_t vy2 = vy;
+        fus_value_attach(vm, vy);
+
+        /* Pop a copy of vx from vy2. */
+        fus_value_t vx_popped;
+        fus_value_arr_pop(vm, &vy, &vx_popped);
+
+        FUS_TEST_EQ_INT(vm->n_boxed, 3)
+        fus_value_detach(vm, vy);
+        FUS_TEST_EQ_INT(vm->n_boxed, 2)
+        fus_value_detach(vm, vy2);
+        FUS_TEST_EQ_INT(vm->n_boxed, 1)
+        fus_value_detach(vm, vx_popped);
+        FUS_TEST_EQ_INT(vm->n_boxed, 0)
+    }
 
     FUS_TESTS_END()
 }

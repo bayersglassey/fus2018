@@ -7,7 +7,15 @@
 
 -999 drop
 
-arr 1, 2, 3,
-dup len swap
+# The following shows crappy error "{Fus err #0: Wrong type}fus_exit: status=1"
+#     arr 1, 2, (3, 4,),
 
-obj
+arr 1, 2, (arr 3, 4,),
+dup len swap
+dup
+dup pop   # Causes core dump
+
+
+obj 10 =.x 20 =.y 30 =.x obj =.nested
+dup .nested "I was .nested" =.msg
+

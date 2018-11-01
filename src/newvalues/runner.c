@@ -97,22 +97,32 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_arr_pop(vm, &state->stack, &value_a);
                 fus_value_arr_push(vm, &value_a, value);
                 fus_arr_push(vm, &state->stack, value_a);
+            }else if(!strcmp(token, "pop")){
+                fus_value_t value_a;
+                fus_value_t value;
+                fus_arr_pop(vm, &state->stack, &value_a);
+                fus_value_arr_pop(vm, &value_a, &value);
+                fus_arr_push(vm, &state->stack, value_a);
+                fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "=.")){
-
-                /* I don't think we want to deal with split tokens here...
-                Let's definitely wrap up the tokens in an arr, and make that
-                a code_t or whatever, and have this function iterate over one
-                of those, so it's guaranteed to have all its stuff, you know? */
-                fprintf(stderr, "%s: TODO!\n", __func__);
-                exit(EXIT_FAILURE);
-
-                int sym_i = -1; /* TODO */
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_o;
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_arr_pop(vm, &state->stack, &value_o);
                 fus_value_obj_set(vm, &value_o, sym_i, value);
                 fus_arr_push(vm, &state->stack, value_o);
+            }else if(!strcmp(token, ".")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value_o;
+                fus_arr_pop(vm, &state->stack, &value_o);
+                fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
+                fus_arr_push(vm, &state->stack, value);
+                fus_value_detach(vm, value_o);
             }else if(!strcmp(token, "len")){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
@@ -136,6 +146,21 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);
                 fus_value_detach(vm, value);
+            }else if(!strcmp(token, "nip")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(vm, &state->stack, &value2);
+                fus_arr_pop(vm, &state->stack, &value1);
+                fus_value_detach(vm, value1);
+                fus_value_detach(vm, value2);
+            }else if(!strcmp(token, "over")){
+                fus_value_t value1;
+                fus_value_t value2;
+                fus_arr_pop(vm, &state->stack, &value2);
+                fus_arr_pop(vm, &state->stack, &value1);
+                fus_arr_push(vm, &state->stack, value1);
+                fus_arr_push(vm, &state->stack, value2);
+                fus_arr_push(vm, &state->stack, value1);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
