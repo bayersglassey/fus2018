@@ -56,6 +56,7 @@ void fus_boxed_cleanup(fus_boxed_t *p){
         fprintf(stderr, "%s: WARNING: "
             "Cleanup of value with nonzero refcount: ", __func__);
         fus_boxed_dump(p, stderr);
+        FUS_BACKTRACE
         fflush(stderr);
     }
     fus_boxed_type_t type = p->type;

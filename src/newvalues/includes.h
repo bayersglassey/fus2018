@@ -7,6 +7,7 @@
 #include <string.h>
 #include <limits.h>
 
+#include "backtrace.h"
 #include "core.h"
 #include "class.h"
 #include "array.h"

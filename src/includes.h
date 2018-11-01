@@ -8,10 +8,10 @@
 
 #ifdef FUS_ENABLE_BACKTRACE
     #include <execinfo.h>
-    void btrace();
-    #define BACKTRACE btrace();
+    void fus_backtrace();
+    #define FUS_BACKTRACE fus_backtrace();
 #else
-    #define BACKTRACE ;
+    #define FUS_BACKTRACE ;
 #endif
 
 #ifdef FUS_DEBUG_MALLOC

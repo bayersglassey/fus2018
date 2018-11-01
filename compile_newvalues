@@ -28,6 +28,8 @@ else
     shift
 fi
 
+CFLAGS+=" -rdynamic -DFUS_ENABLE_BACKTRACE" # for backtrace_symbols
+
 gcc $CFLAGS \
     -o "$OUTFILE" \
     src/newvalues/*.c \

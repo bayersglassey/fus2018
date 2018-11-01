@@ -5,7 +5,7 @@
 
 #define FUS_MAX_BACKTRACE_FRAMES 128
 
-void btrace(){
+void fus_backtrace(){
     void* callstack[FUS_MAX_BACKTRACE_FRAMES];
     int frames = backtrace(callstack, FUS_MAX_BACKTRACE_FRAMES);
     char** strs = backtrace_symbols(callstack, frames);

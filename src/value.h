@@ -67,7 +67,7 @@ fus_type_t fus_type_from_c(char c);
         printf(">>> "); \
         fus_##T##_print(t, NULL, stdout, 0, 0); \
         printf(" refcount=%i " txt "\n", t->refcount); \
-        BACKTRACE \
+        FUS_BACKTRACE \
     }
 #else
     #define FUS_ATTACH_DEBUG_PRINT(T, t, txt) ;
@@ -92,7 +92,7 @@ fus_type_t fus_type_from_c(char c);
                 fprintf(stderr, #T " with negative refcount: "); \
                 fus_##T##_print(t, NULL, stderr, 0, 0); \
                 fprintf(stderr, "\n"); \
-                BACKTRACE \
+                FUS_BACKTRACE \
             } \
             fus_##T##_cleanup(t); \
             free(t); \
