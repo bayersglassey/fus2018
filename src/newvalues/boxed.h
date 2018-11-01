@@ -32,6 +32,11 @@ struct fus_boxed {
         fus_str_t s;
         fus_fun_t f;
     } data;
+
+#ifdef FUS_ENABLE_BOXED_LLIST
+    fus_boxed_t *prev;
+    fus_boxed_t *next;
+#endif
 };
 
 

@@ -28,6 +28,11 @@ struct fus_vm {
     fus_symtable_t *symtable;
     int n_boxed;
 
+#ifdef FUS_ENABLE_BOXED_LLIST
+    /* Linked list of all boxed values, for debugging */
+    fus_boxed_t *boxed_llist;
+#endif
+
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)
 };

@@ -29,6 +29,7 @@ else
 fi
 
 CFLAGS+=" -rdynamic -DFUS_ENABLE_BACKTRACE" # for backtrace_symbols
+CFLAGS+=" -DFUS_ENABLE_BOXED_LLIST"
 
 gcc $CFLAGS \
     -o "$OUTFILE" \

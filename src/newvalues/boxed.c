@@ -31,6 +31,14 @@ void fus_boxed_init(fus_boxed_t *p, fus_vm_t *vm,
     p->type = type;
     p->refcount = 1;
     vm->n_boxed++;
+
+#ifdef FUS_ENABLE_BOXED_LLIST
+    /* Hook p up to vm's linked list of boxed_t */
+    p->next = vm->boxed_llist;
+    if(p->next)p->next->prev = p;
+    vm->boxed_llist = p;
+#endif
+
     /*
     if(type == FUS_BOXED_ARR){
         fus_arr_t *a = &p->data.a;
@@ -59,9 +67,20 @@ void fus_boxed_cleanup(fus_boxed_t *p){
         FUS_BACKTRACE
         fflush(stderr);
     }
-    fus_boxed_type_t type = p->type;
+
     fus_vm_t *vm = p->vm;
     vm->n_boxed--;
+
+#ifdef FUS_ENABLE_BOXED_LLIST
+    /* Unhook p from vm's linked list of boxed_t */
+    fus_boxed_t *prev = p->prev;
+    fus_boxed_t *next = p->next;
+    if(prev)prev->next = next;
+    if(next)next->prev = prev;
+    if(vm->boxed_llist == p)vm->boxed_llist = next;
+#endif
+
+    fus_boxed_type_t type = p->type;
     if(type == FUS_BOXED_ARR){
         fus_arr_t *a = &p->data.a;
         fus_arr_cleanup(vm, a);
