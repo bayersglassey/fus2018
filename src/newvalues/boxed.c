@@ -34,6 +34,7 @@ void fus_boxed_init(fus_boxed_t *p, fus_vm_t *vm,
 
 #ifdef FUS_ENABLE_BOXED_LLIST
     /* Hook p up to vm's linked list of boxed_t */
+    p->prev = NULL;
     p->next = vm->boxed_llist;
     if(p->next)p->next->prev = p;
     vm->boxed_llist = p;
