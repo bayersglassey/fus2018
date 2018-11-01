@@ -13,9 +13,15 @@
 arr 1, 2, (arr 3, 4,),
 dup len swap
 dup
-dup pop   # Causes core dump
+dup pop
 
 
 obj 10 =.x 20 =.y 30 =.x obj =.nested
-dup .nested "I was .nested" =.msg
+dup .nested
+    "I was .nested" =.msg
+    "Ich bin .nested" =.msg
+
+"And then:"
+obj arr 10, =.x arr 20, =.y
+    ..x
 

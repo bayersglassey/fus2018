@@ -121,8 +121,20 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_t value_o;
                 fus_arr_pop(vm, &state->stack, &value_o);
                 fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
+                fus_value_attach(vm, value);
                 fus_arr_push(vm, &state->stack, value);
                 fus_value_detach(vm, value_o);
+            }else if(!strcmp(token, "..")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value_o;
+                fus_arr_pop(vm, &state->stack, &value_o);
+                fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
+                fus_value_attach(vm, value);
+                fus_value_obj_set(vm, &value_o, sym_i, fus_value_null(vm));
+                fus_arr_push(vm, &state->stack, value_o);
+                fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "len")){
                 fus_value_t value;
                 fus_arr_pop(vm, &state->stack, &value);

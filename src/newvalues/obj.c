@@ -38,7 +38,6 @@ fus_value_t fus_obj_get(fus_vm_t *vm, fus_obj_t *o, int sym_i){
     if(i < 0)return fus_value_err(vm, FUS_ERR_MISSING_KEY);
     fus_value_t *values = FUS_ARR_VALUES(o->values);
     fus_value_t value = values[i];
-    fus_value_attach(vm, value);
     return value;
 }
 
@@ -100,7 +99,6 @@ fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o, int sym_i){
     if(!fus_value_is_obj(value_o))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_obj_t *o = &value_o.p->data.o;
     fus_value_t value = fus_obj_get(vm, o, sym_i);
-    fus_value_attach(vm, value);
     return value;
 }
 
