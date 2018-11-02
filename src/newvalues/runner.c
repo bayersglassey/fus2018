@@ -225,6 +225,28 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_arr_push(vm, &state->stack, value2);
                 fus_arr_push(vm, &state->stack, value1);
                 fus_value_attach(vm, value1);
+            }else if(!strcmp(token, "='")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                fus_obj_set(vm, &state->vars, sym_i, value);
+            }else if(!strcmp(token, "'")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
+                fus_value_attach(vm, value);
+                fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "''")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
+                fus_value_attach(vm, value);
+                fus_obj_set(vm, &state->vars, sym_i, fus_value_null(vm));
+                fus_arr_push(vm, &state->stack, value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
