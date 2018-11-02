@@ -25,3 +25,7 @@ dup .nested
 obj arr 10, =.x arr 20, =.y
     ..x
 
+"Arr get:"
+arr "A", "B", "C",
+dup 1 .$
+over 1 ..$

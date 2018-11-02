@@ -131,6 +131,30 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_arr_pop(vm, &value_a, &value);
                 fus_arr_push(vm, &state->stack, value_a);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, ".$")){
+                fus_value_t value_a;
+                fus_value_t value_i;
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_a)
+                fus_value_t value = fus_value_arr_get(vm, value_a, value_i);
+                fus_value_attach(vm, value);
+                fus_arr_push(vm, &state->stack, value);
+                fus_value_detach(vm, value_a);
+                fus_value_detach(vm, value_i);
+            }else if(!strcmp(token, "..$")){
+                fus_value_t value_a;
+                fus_value_t value_i;
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_a)
+
+                /* fus_value_arr_rip ...? */
+                fus_value_t value = fus_value_arr_get(vm, value_a, value_i);
+                fus_value_attach(vm, value);
+                fus_value_arr_set(vm, &value_a, value_i, fus_value_null(vm));
+
+                fus_arr_push(vm, &state->stack, value_a);
+                fus_arr_push(vm, &state->stack, value);
+                fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "=.")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT(sym)
