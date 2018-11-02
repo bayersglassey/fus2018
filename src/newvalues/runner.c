@@ -15,6 +15,28 @@ void fus_state_cleanup(fus_state_t *state){
     fus_obj_cleanup(state->vm, &state->vars);
 }
 
+void fus_state_dump(fus_state_t *state, FILE *file){
+    fus_vm_t *vm = state->vm;
+
+    fus_printer_t printer;
+    fus_printer_init(&printer);
+    fus_printer_set_file(&printer, file);
+    printer.depth = 2;
+
+    fprintf(file, "STATE:\n");
+    fprintf(file, "  vars:\n");
+    fus_printer_write_tabs(&printer);
+    fus_printer_print_obj(&printer, vm, &state->vars);
+    fprintf(file, "\n");
+
+    fprintf(file, "  stack:\n");
+    fus_printer_write_tabs(&printer);
+    fus_printer_print_arr(&printer, vm, &state->stack);
+    fprintf(file, "\n");
+
+    fus_printer_cleanup(&printer);
+}
+
 
 int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
     int status = -1;

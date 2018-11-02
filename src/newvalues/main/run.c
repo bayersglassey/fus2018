@@ -13,8 +13,7 @@ static int run(fus_t *fus, const char *filename, const char *text){
 
     fus_state_t *state = &fus->state;
     if(fus_state_exec_lexer(state, lexer) < 0)return EXIT_FAILURE;
-    fus_printer_print_arr(&fus->printer, &fus->vm, &state->stack);
-    printf("\n");
+    fus_state_dump(&fus->state, stderr);
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
