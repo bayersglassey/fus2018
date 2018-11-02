@@ -58,14 +58,3 @@ HAVE A LOOK AT THIS LEXER PROBLEM:
     ./compile_newvalues parse && ./main fus/lexer_problem.fus
 ...ADD A TEST FOR IT.
 
-
-Nov 1, 2018:
-------------
-
-"compile_newvalues lib" is a hack...
-Proper thing to do is copy includes.h to /usr/include/fus and libfus.so to /usr/lib.
-Then geom2018 can do #include <fus/includes.h> and -lfus!
-Gotta be a superuser eh!
-Shall we make a tiny RPM for it???
-How about "make install"? ("compile_newvalues lib install"... uhh)
-

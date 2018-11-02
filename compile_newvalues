@@ -21,15 +21,26 @@ shift
 
 MAIN_C="src/newvalues/main/$MAIN.c"
 CFLAGS="-g -std=c99 -Wall -Werror -Wno-unused"
+CFILES="src/newvalues/*.c"
 OUTFILE="main"
 
 if [ "$MAIN" = "lib" ]
 then
     CFLAGS+=" -fPIC --shared"
     OUTFILE="libfus.so"
+    >&2 echo "Compiling $OUTFILE..."
+    >&2 echo "To install, try: sudo compile_newvalues lib_install"
+elif [ "$MAIN" = "lib_install" ]
+then
+    OUTFILE="libfus.so"
+    cp "$OUTFILE" /usr/lib/
+    mkdir -p /usr/include/fus
+    cp src/newvalues/*.h /usr/include/fus/
+    exit 0
 elif [ "$MAIN" = "libtest" ]
 then
-    CFLAGS+=" -L. -lfus"
+    CFLAGS+=" -lfus"
+    CFILES=""
 elif [ "$MAIN" = "uwsgi" ]
 then
     CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
@@ -45,31 +56,6 @@ CFLAGS+=" -DFUS_ENABLE_BOXED_LLIST"
 
 gcc $CFLAGS \
     -o "$OUTFILE" \
-    src/newvalues/*.c \
+    $CFILES \
     "$MAIN_C" \
     $@
-
-if [ "$MAIN" = "lib" ]
-then
-    cp "$OUTFILE" /usr/lib/fus/
-
-    # In order for this to work, on Fedora, you can do the following once:
-    #
-    #     # Set up a dir in /usr/lib owned by current user:
-    #     mkdir __libfus
-    #     sudo mv __libfus /usr/lib/fus
-    #
-    #     # Get ld to search our dir in /usr/lib:
-    #     echo /usr/lib/fus >__libfus.conf
-    #     sudo mv __libfus.conf /etc/ld.so.conf.d/fus.conf
-    #
-    #     # Generate our shared lib and copy to our dir in /usr/lib:
-    #     ./compile_newvalues lib
-    #
-    #     # Refresh ld cache:
-    #     sudo rm /etc/ld.so.cache
-    #     sudo ldconfig
-    #
-    # ...now in order to update the shared lib, just do:
-    #     ./compile_newvalues lib
-fi
