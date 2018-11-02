@@ -1,15 +1,15 @@
 
 
-sig(x y -> z) def min:
+def min of(x y -> z):
     ='y ='x
     'x 'y < ifelse('x)('y)
 
-sig(x y -> z) def max:
+def max of(x y -> z):
     ='y ='x
     'x 'y > ifelse('x)('y)
 
 
-sig(->) def test:
+def test of(->):
     1 2 @min 1 == assert
     1 2 @max 2 == assert
 

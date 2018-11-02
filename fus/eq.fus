@@ -1,9 +1,5 @@
 
-defsig eq: x y -> bool
-
-
-sig eq
-def eq:
+def eq of(x y -> bool):
     ='y ='x
     'x typeof 'y typeof sym_eq not if: F return
 
@@ -14,40 +10,36 @@ def eq:
         fun(str_eq) =.str
         fun(sym_eq) =.sym
         fun("Can't compare functions!" error) =.fun
-        fun("Can't compare generators!" error) =.gen
         &obj_eq =.obj
         &arr_eq =.arr
     'x typeof get ='f
 
-    'x 'y 'f call eq
+    'x 'y 'f call(x y -> bool)
 
 
-sig eq
-def obj_eq:
+def obj_eq of(x y -> bool):
     ='y ='x
     ('x keys) ('y keys) @arr_eq not if: F return
 
     T ='result
-    'x keys @arr_togen for: ='key
+    'x keys arr_for: ='key
         ('x 'key get) ('y 'key get) @eq not if: F ='result break
 
     'result
 
 
-sig eq
-def arr_eq:
+def arr_eq of(x y -> bool):
     ='ys ='xs
     ('xs len) ('ys len) != if: F return
 
     T ='result
-    'xs len @int_togen for: ='i
+    'xs len int_for: ='i
         ('xs 'i .$) ('ys 'i .$) @eq not if: F ='result break
 
     'result
 
 
-sig(->)
-def test:
+def test of(->):
     arr
         null,
         1,

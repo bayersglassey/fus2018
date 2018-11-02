@@ -1,14 +1,12 @@
 
 module Prend:
 
-    def sig: -> prend
-    new:
+    def new of(-> prend):
         obj
             arr =.prismels
             arr =.shapes
 
-    def sig: prend prismel name -> prend
-    add_prismel:
+    def add_prismel of(prend prismel name -> prend):
         ='name ='prismel
         ''prismel 'name =.name ='prismel
         ..prismels 'prismel, =.prismels
@@ -20,14 +18,12 @@ module Prismel:
     def N_ROT: 12
     def N_IMAGES: @N_FLIP @N_ROT *
 
-    def sig: -> prismel
-    new:
+    def new of(-> prismel):
         obj
             null =.name
             arr @N_IMAGES repeat =.images
 
-    def sig: data -> prismel
-    parse:
+    def parse of(data -> prismel):
         ='data
         @new ='prismel
 
@@ -37,12 +33,10 @@ module Prismel:
         len 0 == assert
 
         'images_data len @N_IMAGES == assert
-        'images_data len @int_togen for ~image_loop:
-            ='image_i
+        'images_data len int_for ~image_loop: ='image_i
             'images_data 'image_i .$ ='image_data
 
-            'image_data len @int_togen for ~line_loop:
-                ='line_i
+            'image_data len int_for ~line_loop: ='line_i
                 'image_data 'line_i .$ ='line_data
 
                 'line_data is_int ifelse:
@@ -51,9 +45,7 @@ module Prismel:
                     'other_image_i 'image_i < assert
                     'images_data 'other_image_i .$ ='other_image_data
                     ''images_data 'other_image_data 'image_i =.$ ='images_data
-                    drop loop ~image_loop
-                        # NOTE: the "drop" is for the generator for ~line_loop
-                        # Should we... build that into the "for" magic?..
+                    loop ~image_loop
                 :
                     'line_data
                         lpop is_int assert

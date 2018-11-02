@@ -172,17 +172,13 @@ stack len 0 == assert
 
 "Modules & Functions" p
 module ModuleTest:
-    defsig F: -> i
-
-    sig F def f: 2
-
+    def f of(-> i): 2
     def test(-> bool):
-        sig F fun: 1
-        ='f
+        fun(1) ='f
 
         @f 2 == assert
-        'f call F 1 == assert
-        &f call F 2 == assert
+        'f call(-> i) 1 == assert
+        &f call(-> i) 2 == assert
 
         T
 @(ModuleTest test) assert

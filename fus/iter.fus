@@ -1,25 +1,21 @@
 
 
-defsig iter: x -> gen
-
-
-
-sig iter def iter:
+def iter of(x -> gen):
     obj
         &iter_int =.int
         &iter_arr =.arr
         fun(keys &iter_arr) =.obj
         fun() =.gen
-    over typeof get call iter
+    over typeof get call(x -> gen)
 
-sig iter def iter_int:
+def iter_int of(x -> gen):
     gen takes(n):
         0 ='i
         do:
             'i 'n < while
             'i out loop
 
-sig iter def iter_arr:
+def iter_arr of(x -> gen):
     gen takes(a):
         ='a
         0 ='i
@@ -27,7 +23,7 @@ sig iter def iter_arr:
             'i 'a len < while
             'a 'i .$ out loop
 
-sig(->) def test:
+sig(->) def test of(x -> gen):
     3 @iter
         >> 0 == assert
         >> 1 == assert

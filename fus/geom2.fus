@@ -27,13 +27,13 @@ module Geom:
 
         def vec_nmul:
             ='n ='v
-            'v len int_togen for: ='i
+            'v len int_for: ='i
                 ''v 'i ..$ 'n * 'i =.$ ='v
             ''v
 
         def vec_rot:
             ='n ='v
-            'n int_togen for: ='i
+            'n int_for: ='i
                 ''v
                     dup .0 ='a
                     dup .1 ='b
@@ -48,19 +48,19 @@ module Geom:
 
         def vec_add:
             ='w ='v
-            'v len int_togen for: ='i
+            'v len int_for: ='i
                 ''v 'i ..$ 'w 'i .$ + 'i =.$ ='v
             ''v
 
         def vec_sub:
             ='w ='v
-            'v len int_togen for: ='i
+            'v len int_for: ='i
                 ''v 'i ..$ 'w 'i .$ - 'i =.$ ='v
             ''v
 
         def vec_eq:
             ='w ='v
-            'v len int_togen for: ='i
+            'v len int_for: ='i
                 'v 'i .$ 'w 'i .$ != if: F return
             T
 
