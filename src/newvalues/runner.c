@@ -38,14 +38,16 @@ void fus_state_dump(fus_state_t *state, FILE *file){
 }
 
 
-int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer){
+int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer,
+    bool dump_parser
+){
     int status = -1;
 
     fus_parser_t parser;
     fus_parser_init(&parser, state->vm);
 
     if(fus_parser_parse_lexer(&parser, lexer) < 0)goto err;
-    fus_parser_dump(&parser, stderr);
+    if(dump_parser)fus_parser_dump(&parser, stderr);
     if(fus_state_exec_data(state, &parser.arr) < 0)goto err;
 
     status = 0; /* OK! */

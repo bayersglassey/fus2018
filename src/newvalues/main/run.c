@@ -12,7 +12,7 @@ static int run(fus_t *fus, const char *filename, const char *text){
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
 
     fus_state_t *state = &fus->state;
-    if(fus_state_exec_lexer(state, lexer) < 0)return EXIT_FAILURE;
+    if(fus_state_exec_lexer(state, lexer, true) < 0)return EXIT_FAILURE;
     fus_state_dump(&fus->state, stderr);
 
     if(!fus_lexer_is_done(lexer)){
