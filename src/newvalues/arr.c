@@ -32,6 +32,18 @@ fus_value_t fus_arr_get(fus_vm_t *vm, fus_arr_t *a, int i){
     return value;
 }
 
+int fus_arr_set(fus_vm_t *vm, fus_arr_t *a, int i, fus_value_t value){
+    /* Bounds check */
+    if(i < 0 || i >= a->values.len)return -1;
+
+    /* Get old element, detach it, replace it with new one */
+    fus_value_t *value_ptr = &FUS_ARR_VALUES(*a)[i];
+    fus_value_detach(vm, *value_ptr);
+    *value_ptr = value;
+
+    return 0;
+}
+
 void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
     /* Transfers ownership of value */
 
@@ -108,15 +120,56 @@ fus_value_t fus_value_arr_get(fus_vm_t *vm, fus_value_t value_a,
 }
 
 fus_value_t fus_value_arr_get_i(fus_vm_t *vm, fus_value_t value_a, int i){
-    /* Return element i of value_a. Increases element's refcount. */
+    /* Return element i of value_a. */
     if(!fus_value_is_arr(value_a))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_arr_t *a = &value_a.p->data.a;
     if(i < 0 || i >= fus_arr_len(vm, a)){
         return fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
     }
     fus_value_t value = fus_arr_get(vm, a, i);
-    fus_value_attach(vm, value);
     return value;
+}
+
+void fus_value_arr_set(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value_i, fus_value_t value
+){
+    fus_value_arr_set_i(vm, value_a_ptr, fus_value_int_decode(value_i),
+        value);
+}
+
+void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a_ptr, int i,
+    fus_value_t value
+){
+    /* Represents a transfer of ownership of value to value_a.
+    So refcounts of value and value_a are unchanged
+    (Except in case of error, when they are both decremented) */
+
+    /* Typecheck */
+    fus_value_t value_a = *value_a_ptr;
+    if(!fus_value_is_arr(value_a)){
+        fus_value_detach(vm, value_a);
+        fus_value_detach(vm, value);
+        *value_a_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Get arr */
+    fus_arr_t *a = &value_a.p->data.a;
+
+    /* Bounds check */
+    if(i < 0 || i >= fus_arr_len(vm, a)){
+        fus_value_detach(vm, value_a);
+        fus_value_detach(vm, value);
+        *value_a_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_arr_mkunique(&value_a.p);
+
+    /* Set the element and return */
+    fus_arr_set(vm, a, i, value);
+    *value_a_ptr = value_a;
 }
 
 void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,

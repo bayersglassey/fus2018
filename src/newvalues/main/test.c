@@ -63,7 +63,7 @@
 #define FUS_TEST_NE_INT(X, Y) \
     FUS_TEST_NE(#X, #Y, X, Y, int, "%i")
 #define FUS_TEST_EQ_PTR(X, Y) \
-    FUS_TEST_EQ(#X, #Y, (void*)(X), (void*)(Y), int, "%p")
+    FUS_TEST_EQ(#X, #Y, (void*)(X), (void*)(Y), void*, "%p")
 #define FUS_TEST_EQ_UNBOXED(X, Y) \
     FUS_TEST_EQ(#X, #Y, X, Y, fus_unboxed_t, "%li")
 #define FUS_TEST_NE_UNBOXED(X, Y) \
@@ -266,6 +266,35 @@ void run_arr_tests_medium(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
         fus_value_detach(vm, vx_popped);
         FUS_TEST_EQ_INT(vm->n_boxed, 0)
     }
+
+    FUS_TESTS_END()
+}
+
+void run_arr_tests_uhhh(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
+    FUS_TESTS_BEGIN("Arr tests (...also intermediate?)")
+
+    /* Create 2 arrs, push 3 copies of one (vpushed) onto the other (va) */
+    fus_value_t va = fus_value_arr(vm);
+    fus_value_t vpushed = fus_value_arr(vm);
+    fus_value_arr_push(vm, &va, vpushed);
+    fus_value_arr_push(vm, &va, vpushed);
+    fus_value_arr_push(vm, &va, vpushed);
+    fus_value_attach(vm, vpushed);
+    fus_value_attach(vm, vpushed);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vpushed), 3)
+
+    /* Put a new arr (vput) into index 1 of va */
+    fus_value_t vput = fus_value_arr(vm);
+    fus_value_arr_set_i(vm, &va, 1, vput);
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vput), 1)
+    FUS_TEST_EQ_INT(FUS_REFCOUNT(vpushed), 2)
+
+    /* Get vput back from index 1 of va */
+    fus_value_t vgot = fus_value_arr_get_i(vm, va, 1);
+    FUS_TEST_EQ_PTR(vput.p, vgot.p)
+
+    fus_value_detach(vm, va);
+    FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
     FUS_TESTS_END()
 }
@@ -636,6 +665,8 @@ int run_tests(fus_vm_t *vm){
     run_unboxed_tests(vm, &n_tests, &n_fails);
     run_arr_tests_basic(vm, &n_tests, &n_fails);
     run_arr_tests_medium(vm, &n_tests, &n_fails);
+    run_arr_tests_uhhh(vm, &n_tests, &n_fails);
+    /*
     run_str_tests_basic(vm, &n_tests, &n_fails);
     run_symtable_tests_basic(vm->core, &n_tests, &n_fails);
     run_symtable_tests_full(vm, &n_tests, &n_fails);
@@ -644,6 +675,7 @@ int run_tests(fus_vm_t *vm){
     run_parser_tests_basic(vm, &n_tests, &n_fails);
     run_parser_tests_full(vm, &n_tests, &n_fails);
     run_parser_lexer_tests(vm, &n_tests, &n_fails);
+    */
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
