@@ -1,4 +1,6 @@
 
+set -e
+
 if [ -z "$1" ]
 then
     echo "Usage (pick one):"
@@ -14,18 +16,28 @@ then
     exit 1
 fi
 
+MAIN="$1"
+shift
+
+MAIN_C="src/newvalues/main/$MAIN.c"
 CFLAGS="-g -std=c99 -Wall -Werror -Wno-unused"
 OUTFILE="main"
 
-if [ "$1" = "uwsgi" ]
+if [ "$MAIN" = "lib" ]
 then
-    shift
-    MAIN_C="src/newvalues/uwsgi/fus_plugin.c"
+    CFLAGS+=" -fPIC --shared"
+    OUTFILE="libfus.so"
+elif [ "$MAIN" = "libtest" ]
+then
+    CFLAGS+=" -L. -lfus"
+elif [ "$MAIN" = "uwsgi" ]
+then
     CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
     OUTFILE="fus_plugin.so"
-else
-    MAIN_C="src/newvalues/main/$1.c"
-    shift
+elif [ "$MAIN" = "uwsgi_fuslib" ]
+then
+    CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
+    OUTFILE="fus_plugin.so"
 fi
 
 CFLAGS+=" -rdynamic -DFUS_ENABLE_BACKTRACE" # for backtrace_symbols
@@ -36,3 +48,28 @@ gcc $CFLAGS \
     src/newvalues/*.c \
     "$MAIN_C" \
     $@
+
+if [ "$MAIN" = "lib" ]
+then
+    cp "$OUTFILE" /usr/lib/fus/
+
+    # In order for this to work, on Fedora, you can do the following once:
+    #
+    #     # Set up a dir in /usr/lib owned by current user:
+    #     mkdir __libfus
+    #     sudo mv __libfus /usr/lib/fus
+    #
+    #     # Get ld to search our dir in /usr/lib:
+    #     echo /usr/lib/fus >__libfus.conf
+    #     sudo mv __libfus.conf /etc/ld.so.conf.d/fus.conf
+    #
+    #     # Generate our shared lib and copy to our dir in /usr/lib:
+    #     ./compile_newvalues lib
+    #
+    #     # Refresh ld cache:
+    #     sudo rm /etc/ld.so.cache
+    #     sudo ldconfig
+    #
+    # ...now in order to update the shared lib, just do:
+    #     ./compile_newvalues lib
+fi

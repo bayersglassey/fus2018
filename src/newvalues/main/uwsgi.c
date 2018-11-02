@@ -1,5 +1,11 @@
 
-#include "uwsgi.h"
+/*
+    Loosely based off of the official Lua plugin for UWSGI:
+    https://github.com/unbit/uwsgi/blob/master/plugins/lua/lua_plugin.c
+*/
+
+
+#include "../uwsgi/uwsgi.h"
 #include "../includes.h"
 
 

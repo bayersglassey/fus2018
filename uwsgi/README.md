@@ -20,4 +20,4 @@ To see this in action, with uwsgi still running, open another terminal window an
 
 ## Source Code
 
-It's in [src/newvalues/uwsgi](/src/newvalues/uwsgi).
+See [src/newvalues/main/uwsgi.c](src/newvalues/main/uwsgi.c) and [src/newvalues/uwsgi](/src/newvalues/uwsgi).
