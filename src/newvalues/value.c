@@ -91,6 +91,12 @@ fus_value_t fus_value_bool(fus_vm_t *vm, bool b){
     return b? FUS_VALUE_TRUE: FUS_VALUE_FALSE;
 }
 
+fus_value_t fus_value_bool_not(fus_vm_t *vm, fus_value_t value_x){
+    if(!FUS_IS_BOOL(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    bool b = fus_value_bool_decode(value_x);
+    return fus_value_bool(vm, !b);
+}
+
 bool fus_value_bool_decode(fus_value_t value){
     return value.i == FUS_VALUE_TRUE.i;
 }

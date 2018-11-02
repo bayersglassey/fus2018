@@ -7,11 +7,14 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+fus_value_t fus_value_int_neg(fus_vm_t *vm, fus_value_t value_x);
 fus_value_t fus_value_int_add(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 fus_value_t fus_value_int_sub(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 fus_value_t fus_value_int_mul(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_value_int_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
 
 

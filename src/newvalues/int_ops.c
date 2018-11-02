@@ -4,6 +4,13 @@
 
 
 
+fus_value_t fus_value_int_neg(fus_vm_t *vm, fus_value_t value_x){
+    if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
+    /* TODO: Can negating an int cause overflow?.. */
+    return fus_value_int(vm, -x);
+}
+
 fus_value_t fus_value_int_add(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y
 ){
@@ -56,5 +63,13 @@ fus_value_t fus_value_int_mul(fus_vm_t *vm,
 
     fus_unboxed_t z = x * y;
     return fus_value_int(vm, z);
+}
+
+fus_value_t fus_value_int_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y
+){
+    if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    return fus_value_bool(vm, value_x.i == value_y.i);
 }
 

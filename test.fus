@@ -1,31 +1,15 @@
 
 "The result is:"
 
-    1 2 +  # 3
-    3 4 +  # 7
-*  # 21
+    1 2 + dup 3 == assert
+    3 4 + dup 7 == assert
+* dup 21 == assert
+neg dup -21 == assert
+
+1 1 == assert
+1 2 == not assert
+1 `x eq not assert
+`x `x eq assert
 
 -999 drop
 
-# The following shows crappy error "{Fus err #0: Wrong type}fus_exit: status=1"
-#     arr 1, 2, (3, 4,),
-
-arr 1, 2, (arr 3, 4,),
-dup len swap
-dup
-dup pop
-
-
-obj 10 =.x 20 =.y 30 =.x obj =.nested
-dup .nested
-    "I was .nested" =.msg
-    "Ich bin .nested" =.msg
-
-"And then:"
-obj arr 10, =.x arr 20, =.y
-    ..x
-
-"Arr get:"
-arr "A", "B", "C",
-dup 1 .$
-over 1 ..$

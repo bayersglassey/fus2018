@@ -1,0 +1,23 @@
+
+# The following shows crappy error "{Fus err #0: Wrong type}fus_exit: status=1"
+#     arr 1, 2, (3, 4,),
+
+arr 1, 2, (arr 3, 4,),
+dup len swap
+dup
+dup pop
+
+
+obj 10 =.x 20 =.y 30 =.x obj =.nested
+dup .nested
+    "I was .nested" =.msg
+    "Ich bin .nested" =.msg
+
+"And then:"
+obj arr 10, =.x arr 20, =.y
+    ..x
+
+"Arr get:"
+arr "A", "B", "C",
+dup 1 .$
+over 1 ..$

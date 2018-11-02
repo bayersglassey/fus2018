@@ -95,6 +95,16 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 FUS_STATE_EXPECT(sym)
                 fus_value_t value = fus_value_stringparse_sym(vm, token);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "not")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                fus_value_t new_value = fus_value_bool_not(vm, value);
+                fus_arr_push(vm, &state->stack, new_value);
+            }else if(!strcmp(token, "neg")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                fus_value_t new_value = fus_value_int_neg(vm, value);
+                fus_arr_push(vm, &state->stack, new_value);
             }else if(!strcmp(token, "+")){
                 fus_value_t value1;
                 fus_value_t value2;
@@ -103,12 +113,36 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_t value3 = fus_value_int_add(vm,
                     value1, value2);
                 fus_arr_push(vm, &state->stack, value3);
+            }else if(!strcmp(token, "-")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_t value3 = fus_value_int_sub(vm,
+                    value1, value2);
+                fus_arr_push(vm, &state->stack, value3);
             }else if(!strcmp(token, "*")){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_t value3 = fus_value_int_mul(vm,
+                    value1, value2);
+                fus_arr_push(vm, &state->stack, value3);
+            }else if(!strcmp(token, "==")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_t value3 = fus_value_int_eq(vm,
+                    value1, value2);
+                fus_arr_push(vm, &state->stack, value3);
+            }else if(!strcmp(token, "eq")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_t value3 = fus_value_eq(vm,
                     value1, value2);
                 fus_arr_push(vm, &state->stack, value3);
             }else if(!strcmp(token, "arr")){
@@ -247,6 +281,14 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_attach(vm, value);
                 fus_obj_set(vm, &state->vars, sym_i, fus_value_null(vm));
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "assert")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                bool b = fus_value_bool_decode(value);
+                if(!b){
+                    fprintf(stderr, "%s: Failed assertion\n", __func__);
+                    return -1;
+                }
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
