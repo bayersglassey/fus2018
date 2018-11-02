@@ -200,6 +200,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_arr_push(vm, &state->stack, value1);
                 fus_arr_push(vm, &state->stack, value2);
                 fus_arr_push(vm, &state->stack, value1);
+                fus_value_attach(vm, value1);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);

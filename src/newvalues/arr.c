@@ -153,11 +153,11 @@ void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a_ptr, int i,
         return;
     }
 
-    /* Get arr */
-    fus_arr_t *a = &value_a.p->data.a;
+    /* Get arr *before* mkunique is called */
+    fus_arr_t *original_a = &value_a.p->data.a;
 
     /* Bounds check */
-    if(i < 0 || i >= fus_arr_len(vm, a)){
+    if(i < 0 || i >= fus_arr_len(vm, original_a)){
         fus_value_detach(vm, value_a);
         fus_value_detach(vm, value);
         *value_a_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
@@ -167,8 +167,11 @@ void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a_ptr, int i,
     /* Uniqueness guarantee */
     fus_boxed_arr_mkunique(&value_a.p);
 
-    /* Set the element and return */
+    /* Get arr and set the element */
+    fus_arr_t *a = &value_a.p->data.a;
     fus_arr_set(vm, a, i, value);
+
+    /* Return */
     *value_a_ptr = value_a;
 }
 
