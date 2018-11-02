@@ -189,7 +189,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_detach(vm, value1);
-                fus_value_detach(vm, value2);
+                fus_arr_push(vm, &state->stack, value2);
             }else if(!strcmp(token, "over")){
                 fus_value_t value1;
                 fus_value_t value2;
