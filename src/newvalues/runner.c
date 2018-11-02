@@ -95,6 +95,15 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 FUS_STATE_EXPECT(sym)
                 fus_value_t value = fus_value_stringparse_sym(vm, token);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "null")){
+                fus_value_t value = fus_value_null(vm);
+                fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "T")){
+                fus_value_t value = fus_value_bool(vm, true);
+                fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "F")){
+                fus_value_t value = fus_value_bool(vm, false);
+                fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "not")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)

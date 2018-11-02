@@ -10,6 +10,8 @@ neg dup -21 == assert
 1 2 == not assert
 1 `x eq not assert
 `x `x eq assert
+null null eq assert
 
 -999 drop
 
+T F
