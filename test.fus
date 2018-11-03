@@ -15,3 +15,8 @@ null null eq assert
 -999 drop
 
 T F
+
+
+"LALALALA" p
+1 2 + p
+T F p p
