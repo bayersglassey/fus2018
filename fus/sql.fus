@@ -9,6 +9,7 @@ def test of(->):
     use: Schema fields STR
     use: Schema fields DECIMAL
     @new
+        `bank_account =.name
         "Bank Account" =.title
         `id @ID @add_field
         `first_name @STR F =.allow_empty @add_field
@@ -60,7 +61,7 @@ module Schema:
         ='schema
         obj 'schema =._schema ='object
         'schema .fields ='fields
-        'fields @arr_togen for: ='field
+        'fields arr_for: ='field
             'field .name ='name
             'field .default ='value
             ''object ''value 'name set ='object
@@ -74,7 +75,10 @@ module Schema:
                 "Schema has no title" =.msg
             error
         'schema .name is_null if:
-            ''schema ('schema .title @slugify str_tosym) =.name ='schema
+            obj
+                `no_name =.code
+                "Schema has no name" =.msg
+            error
         'schema .table_name is_null if:
             ''schema ('schema .name sym_tostr) =.table_name ='schema
         ''schema T =.finished
@@ -86,26 +90,58 @@ module Schema:
         'schema .primary_key ='pk_name
         'schema 'pk_name @get_field ='pk_field
         'object 'pk_name get ='pk_value
+        'pk_field 'pk_value @(Field get_db_value) ='pk_db_value
 
-        'schema 'fields fun: ='field
+        # If "fun" can capture variables:
+        #'schema 'fields fun: ='field
+        #    'object 'field .name get ='value
+        #    'field 'value @(Field get_db_value)
+        #@map ='values
+
+        # Fancy for-loop which modifies topmost stack element:
+        #arr
+        #'schema 'fields arr_for: ='field
+        #    'object 'field .name get ='value
+        #    'field 'value @(Field get_db_value)
+        #    push
+        #='values
+
+        # The direct approach
+        arr ='values
+        'schema 'fields arr_for: ='field
             'object 'field .name get ='value
             'field 'value @(Field get_db_value)
-        @map ='values
+            ''values swap, ='values
 
         'schema ''values @sql_format_values ='db_values
 
         arr
             "UPDATE ", 'schema .table_name,
-            " WHERE ", 'pk_name, " = ",
-            'pk_field 'pk_value @(Field get_db_value),
+            " WHERE ", 'pk_name, " = ", 'pk_db_value,
             " VALUES ", 'db_values, ";",
         @sql_format
 
-    def sql_format_values(schema values -> db_values):
+    def sql_format_values of(schema values -> db_values):
+        # db_values is a str containing valid SQL
+
         ='values ='schema
-        'values fun:
-            'schema swap ... # ummm
-        @map ", " @str_join
+
+        "("
+        'values len int_for: ='i
+            'values 'i .$ ='value
+            'i 0 > if: ", " str_concat
+            'schema ''value @sql_format_value str_concat
+        ")" str_concat
+
+    def sql_format_value of(schema value -> db_value):
+        # Converts a fus value into an SQL value.
+        # db_value is a str containing valid SQL
+
+        ='value ='schema
+        # ...now if value is an int, do int_tostr.
+        # If value is a str, implement SQL string literal quoting.
+        # Etc.
+        "<TODO>"
 
     def add_field of(schema name opts -> schema):
         ='opts ='name ='schema
