@@ -1,0 +1,41 @@
+
+module LList:
+    def nil: null
+    def cons of(tail head -> list): obj swap =.head swap =.tail
+    def car: .head
+    def cdr: .tail
+
+    def iter of(list -> iter next):
+        # NOTE: lists are their own iterators (they contain all state needed
+        # to call "next")
+        &iter_next
+    def iter_next of(list -> tail head):
+        dup is_null ifelse(null)(dup @cdr swap @car)
+
+    def test of(->):
+        @nil 1 @cons 2 @cons 3 @cons ='xs
+
+        # builtin "for":
+        'xs @iter for: p
+
+        # equivalent to:
+        'xs @iter ='f ='xs do:
+            ''xs 'f call(xs -> xs x)
+            over is_null if: drop drop break
+            swap ='xs
+            # ...
+            loop
+        ''f drop
+
+
+
+def int_iter of(n -> iter next):
+    # Usage example:
+    #     3 int_for: p
+    #     3 @int_iter for: p
+    obj
+        0 =.i
+        swap =.n
+    fun of(iter -> iter i):
+        dup .i over .n >= if: drop null null return
+        ..i 1 + =.i
