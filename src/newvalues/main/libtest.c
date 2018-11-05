@@ -16,7 +16,7 @@ static int test(fus_t *fus){
 
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
     if(fus_state_exec_lexer(state, lexer, false) < 0)return -1;
-    fus_state_dump(state, stdout);
+    fus_state_dump(state, stdout, "dvs");
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");

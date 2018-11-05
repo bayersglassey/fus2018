@@ -5,7 +5,7 @@
 
 
 static int run(fus_t *fus, const char *filename, const char *text,
-    bool dump_parser, bool dump_state
+    bool dump_parser, const char *dump_state
 ){
     int status = EXIT_SUCCESS;
 
@@ -15,7 +15,7 @@ static int run(fus_t *fus, const char *filename, const char *text,
 
     fus_state_t *state = &fus->state;
     if(fus_state_exec_lexer(state, lexer, dump_parser) < 0)return EXIT_FAILURE;
-    if(dump_state)fus_state_dump(&fus->state, stderr);
+    if(dump_state)fus_state_dump(&fus->state, stderr, dump_state);
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
@@ -34,17 +34,28 @@ int main(int n_args, char *args[]){
     }
 
     bool dump_parser = false;
-    bool dump_state = false;
-    for(int i = 1; i < n_args - 1; i++){
-        char *arg = args[i];
+    const char *dump_state = NULL;
+    int arg_i;
+    for(arg_i = 1; arg_i < n_args - 1; arg_i++){
+        char *arg = args[arg_i];
         if(!strcmp(arg, "-dp")){
             dump_parser = true;
         }else if(!strcmp(arg, "-ds")){
-            dump_state = true;
+            arg_i++;
+            if(arg_i >= n_args){
+                fprintf(stderr, "Option %s missing argument\n", arg);
+                return EXIT_FAILURE;
+            }
+            dump_state = args[arg_i];
         }else{
             fprintf(stderr, "Unrecognized option: %s\n", arg);
             return EXIT_FAILURE;
         }
+    }
+
+    if(arg_i >= n_args){
+        fprintf(stderr, "Missing FILE argument\n");
+        return EXIT_FAILURE;
     }
 
     char *buffer = NULL;

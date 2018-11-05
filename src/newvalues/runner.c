@@ -8,14 +8,16 @@ void fus_state_init(fus_state_t *state, fus_vm_t *vm){
     state->vm = vm;
     fus_arr_init(vm, &state->stack);
     fus_obj_init(vm, &state->vars);
+    fus_obj_init(vm, &state->defs);
 }
 
 void fus_state_cleanup(fus_state_t *state){
     fus_arr_cleanup(state->vm, &state->stack);
     fus_obj_cleanup(state->vm, &state->vars);
+    fus_obj_cleanup(state->vm, &state->defs);
 }
 
-void fus_state_dump(fus_state_t *state, FILE *file){
+void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
     fus_vm_t *vm = state->vm;
 
     fus_printer_t printer;
@@ -24,15 +26,28 @@ void fus_state_dump(fus_state_t *state, FILE *file){
     printer.depth = 2;
 
     fprintf(file, "STATE:\n");
-    fprintf(file, "  vars:\n");
-    fus_printer_write_tabs(&printer);
-    fus_printer_print_obj(&printer, vm, &state->vars);
-    fprintf(file, "\n");
-
-    fprintf(file, "  stack:\n");
-    fus_printer_write_tabs(&printer);
-    fus_printer_print_arr(&printer, vm, &state->stack);
-    fprintf(file, "\n");
+    char fmt_c;
+    while(fmt_c = *fmt, fmt_c != '\0'){
+        if(fmt_c == 'd'){
+            fprintf(file, "  defs:\n");
+            fus_printer_write_tabs(&printer);
+            fus_printer_print_obj(&printer, vm, &state->defs);
+            fprintf(file, "\n");
+        }else if(fmt_c == 'v'){
+            fprintf(file, "  vars:\n");
+            fus_printer_write_tabs(&printer);
+            fus_printer_print_obj(&printer, vm, &state->vars);
+            fprintf(file, "\n");
+        }else if(fmt_c == 's'){
+            fprintf(file, "  stack:\n");
+            fus_printer_write_tabs(&printer);
+            fus_printer_print_arr(&printer, vm, &state->stack);
+            fprintf(file, "\n");
+        }else{
+            fprintf(file, "  unrecognized fmt_c: %c\n", fmt_c);
+        }
+        fmt++;
+    }
 
     fus_printer_cleanup(&printer);
 }
