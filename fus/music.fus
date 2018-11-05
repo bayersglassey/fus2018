@@ -45,27 +45,23 @@ def apply_sounds(pattern sounds -> pattern):
     ='sounds
     ='pat
 
-    0 'pat len do loop:
-        over over < while loop
-        swap dup ='i 1 + swap
-
-        ''pat 'i ..$ ='part ='pat
-
-        'part is_sym ifelse:
-            'part (` @) sym_eq ifelse:
-                # ummmm?.. e.g.:
-                #     data: @loop 4
+    'pat len int_for: ='i
+        ''pat
+            'i ..$ ='part
+            'part is_sym ifelse:
+                'part (` @) sym_eq ifelse:
+                    # ummmm?.. e.g.:
+                    #     data: @loop 4
+                :
+                    'sounds 'part has if:
+                        'sounds 'part get ='part
             :
-                'sounds 'part has if:
-                    'sounds 'part get ='part
-        :
-            'part is_arr ifelse:
-                ''part 'sounds @apply_sounds ='part
-            :
+                'part is_arr ifelse:
+                    ''part 'sounds @apply_sounds ='part
+                :
 
-        ''pat ''part 'i =.$ ='pat
-
-    drop drop
+            ''part 'i =.$
+        ='pat
 
     ''pat
 
@@ -74,10 +70,12 @@ def loop(pattern n -> pattern):
     ='n ='pat
     'pat ='pat0
 
-    ''n do loop:
-        dup 0 >= while loop
-        1 -
+    'n 1 - ='i
+    do:
+        'i 0 >= while
+        ''i 1 - ='i
 
-        ''pat ='pat0 join ='pat
-    drop
+        ''pat 'pat0 concat ='pat
+        loop
+
     ''pat

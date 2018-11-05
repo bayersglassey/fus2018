@@ -23,11 +23,28 @@ def file_new of(filepath -> file): obj
     swap =.filepath
     arr =.defs
 
-def file_get_def of(file def_name -> def_i):
+def file_get_def of(file def_name -> def):
+    ='def_name
+    .defs ='defs
+    'defs len int_for: ='i
+        'defs 'i .$ ='def
+        'def .name 'def_name eq if: ''def return
+    null
 
-def file_add_def of(file def_name -> file def_i):
-    ='def
-    ..defs ''def, =.defs
+def file_add_def of(file def_name -> file def):
+    ='def_name ='file
+
+    'file @file_get_def ='def
+    'def is_null not if:
+        ''file ''def return
+
+    'file .defs len ='def_i
+
+    'def_i 'def_name @def_new ='def
+
+    # Return:
+    ''file ..defs ''def, =.defs
+    'def
 
 
 #######
