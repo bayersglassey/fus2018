@@ -31,7 +31,7 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
         if(fmt_c == 'd'){
             fprintf(file, "  defs:\n");
             fus_printer_write_tabs(&printer);
-            fus_printer_print_obj(&printer, vm, &state->defs);
+            fus_printer_print_obj_as_data(&printer, vm, &state->defs);
             fprintf(file, "\n");
         }else if(fmt_c == 'v'){
             fprintf(file, "  vars:\n");
@@ -83,17 +83,38 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
         #define FUS_STATE_NEXT_VALUE() \
             i++; \
             if(i >= token_values_len){ \
-                fprintf(stderr, "%s: Missing arg after: %s\n", \
+                fprintf(stderr, "%s: Missing arg after %s\n", \
                     __func__, token); \
                 return -1; \
             } \
             token_value = token_values[i];
 
-        #define FUS_STATE_EXPECT(T) \
+        #define FUS_STATE_PEEK_NEXT_VALUE(VALUE) \
+            if(i + 1 >= token_values_len){ \
+                (VALUE) = fus_value_null(vm); \
+            }else{ \
+                (VALUE) = token_values[i + 1]; \
+            }
+
+        #define FUS_STATE_EXPECT_T(T) \
             if(!fus_value_is_##T(token_value)){ \
-                fprintf(stderr, "%s: Expected " #T " after: %s\n", \
-                    __func__, token); \
+                fprintf(stderr, "%s: Expected " #T " after %s, got: %s\n", \
+                    __func__, token, fus_value_type_msg(token_value)); \
                 return -1; \
+            }
+
+        #define FUS_STATE_EXPECT_SYM(TOKEN) \
+            FUS_STATE_EXPECT_T(SYM) \
+            { \
+                int __sym_i = fus_value_sym_decode(token_value); \
+                const char *__token = fus_symtable_get_token(symtable, sym_i); \
+                const char *__token_expected = (TOKEN); \
+                if(strcmp(__token, __token_expected)){ \
+                    fprintf(stderr, "%s: Expected \"%s\" after %s, " \
+                        "but got: %s\n", \
+                        __func__, __token_expected, token, __token); \
+                    return -1; \
+                } \
             }
 
         #define FUS_STATE_STACK_POP(VPTR) \
@@ -107,7 +128,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
             const char *token = fus_symtable_get_token(symtable, sym_i);
             if(!strcmp(token, "`")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 fus_value_t value = fus_value_stringparse_sym(vm, token);
                 fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "null")){
@@ -215,7 +236,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "=.")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_o;
                 fus_value_t value;
@@ -225,7 +246,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_arr_push(vm, &state->stack, value_o);
             }else if(!strcmp(token, ".")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
@@ -235,7 +256,7 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_detach(vm, value_o);
             }else if(!strcmp(token, "..")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
@@ -285,21 +306,21 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_value_attach(vm, value1);
             }else if(!strcmp(token, "='")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_obj_set(vm, &state->vars, sym_i, value);
             }else if(!strcmp(token, "'")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
                 fus_value_attach(vm, value);
                 fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "''")){
                 FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT(sym)
+                FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
                 fus_value_attach(vm, value);
@@ -338,6 +359,31 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
+            }else if(!strcmp(token, "def")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+
+                fus_value_t value_peek;
+                FUS_STATE_PEEK_NEXT_VALUE(value_peek)
+                if(fus_value_is_sym(value_peek)){
+                    int sym_i = fus_value_sym_decode(value_peek);
+                    const char *token_peek =
+                        fus_symtable_get_token(symtable, sym_i);
+                    if(strcmp(token_peek, "of")){
+                        fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
+                            __func__, token, token_peek);
+                        return -1;
+                    }
+                    FUS_STATE_NEXT_VALUE()
+                    FUS_STATE_NEXT_VALUE()
+                    FUS_STATE_EXPECT_T(arr)
+                }
+
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                fus_obj_set(vm, &state->defs, sym_i, token_value);
+                fus_value_attach(vm, token_value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);

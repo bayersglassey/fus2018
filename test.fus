@@ -20,3 +20,14 @@ T F
 "LALALALA" p
 1 2 + p
 T F p p
+
+def f: "EFFFF!\n" str_p
+
+def g: 2
+
+def add of(x y -> z): +
+
+def mkpoint:
+    ='y ='x
+    obj 'x =.x 'y =.y
+
