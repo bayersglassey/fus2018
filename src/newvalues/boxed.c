@@ -39,24 +39,6 @@ void fus_boxed_init(fus_boxed_t *p, fus_vm_t *vm,
     if(p->next)p->next->prev = p;
     vm->boxed_llist = p;
 #endif
-
-    /*
-    if(type == FUS_BOXED_ARR){
-        fus_arr_t *a = &p->data.a;
-        fus_array_init(&a->values, &vm->class_value);
-    }else if(type == FUS_BOXED_OBJ){
-        fus_obj_t *o = &p->data.o;
-        fus_array_init(&o->keys, &vm->class_sym_i);
-        fus_array_init(&o->values, &vm->class_value);
-    }else if(type == FUS_BOXED_STR){
-        fus_str_t *s = &p->data.s;
-        fus_array_init(&s->text, &vm->class_char);
-    }else if(type == FUS_BOXED_FUN){
-        // TODO...
-    }else{
-        FUS_BOXED_LOG_WEIRD_TYPE(type)
-    }
-    */
 }
 
 void fus_boxed_cleanup(fus_boxed_t *p){
@@ -92,7 +74,8 @@ void fus_boxed_cleanup(fus_boxed_t *p){
         fus_str_t *s = &p->data.s;
         fus_str_cleanup(vm, s);
     }else if(type == FUS_BOXED_FUN){
-        /* TODO... */
+        fus_fun_t *f = &p->data.f;
+        fus_fun_cleanup(vm, f);
     }else{
         FUS_BOXED_LOG_WEIRD_TYPE(type)
     }

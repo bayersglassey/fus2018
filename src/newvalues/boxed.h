@@ -16,12 +16,6 @@ typedef enum {
 } fus_boxed_type_t;
 
 
-struct fus_fun {
-    /* not sure what goes in here yet...
-    dummy member because C doesn't allow empty struct */
-    int dummy;
-};
-
 struct fus_boxed {
     fus_vm_t *vm;
     fus_boxed_type_t type;
