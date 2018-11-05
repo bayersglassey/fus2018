@@ -1,0 +1,10 @@
+
+def f: 2
+
+def g: @f
+
+def add of(x y -> z): +
+
+@f
+@g 1 @add
+

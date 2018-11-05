@@ -71,7 +71,7 @@ err:
     return status;
 }
 
-int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
+static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def){
     fus_vm_t *vm = state->vm;
     fus_symtable_t *symtable = vm->symtable;
     int arr_depth = 0;
@@ -364,6 +364,14 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
 
+                if(in_def){
+                    const char *token_def =
+                        fus_symtable_get_token(symtable, sym_i);
+                    fprintf(stderr, "%s: Nested defs not allowed: %s\n",
+                        __func__, token_def);
+                    return -1;
+                }
+
                 fus_value_t value_peek;
                 FUS_STATE_PEEK_NEXT_VALUE(value_peek)
                 if(fus_value_is_sym(value_peek)){
@@ -384,6 +392,13 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 FUS_STATE_EXPECT_T(arr)
                 fus_obj_set(vm, &state->defs, sym_i, token_value);
                 fus_value_attach(vm, token_value);
+            }else if(!strcmp(token, "@")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(sym)
+                int sym_i = fus_value_sym_decode(token_value);
+                fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
+                fus_arr_t *def_data = &value_def.p->data.a;
+                if(_fus_state_exec_data(state, def_data, true) < 0)return -1;
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
@@ -400,3 +415,6 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
     return 0;
 }
 
+int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
+    return _fus_state_exec_data(state, data, false);
+}
