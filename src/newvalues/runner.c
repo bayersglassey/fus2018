@@ -308,6 +308,21 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
+            }else if(!strcmp(token, "str_p")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                if(!fus_value_is_str(value)){
+                    fprintf(stderr, "%s: Not a str: %s\n", __func__,
+                        fus_value_type_msg(value));
+                    return -1;
+                }
+                fus_str_t *s = &value.p->data.s;
+                fus_printer_t printer;
+                fus_printer_init(&printer);
+                fus_printer_write(&printer, s->text, s->len);
+                fus_printer_flush(&printer);
+                fus_printer_cleanup(&printer);
+                fus_value_detach(vm, value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
