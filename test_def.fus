@@ -8,3 +8,6 @@ def add of(x y -> z): +
 @f
 @g 1 @add
 
+fun: 1 2 +
+
+&f
