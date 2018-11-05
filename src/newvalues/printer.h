@@ -50,6 +50,8 @@ void fus_printer_write_arr(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
 void fus_printer_write_obj(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
+void fus_printer_write_obj_as_data(fus_printer_t *printer,
+    fus_vm_t *vm, fus_obj_t *o);
 void fus_printer_write_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
 
@@ -59,6 +61,8 @@ int fus_printer_print_value(fus_printer_t *printer,
 int fus_printer_print_arr(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);
 int fus_printer_print_obj(fus_printer_t *printer,
+    fus_vm_t *vm, fus_obj_t *o);
+int fus_printer_print_obj_as_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
 int fus_printer_print_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a);

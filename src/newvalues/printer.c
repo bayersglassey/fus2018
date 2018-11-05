@@ -234,24 +234,48 @@ void fus_printer_write_arr(fus_printer_t *printer,
     }
 }
 
-void fus_printer_write_obj(fus_printer_t *printer,
-    fus_vm_t *vm, fus_obj_t *o
+static void _fus_printer_write_obj(fus_printer_t *printer,
+    fus_vm_t *vm, fus_obj_t *o, bool as_data
 ){
     fus_symtable_t *table = vm->symtable;
     int len = o->keys.len;
     int *keys = FUS_ARRAY_GET_REF(o->keys, 0);
     fus_value_t *values = FUS_ARR_VALUES(o->values);
     for(int i = 0; i < len; i++){
+        const char *token = fus_symtable_get_token(table, keys[i]);
+        fus_value_t value = values[i];
+
         if(i > 0)fus_printer_write_newline(printer);
 
-        printer->depth++;
-        fus_printer_write_value(printer, vm, values[i]);
-        printer->depth--;
+        if(as_data){
+            fus_printer_write_text(printer, token);
+            fus_printer_write_text(printer, ": ");
 
-        const char *token = fus_symtable_get_token(table, keys[i]);
-        fus_printer_write_text(printer, " =.");
-        fus_printer_write_text(printer, token);
+            printer->depth++;
+            fus_printer_write_newline(printer);
+            fus_printer_write_data(printer, vm, &value.p->data.a);
+            printer->depth--;
+        }else{
+            printer->depth++;
+            fus_printer_write_value(printer, vm, value);
+            printer->depth--;
+
+            fus_printer_write_text(printer, " =.");
+            fus_printer_write_text(printer, token);
+        }
     }
+}
+
+void fus_printer_write_obj(fus_printer_t *printer,
+    fus_vm_t *vm, fus_obj_t *o
+){
+    _fus_printer_write_obj(printer, vm, o, false);
+}
+
+void fus_printer_write_obj_as_data(fus_printer_t *printer,
+    fus_vm_t *vm, fus_obj_t *o
+){
+    _fus_printer_write_obj(printer, vm, o, true);
 }
 
 void fus_printer_write_data(fus_printer_t *printer,
@@ -308,6 +332,10 @@ int fus_printer_print_arr(fus_printer_t *printer, fus_vm_t *vm, fus_arr_t *a){
 }
 int fus_printer_print_obj(fus_printer_t *printer, fus_vm_t *vm, fus_obj_t *o){
     fus_printer_write_obj(printer, vm, o);
+    return fus_printer_flush(printer);
+}
+int fus_printer_print_obj_as_data(fus_printer_t *printer, fus_vm_t *vm, fus_obj_t *o){
+    fus_printer_write_obj_as_data(printer, vm, o);
     return fus_printer_flush(printer);
 }
 int fus_printer_print_data(fus_printer_t *printer, fus_vm_t *vm, fus_arr_t *a){
