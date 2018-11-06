@@ -402,7 +402,7 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                     fus_value_attach(vm, token_value);
                 }else{
                     /* fun */
-                    fus_value_t value_fun = fus_value_fun(vm,
+                    fus_value_t value_fun = fus_value_fun(vm, NULL,
                         &token_value.p->data.a);
                     fus_arr_push(vm, &state->stack, value_fun);
                 }
@@ -417,9 +417,12 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
+                const char *token_def =
+                    fus_symtable_get_token(symtable, sym_i);
                 fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
                 fus_arr_t *def_data = &value_def.p->data.a;
-                fus_value_t value_fun = fus_value_fun(vm, def_data);
+                fus_value_t value_fun = fus_value_fun(vm,
+                    fus_strdup(vm->core, token_def), def_data);
                 fus_arr_push(vm, &state->stack, value_fun);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",

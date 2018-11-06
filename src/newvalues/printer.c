@@ -211,7 +211,20 @@ void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
         fus_str_t *s = &p->data.s;
         fus_printer_write_str(printer, s);
     }else if(type == FUS_BOXED_FUN){
-        fus_printer_write_text(printer, "fun(\"TODO: Implement printing of fun\" error)");
+        fus_fun_t *f = &p->data.f;
+        if(f->name){
+            fus_printer_write_text(printer, "&");
+            fus_printer_write_text(printer, f->name);
+        }else{
+            fus_arr_t *data = &f->data;
+            if(data->values.len > 0){
+                fus_printer_write_text(printer, "fun:");
+                fus_printer_write_newline(printer);
+                fus_printer_write_data(printer, p->vm, data);
+            }else{
+                fus_printer_write_text(printer, "fun()");
+            }
+        }
     }else{
         FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
         fus_printer_write_text(printer, "(\"Got weird boxed value\" error)");
