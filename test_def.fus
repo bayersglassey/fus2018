@@ -5,12 +5,15 @@ def g: @f
 
 def add of(x y -> z): +
 
-@f
-@g 1 @add
+@f 2 == assert
+@g 1 @add 3 == assert
 
-fun(1 2 +) ='fun
+fun(10 20 +) ='fun
+
+'fun call(->) 30 == assert
+3 4 &add call(x y -> z) 7 == assert
 
 'fun
 &f
 fun()
-1
+

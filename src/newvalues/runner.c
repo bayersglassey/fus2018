@@ -391,6 +391,7 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
+                    /* TODO: Check stack effects */
                 }
 
                 FUS_STATE_NEXT_VALUE()
@@ -424,6 +425,22 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                 fus_value_t value_fun = fus_value_fun(vm,
                     fus_strdup(vm->core, token_def), def_data);
                 fus_arr_push(vm, &state->stack, value_fun);
+            }else if(!strcmp(token, "call")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                /* TODO: Check stack effects */
+
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                if(!fus_value_is_fun(value)){
+                    fprintf(stderr, "%s: Not a fun: %s\n", __func__,
+                        fus_value_type_msg(value));
+                    return -1;
+                }
+                fus_fun_t *f = &value.p->data.f;
+                fus_arr_t *data = &f->data;
+                if(_fus_state_exec_data(state, data, true) < 0)return -1;
+                fus_value_detach(vm, value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
