@@ -4,6 +4,10 @@
 
 
 
+/*********
+ * STATE *
+ *********/
+
 void fus_state_init(fus_state_t *state, fus_vm_t *vm){
     state->vm = vm;
     fus_arr_init(vm, &state->stack);
@@ -71,14 +75,102 @@ err:
     return status;
 }
 
-static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def){
+int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
+    int status = -1;
+
+    fus_runner_t runner;
+    fus_runner_init(&runner, state, data);
+
+    while(!fus_runner_is_done(&runner)){
+        if(fus_runner_step(&runner) < 0)goto err;
+    }
+
+    status = 0; /* OK! */
+err:
+    fus_runner_cleanup(&runner);
+    return status;
+}
+
+
+
+/**********
+ * RUNNER *
+ **********/
+
+void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
+    fus_runner_t *runner, fus_arr_t *data, bool in_def
+){
+    callframe->runner = runner;
+    fus_arr_copy(runner->state->vm, &callframe->data, data);
+    callframe->i = 0;
+    callframe->in_def = in_def; /* runner doesn't support nested defs */
+}
+
+void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe){
+    fus_arr_cleanup(callframe->runner->state->vm, &callframe->data);
+}
+
+void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
+    fus_arr_t *data
+){
+    runner->state = state;
+
+    /* Init callframe class */
+    fus_vm_t *vm = state->vm;
+    fus_class_init(&runner->class_callframe, vm->core,
+        "runner_callframe", sizeof(fus_runner_callframe_t), runner,
+        fus_class_instance_init_zero,
+        fus_class_cleanup_runner_callframe);
+
+    /* Init callframe array */
+    fus_array_init(&runner->callframes, &runner->class_callframe);
+    fus_runner_push_callframe(runner, data, false);
+}
+
+void fus_runner_cleanup(fus_runner_t *runner){
+    fus_array_cleanup(&runner->callframes);
+}
+
+
+
+fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner){
+    return FUS_ARRAY_GET_REF(runner->callframes,
+        runner->callframes.len - 1);
+}
+
+bool fus_runner_is_done(fus_runner_t *runner){
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    fus_arr_t *data = &callframe->data;
+    fus_value_t *token_values = FUS_ARR_VALUES(*data);
+    return callframe->i >= data->values.len;
+}
+
+void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
+    bool in_def
+){
+    fus_array_push(&runner->callframes);
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    fus_runner_callframe_init(callframe, runner, data, in_def);
+}
+
+int fus_runner_step(fus_runner_t *runner){
+
+    /* If we're already finished, don't do anything
+    (TODO: pop from callframe) */
+    if(fus_runner_is_done(runner))return 0;
+
+    /* Get some variables from runner, state, etc */
+    fus_state_t *state = runner->state;
     fus_vm_t *vm = state->vm;
     fus_symtable_t *symtable = vm->symtable;
-    int arr_depth = 0;
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    fus_arr_t *data = &callframe->data;
+    int i = callframe->i;
     fus_value_t *token_values = FUS_ARR_VALUES(*data);
     int token_values_len = data->values.len;
-    for(int i = 0; i < token_values_len; i++){
-        fus_value_t token_value = token_values[i];
+    fus_value_t token_value = token_values[i];
+
+    {
 
         #define FUS_STATE_NEXT_VALUE() \
             i++; \
@@ -368,7 +460,7 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                     FUS_STATE_EXPECT_T(sym)
                     def_sym_i = fus_value_sym_decode(token_value);
 
-                    if(in_def){
+                    if(callframe->in_def){
                         const char *token_def =
                             fus_symtable_get_token(symtable, def_sym_i);
                         fprintf(stderr, "%s: Nested defs not allowed: %s\n",
@@ -413,7 +505,7 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
                 fus_arr_t *def_data = &value_def.p->data.a;
-                if(_fus_state_exec_data(state, def_data, true) < 0)return -1;
+                fus_runner_push_callframe(runner, def_data, true);
             }else if(!strcmp(token, "&")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
@@ -439,7 +531,7 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                 }
                 fus_fun_t *f = &value.p->data.f;
                 fus_arr_t *data = &f->data;
-                if(_fus_state_exec_data(state, data, true) < 0)return -1;
+                fus_runner_push_callframe(runner, data, true);
                 fus_value_detach(vm, value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
@@ -447,16 +539,25 @@ static int _fus_state_exec_data(fus_state_t *state, fus_arr_t *data, bool in_def
                 return -1;
             }
         }else if(fus_value_is_arr(token_value)){
-            if(fus_state_exec_data(state, &token_value.p->data.a))return -1;
+            fus_runner_push_callframe(runner, &token_value.p->data.a, callframe->in_def);
         }else{
             fprintf(stderr, "%s: Unexpected type in data to be run: %s\n",
                 __func__, fus_value_type_msg(token_value));
             return -1;
         }
     }
+    i++;
+    callframe->i = i;
     return 0;
 }
 
-int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
-    return _fus_state_exec_data(state, data, false);
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_cleanup_runner_callframe(fus_class_t *class, void *ptr){
+    fus_runner_callframe_t *callframe = ptr;
+    fus_runner_callframe_cleanup(callframe);
 }

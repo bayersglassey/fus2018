@@ -26,6 +26,8 @@ typedef struct fus_str fus_str_t;
 typedef struct fus_fun fus_fun_t;
 typedef struct fus_printer fus_printer_t;
 typedef struct fus_state fus_state_t;
+typedef struct fus_runner fus_runner_t;
+typedef struct fus_runner_callframe fus_runner_callframe_t;
 typedef struct fus fus_t;
 #include "value.h"
 #include "vm.h"
