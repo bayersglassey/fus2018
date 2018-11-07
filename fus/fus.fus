@@ -14,76 +14,63 @@ def parser_new: obj
     arr =.files
 
 
+def parser_test of(->):
+    @parser_new ='parser
+
+    ''parser
+        ..files "test.fus" data:
+            def f: 1
+            def g: 2
+            def add: +
+            @f @g @add 3 == assert
+        @file_new, =.files
+    ='parser
+
+
 
 ########
 # FILE #
 ########
 
-def file_new of(filepath -> file): obj
-    swap =.filepath
-    arr =.defs
+def file_new of(filename data -> file): obj
+    swap =.data
+    swap =.filename
+    arr "<root>" @def_new, =.defs
 
-def file_get_def of(file def_name -> def):
-    ='def_name
-    .defs ='defs
-    'defs len int_for: ='i
-        'defs 'i .$ ='def
-        'def .name 'def_name eq if: ''def return
-    null
+def file_add_def of(file def -> file def_i):
+    ='def
+    ..defs ''def, dup len ='def_i =.defs
+    ''def_i
 
-def file_add_def of(file def_name -> file def):
-    ='def_name ='file
+def file_find_def of(file path -> def_i):
+    ='path .defs ='defs
+    0 ='def_i
+    'path arr_for_rev: ='part
+        'defs 'def_i .$ ='def
+        'def .refs ='refs
+        'refs 'part has not if: null return
+        'refs 'part get ='def_i
+    ''def_i
 
-    'file @file_get_def ='def
-    'def is_null not if:
-        ''file ''def return
-
-    'file .defs len ='def_i
-
-    'def_i 'def_name @def_new ='def
-
-    # Return:
-    ''file ..defs ''def, =.defs
-    'def
+def file_get_def of(file path -> def):
+    ='path ='file
+    'file 'path @file_find_def ='def_i
+    'def_i is_null if: null return
+    'file .defs 'def_i .$
 
 
 #######
 # DEF #
 #######
 
-def def_new of(def_i name -> def): obj
-    swap =.name
-    swap =.i
-    arr =.refs
-
-def def_new_ref of(def_i name -> ref): obj
-    swap =.name
-    swap =.def_i
-
-def def_get_ref of(def name -> ref):
-    ='name
-    dup .refs arr_togen for: ='ref
-        'ref .name 'name sym_eq if: 'ref return
-    null
-
-def def_add_ref of(def def_i name -> def ref):
-    ='name ='def_i ='def
-    'def 'name @get_ref is_null if: ''def null return
-    'def_i 'name @new_ref ='ref
-
-    # Return:
-    ''def ..refs 'ref, =.refs
-    ''ref
-
-def def_test of(->):
-    # Create 2 defs:
-    0 `A @new ='A
-    1 `B @new ='B
-
-    # Add a ref to B from A:
-    'A `b @get_ref is_null assert
-    ''A 1 `b @add_ref is_null not assert ='A
-    ''A 1 `b @add_ref is_null assert ='A
-    'A `b @get_ref is_null not assert
+def def_new of(title -> def): obj
+    swap =.title
+    obj =.refs
 
 
+
+#############
+# RUN TESTS #
+#############
+
+@parser_test
