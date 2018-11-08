@@ -1,0 +1,25 @@
+
+set -e
+echo "Compiling..."
+./compile_newvalues run
+echo "Compiled OK"
+
+FILES="test*.fus"
+
+echo
+echo "Running files:" $FILES
+
+STARS="* * * * * * * * * * * * * * *"
+
+for F in $FILES
+do
+    echo
+    echo "Running file: $F"
+    echo "$STARS"
+    ./main "$F"
+    echo "$STARS"
+    echo "Ran $F OK"
+done
+
+echo
+echo "Ran all test files without crashing!"

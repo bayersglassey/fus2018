@@ -127,7 +127,14 @@ Compile & Run Parser:
 Compile & Run "Runner":
 
     # Parse and execute a fus file:
-    ./compile_newvalues run && ./main fus/test.fus
+    ./compile_newvalues run && ./main fus/fib.fus
+
+Compile & Run "Runner" on all test files in repo root:
+
+    # Roughly equivalent to:
+    #     ./compile_newvalues run && ./main test*.fus
+    # ...except that doesn't actually work.
+    ./runtests
 
 
 ## UWSGI plugin
