@@ -194,7 +194,7 @@ int fus_runner_step(fus_runner_t *runner){
     if(callframe == NULL){
         fprintf(stderr, "%s: Stepping a done runner is an error!\n",
             __func__);
-        return -1;
+        goto err;
     }
     fus_arr_t *data = &callframe->data;
     int i = callframe->i;
@@ -220,7 +220,7 @@ int fus_runner_step(fus_runner_t *runner){
             if(i >= token_values_len){ \
                 fprintf(stderr, "%s: Missing arg after %s\n", \
                     __func__, token); \
-                return -1; \
+                goto err; \
             } \
             token_value = token_values[i];
 
@@ -235,7 +235,7 @@ int fus_runner_step(fus_runner_t *runner){
             if(!fus_value_is_##T(token_value)){ \
                 fprintf(stderr, "%s: Expected " #T " after %s, got: %s\n", \
                     __func__, token, fus_value_type_msg(token_value)); \
-                return -1; \
+                goto err; \
             }
 
         #define FUS_STATE_EXPECT_SYM(TOKEN) \
@@ -248,12 +248,12 @@ int fus_runner_step(fus_runner_t *runner){
                     fprintf(stderr, "%s: Expected \"%s\" after %s, " \
                         "but got: %s\n", \
                         __func__, __token_expected, token, __token); \
-                    return -1; \
+                    goto err; \
                 } \
             }
 
         #define FUS_STATE_STACK_POP(VPTR) \
-            if(fus_arr_pop(vm, &state->stack, (VPTR)))return -1;
+            if(fus_arr_pop(vm, &state->stack, (VPTR)))goto err;
 
         if(fus_value_is_int(token_value) || fus_value_is_str(token_value)){
             fus_value_attach(vm, token_value);
@@ -457,7 +457,7 @@ int fus_runner_step(fus_runner_t *runner){
                 bool b = fus_value_bool_decode(value);
                 if(!b){
                     fprintf(stderr, "%s: Failed assertion\n", __func__);
-                    return -1;
+                    goto err;
                 }
             }else if(!strcmp(token, "p")){
                 fus_value_t value;
@@ -475,7 +475,7 @@ int fus_runner_step(fus_runner_t *runner){
                 if(!fus_value_is_str(value)){
                     fprintf(stderr, "%s: Not a str: %s\n", __func__,
                         fus_value_type_msg(value));
-                    return -1;
+                    goto err;
                 }
                 fus_str_t *s = &value.p->data.s;
                 fus_printer_t printer;
@@ -498,7 +498,7 @@ int fus_runner_step(fus_runner_t *runner){
                             fus_symtable_get_token(symtable, def_sym_i);
                         fprintf(stderr, "%s: Nested defs not allowed: %s\n",
                             __func__, token_def);
-                        return -1;
+                        goto err;
                     }
                 }
 
@@ -511,7 +511,7 @@ int fus_runner_step(fus_runner_t *runner){
                     if(strcmp(token_peek, "of")){
                         fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
                             __func__, token, token_peek);
-                        return -1;
+                        goto err;
                     }
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_NEXT_VALUE()
@@ -564,7 +564,7 @@ int fus_runner_step(fus_runner_t *runner){
                 if(!fus_value_is_fun(value)){
                     fprintf(stderr, "%s: Not a fun: %s\n", __func__,
                         fus_value_type_msg(value));
-                    return -1;
+                    goto err;
                 }
                 fus_fun_t *f = &value.p->data.f;
                 fus_arr_t *data = &f->data;
@@ -614,7 +614,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "break") || !strcmp(token, "loop")){
                 char c = token[0] == 'b'? 'b': 'l';
                     /* 'b' for break or 'l' for loop */
-                if(fus_runner_break_or_loop(runner, token, c) < 0)return -1;
+                if(fus_runner_break_or_loop(runner, token, c) < 0)goto err;
                 goto dont_update_i;
             }else if(!strcmp(token, "while") || !strcmp(token, "until")){
                 fus_value_t value;
@@ -624,13 +624,13 @@ int fus_runner_step(fus_runner_t *runner){
 
                 if(token[0] == 'w')cond = !cond; /* "while" */
                 if(cond){
-                    if(fus_runner_break_or_loop(runner, token, 'b') < 0)return -1;
+                    if(fus_runner_break_or_loop(runner, token, 'b') < 0)goto err;
                     goto dont_update_i;
                 }
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
-                return -1;
+                goto err;
             }
         }else if(fus_value_is_arr(token_value)){
             callframe->i = i + 1;
@@ -640,7 +640,7 @@ int fus_runner_step(fus_runner_t *runner){
         }else{
             fprintf(stderr, "%s: Unexpected type in data to be run: %s\n",
                 __func__, fus_value_type_msg(token_value));
-            return -1;
+            goto err;
         }
     }
 
@@ -649,8 +649,23 @@ int fus_runner_step(fus_runner_t *runner){
 dont_update_i:
     /* Particularly if you push/pop a callframe, you should jump here so
     we don't attempt to access old callframe->i. */
-
     return 0;
+
+err:
+    /* TODO: Improve the following greatly...
+    Can we wrap it up as a callback somehow, so we can tell core to call
+    it before exiting?
+    So, have a stack of on_error callbacks on core??? Oh my goodness */
+    callframe = fus_runner_get_callframe(runner);
+    if(callframe != NULL){
+        fus_arr_t *data = &callframe->data;
+        fus_printer_t printer;
+        fus_printer_init(&printer);
+        fus_printer_print_data(&printer, vm, data);
+        fprintf(stderr, "\n");
+        fus_printer_cleanup(&printer);
+    }
+    return -1;
 }
 
 
