@@ -1,0 +1,65 @@
+
+# Fibonacci numbers as a generator
+
+
+def fib_gen: gen:
+    0 ='a
+    1 ='b
+    do:
+        'a out
+        ''a 'b + ='c
+        ''b ='a
+        ''c ='b
+        loop
+
+def test:
+
+    @fib_gen
+        >> 0 == assert
+        >> 1 == assert
+        >> 1 == assert
+        >> 2 == assert
+        >> 3 == assert
+        >> 5 == assert
+        >> 8 == assert
+        >> 13 == assert
+        >> 21 == assert
+    drop
+
+    @(GenCache test)
+
+
+module GenCache:
+
+    def new:
+        ='gen
+        obj
+            arr =.cache
+            ''gen =.gen
+
+    def next:
+        ..gen >> ='value =.gen
+        ..cache dup len ='i 'value, =.cache
+        "Generated value "
+            'i int_tostr str_concat
+            ": " str_concat
+            'value int_tostr str_concat
+        str_p
+        ''value
+
+    def get:
+        ='i ='self
+        'i 0 < if: "Out of bounds!" error
+        ('self .cache len) 'i - do:
+            dup 0 > while
+            ''self @next ='self
+            - loop
+        'self .cache 'i .$
+
+    def test:
+        @new
+            1 @get  1 == assert
+            7 @get 13 == assert
+            8 @get 21 == assert
+        drop
+

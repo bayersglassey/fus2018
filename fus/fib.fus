@@ -1,65 +1,82 @@
 
-# Fibonacci numbers as a generator
+def test of(->):
+    # Test basic generator behaviour
 
-
-def fib_gen: gen:
-    0 ='a
-    1 ='b
-    do:
-        'a out
-        ''a 'b + ='c
-        ''b ='a
-        ''c ='b
-        loop
-
-def test:
-
-    @fib_gen
-        >> 0 == assert
-        >> 1 == assert
-        >> 1 == assert
-        >> 2 == assert
-        >> 3 == assert
-        >> 5 == assert
-        >> 8 == assert
-        >> 13 == assert
-        >> 21 == assert
+    @new
+    dup @cur_index  0 == assert
+    dup @cur_value  0 == assert
+    @pop  0 == assert
+    @pop  1 == assert
+    @pop  1 == assert
+    @pop  2 == assert
+    @pop  3 == assert
+    @pop  5 == assert
+    @pop  8 == assert
+    @pop 13 == assert
+    dup @cur_index  8 == assert
+    dup @cur_value 13 == assert
     drop
 
-    @(GenCache test)
+def test_cache of(->):
+    # The cache should let us do lookups of arbitrary indices
 
+    @new
+    # First call to @get does the calculations:
+    8 @get 13 == assert
+    # Second call to @get does a quick array lookup:
+    8 @get 13 == assert
+    drop
 
-module GenCache:
+def new of(-> gen):
+    obj
+        0 =.i
+        0 =.a
+        1 =.b
+        arr =.cache
 
-    def new:
-        ='gen
-        obj
-            arr =.cache
-            ''gen =.gen
+def cur_index of(gen -> i): .i
+def cur_value of(gen -> val): .a
 
-    def next:
-        ..gen >> ='value =.gen
-        ..cache dup len ='i 'value, =.cache
-        "Generated value "
-            'i int_tostr str_concat
-            ": " str_concat
-            'value int_tostr str_concat
-        str_p
-        ''value
+def next of(gen -> gen):
+    ='gen
 
-    def get:
-        ='i ='self
-        'i 0 < if: "Out of bounds!" error
-        ('self .cache len) 'i - do:
-            dup 0 > while
-            ''self @next ='self
-            - loop
-        'self .cache 'i .$
+    # Get variables from object members:
+    'gen .a ='a
+    'gen .b ='b
 
-    def test:
-        @new
-            1 @get  1 == assert
-            7 @get 13 == assert
-            8 @get 21 == assert
-        drop
+    # Calculate next number in the sequence:
+    ''a 'b + ='c
+
+    # Return modified generator:
+    ''gen
+
+        # Increment the index:
+        ..i 1 + =.i
+
+        # Push newest value onto the "cache" array:
+        ..cache 'c, =.cache
+
+        ''b =.a
+        ''c =.b
+
+def pop(gen -> gen val):
+    @cur_value ='val
+    @next
+    ''val
+
+def get(gen i -> gen val):
+    # Get "i"th value of Fibonacci sequence
+
+    ='i ='gen
+    do:
+        # Loop while the requested index is not yet in cache:
+        'i ('gen .cache len) >= while
+        ''gen @next ='gen
+        loop
+
+    # Quick lookup now that index is within cache:
+    'gen .cache 'i .$ ='val
+
+    # Return:
+    ''gen ''val
 
