@@ -161,6 +161,32 @@ void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_array_pop(&runner->callframes);
 }
 
+static int fus_runner_break_or_loop(fus_runner_t *runner, const char *token,
+    char c
+){
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    while(callframe->type != FUS_CALLFRAME_TYPE_DO){
+        fus_runner_pop_callframe(runner);
+        callframe = fus_runner_get_callframe(runner);
+        if(callframe == NULL){
+            fprintf(stderr, "%s: %s not in do(...)\n",
+                token, __func__);
+            return -1;
+        }
+    }
+    if(c == 'b'){
+        /* 'b' for "break" */
+        fus_runner_pop_callframe(runner);
+    }else if(c == 'l'){
+        /* 'l' for "loop" */
+        callframe->i = 0;
+    }else{
+        fprintf(stderr, "%s: '%c' not one of 'b', 'l'\n", __func__, c);
+        return -1;
+    }
+    return 0;
+}
+
 int fus_runner_step(fus_runner_t *runner){
 
     /* Get some variables from callframe */
@@ -586,23 +612,21 @@ int fus_runner_step(fus_runner_t *runner){
                     data);
                 goto dont_update_i;
             }else if(!strcmp(token, "break") || !strcmp(token, "loop")){
-                while(callframe->type != FUS_CALLFRAME_TYPE_DO){
-                    fus_runner_pop_callframe(runner);
-                    callframe = fus_runner_get_callframe(runner);
-                    if(callframe == NULL){
-                        fprintf(stderr, "%s: %s not in do(...)\n",
-                            token, __func__);
-                        return -1;
-                    }
-                }
-                if(token[0] == 'b'){
-                    /* "break" */
-                    fus_runner_pop_callframe(runner);
-                }else{
-                    /* "loop" */
-                    callframe->i = 0;
-                }
+                char c = token[0] == 'b'? 'b': 'l';
+                    /* 'b' for break or 'l' for loop */
+                if(fus_runner_break_or_loop(runner, token, c) < 0)return -1;
                 goto dont_update_i;
+            }else if(!strcmp(token, "while") || !strcmp(token, "until")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                bool cond = fus_value_bool_decode(value);
+                fus_value_detach(vm, value);
+
+                if(token[0] == 'w')cond = !cond; /* "while" */
+                if(cond){
+                    if(fus_runner_break_or_loop(runner, token, 'b') < 0)return -1;
+                    goto dont_update_i;
+                }
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);

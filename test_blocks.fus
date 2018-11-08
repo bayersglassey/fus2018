@@ -1,4 +1,5 @@
 
+
 1 (2 3) 4
 4 == assert
 3 == assert
@@ -37,5 +38,21 @@ do:
     'stop if(break)
     T ='stop
     loop
+
+arr ='a
+0 ='i
+do:
+    'i 3 < while
+    ''a 'i, ='a
+    ''i 1 + ='i loop
+''a dup p len 3 == assert
+
+arr ='a
+0 ='i
+do:
+    'i 3 >= until
+    ''a 'i, ='a
+    ''i 1 + ='i loop
+''a dup p len 3 == assert
 
 "Do Tests OK!\n" str_p
