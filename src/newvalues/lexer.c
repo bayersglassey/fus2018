@@ -397,8 +397,15 @@ void fus_lexer_next(fus_lexer_t *lexer){
 
     /* Eat various kinds of whitespace */
     while(1){
-        /* NOTE: This loop may increase/decrease returning_indents
-        by more than 1. */
+
+        if(lexer->returning_indents){
+            /* This loop may increase/decrease returning_indents
+            by more than 1, but not both!
+            Each of the various if-branches within the loop either calls
+            fus_lexer_finish_line (which may decrease returning_indents
+            by an arbitrary amount) or does returning_indents++. */
+            break;
+        }
 
         if(lexer->chunk_i >= lexer->chunk_size){
             /* End of chunk. DO NOT call fus_lexer_finish_line!
