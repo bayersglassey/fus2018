@@ -40,7 +40,7 @@ void fus_parser_dump(fus_parser_t *parser, FILE *file){
         fus_printer_set_file(&printer, file);
         printer.depth = 2;
 
-        fus_printer_print_data(&printer, parser->vm, &parser->arr);
+        fus_printer_print_data(&printer, parser->vm, &parser->arr, 0, -1);
 
         fus_printer_cleanup(&printer);
     }

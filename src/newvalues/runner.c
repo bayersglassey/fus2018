@@ -690,7 +690,7 @@ err:
         fus_arr_t *data = &callframe->data;
         fus_printer_t printer;
         fus_printer_init(&printer);
-        fus_printer_print_data(&printer, vm, data);
+        fus_printer_print_data(&printer, vm, data, 0, -1);
         fprintf(stderr, "\n");
         fus_printer_cleanup(&printer);
     }

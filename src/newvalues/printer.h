@@ -20,6 +20,9 @@ struct fus_printer {
     int buffer_len;
     int buffer_maxlen;
 
+    bool shallow_values; /* Don't recurse into arr, obj, fun, etc */
+    bool shallow_data; /* Don't recurse into arr */
+
     int depth;
     const char *tab;
     const char *newline;
@@ -53,7 +56,7 @@ void fus_printer_write_obj(fus_printer_t *printer,
 void fus_printer_write_obj_as_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
 void fus_printer_write_data(fus_printer_t *printer,
-    fus_vm_t *vm, fus_arr_t *a);
+    fus_vm_t *vm, fus_arr_t *a, int i0, int i1);
 
 
 int fus_printer_print_value(fus_printer_t *printer,
@@ -65,6 +68,6 @@ int fus_printer_print_obj(fus_printer_t *printer,
 int fus_printer_print_obj_as_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
 int fus_printer_print_data(fus_printer_t *printer,
-    fus_vm_t *vm, fus_arr_t *a);
+    fus_vm_t *vm, fus_arr_t *a, int i0, int i1);
 
 #endif
