@@ -21,7 +21,6 @@ struct fus_str {
 
 void fus_str_init(fus_vm_t *vm, fus_str_t *s,
     char *text, int len, size_t size);
-void fus_str_reinit(fus_vm_t *vm, fus_str_t *s, char *text, int len, size_t size);
 void fus_str_cleanup(fus_vm_t *vm, fus_str_t *s);
 
 int fus_str_len(fus_vm_t *vm, fus_str_t *s);

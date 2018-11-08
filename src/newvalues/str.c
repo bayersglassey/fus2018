@@ -12,11 +12,6 @@ void fus_str_init(fus_vm_t *vm, fus_str_t *s,
     s->size = size;
 }
 
-void fus_str_reinit(fus_vm_t *vm, fus_str_t *s, char *text, int len, size_t size){
-    fus_str_cleanup(vm, s);
-    fus_str_init(vm, s, text, len, size);
-}
-
 void fus_str_cleanup(fus_vm_t *vm, fus_str_t *s){
     /* NOTE: If text != NULL && size == 0, then str doesn't own its text
     (e.g. text was a C string literal) */
