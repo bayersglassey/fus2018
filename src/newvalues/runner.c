@@ -55,8 +55,20 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
             fus_printer_write_tabs(&printer);
             fus_printer_print_arr(&printer, vm, &state->stack);
             fprintf(file, "\n");
+        }else if(fmt_c == 'D' || fmt_c == 'V'){
+            bool *b_ptr = fmt_c == 'D'?
+                &printer.shallow_data: &printer.shallow_values;
+            fmt++;
+            char fmt_c2 = *fmt;
+            if(fmt_c2 == '+')*b_ptr = true;
+            else if(fmt_c2 == '-')*b_ptr = false;
+            else{
+                fprintf(stderr, "%s: Unrecognized fmt_c after %c: %c\n",
+                    __func__, fmt_c, fmt_c2);
+            }
         }else{
-            fprintf(file, "  unrecognized fmt_c: %c\n", fmt_c);
+            fprintf(stderr, "%s: Unrecognized fmt_c: %c\n",
+                __func__, fmt_c);
         }
         fmt++;
     }
@@ -139,6 +151,43 @@ void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
 
 void fus_runner_cleanup(fus_runner_t *runner){
     fus_array_cleanup(&runner->callframes);
+}
+
+void fus_runner_dump(fus_runner_t *runner, FILE *file){
+    fus_state_t *state = runner->state;
+    fus_vm_t *vm = state->vm;
+
+    fus_printer_t printer;
+    fus_printer_init(&printer);
+    fus_printer_set_file(&printer, file);
+
+    printer.shallow_data = true;
+
+    fprintf(file, "RUNNER:\n");
+
+    fprintf(file, "  callframes:");
+    int callframes_len = runner->callframes.len;
+    for(int i = 0; i < callframes_len; i++){
+        fus_runner_callframe_t *callframe =
+            FUS_ARRAY_GET_REF(runner->callframes, i);
+
+        printer.depth = i + 2;
+        fus_printer_write_newline(&printer);
+        fus_printer_print_data(&printer, vm, &callframe->data,
+            0, callframe->i);
+    }
+    fus_printer_write_text(&printer, "    <-- HERE");
+    for(int i = callframes_len - 1; i >= 0; i--){
+        fus_runner_callframe_t *callframe =
+            FUS_ARRAY_GET_REF(runner->callframes, i);
+
+        printer.depth = i + 2;
+        fus_printer_print_data(&printer, vm, &callframe->data,
+            callframe->i, -1);
+    }
+    fprintf(file, "\n");
+
+    fus_printer_cleanup(&printer);
 }
 
 
@@ -681,19 +730,8 @@ dont_update_i:
     return 0;
 
 err:
-    /* TODO: Improve the following greatly...
-    Can we wrap it up as a callback somehow, so we can tell core to call
-    it before exiting?
-    So, have a stack of on_error callbacks on core??? Oh my goodness */
-    callframe = fus_runner_get_callframe(runner);
-    if(callframe != NULL){
-        fus_arr_t *data = &callframe->data;
-        fus_printer_t printer;
-        fus_printer_init(&printer);
-        fus_printer_print_data(&printer, vm, data, 0, -1);
-        fprintf(stderr, "\n");
-        fus_printer_cleanup(&printer);
-    }
+    fus_runner_dump(runner, stderr);
+    fus_state_dump(state, stderr, "V+vV-s");
     return -1;
 }
 
