@@ -7,6 +7,15 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
+typedef enum fus_runner_callframe_type {
+    FUS_CALLFRAME_TYPE_MODULE,
+    FUS_CALLFRAME_TYPE_DEF,
+    FUS_CALLFRAME_TYPE_PAREN,
+    FUS_CALLFRAME_TYPE_IF,
+    FUS_CALLFRAME_TYPE_DO,
+    FUS_CALLFRAME_TYPES
+} fus_runner_callframe_type_t;
+
 struct fus_state {
     fus_vm_t *vm;
     fus_arr_t stack;
@@ -16,9 +25,9 @@ struct fus_state {
 
 struct fus_runner_callframe {
     fus_runner_t *runner;
+    fus_runner_callframe_type_t type;
     fus_arr_t data;
     int i;
-    bool in_def;
 };
 
 struct fus_runner {
@@ -47,7 +56,9 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data);
  **********/
 
 void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
-    fus_runner_t *runner, fus_arr_t *data, bool in_def);
+    fus_runner_t *runner,
+    fus_runner_callframe_type_t type,
+    fus_arr_t *data);
 void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe);
 void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
     fus_arr_t *data);
@@ -55,8 +66,9 @@ void fus_runner_cleanup(fus_runner_t *runner);
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
-void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
-    bool in_def);
+void fus_runner_push_callframe(fus_runner_t *runner,
+    fus_runner_callframe_type_t type,
+    fus_arr_t *data);
 void fus_runner_pop_callframe(fus_runner_t *runner);
 int fus_runner_step(fus_runner_t *runner);
 

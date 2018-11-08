@@ -5,11 +5,15 @@
 2 == assert
 1 == assert
 
+"Paren Tests OK!\n" str_p
+
 10 ='x
 F if: 20 ='x
 'x 10 == assert
 T if: 30 ='x
 'x 30 == assert
+
+"If Tests OK!\n" str_p
 
 10 ='y
 F ifelse(20 ='y)(25 ='y)
@@ -17,5 +21,21 @@ F ifelse(20 ='y)(25 ='y)
 T ifelse(30 ='y)(35 ='y)
 'y 30 == assert
 
+"Ifelse Tests OK!\n" str_p
 
-"Block Tests OK!\n" str_p
+do: 1 2
+2 == assert
+1 == assert
+
+do: 1 break 2
+1 == assert
+
+"Loopin...\n" str_p
+F ='stop
+do:
+    "  Stop? " str_p 'stop p
+    'stop if(break)
+    T ='stop
+    loop
+
+"Do Tests OK!\n" str_p

@@ -98,12 +98,14 @@ err:
  **********/
 
 void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
-    fus_runner_t *runner, fus_arr_t *data, bool in_def
+    fus_runner_t *runner,
+    fus_runner_callframe_type_t type,
+    fus_arr_t *data
 ){
     callframe->runner = runner;
+    callframe->type = type;
     fus_arr_copy(runner->state->vm, &callframe->data, data);
     callframe->i = 0;
-    callframe->in_def = in_def; /* runner doesn't support nested defs */
 }
 
 void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe){
@@ -124,7 +126,7 @@ void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
 
     /* Init callframe array */
     fus_array_init(&runner->callframes, &runner->class_callframe);
-    fus_runner_push_callframe(runner, data, false);
+    fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_MODULE, data);
 }
 
 void fus_runner_cleanup(fus_runner_t *runner){
@@ -144,12 +146,13 @@ bool fus_runner_is_done(fus_runner_t *runner){
     return callframe == NULL;
 }
 
-void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
-    bool in_def
+void fus_runner_push_callframe(fus_runner_t *runner,
+    fus_runner_callframe_type_t type,
+    fus_arr_t *data
 ){
     fus_array_push(&runner->callframes);
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    fus_runner_callframe_init(callframe, runner, data, in_def);
+    fus_runner_callframe_init(callframe, runner, type, data);
 }
 
 void fus_runner_pop_callframe(fus_runner_t *runner){
@@ -474,7 +477,7 @@ int fus_runner_step(fus_runner_t *runner){
                     FUS_STATE_EXPECT_T(sym)
                     def_sym_i = fus_value_sym_decode(token_value);
 
-                    if(callframe->in_def){
+                    if(callframe->type != FUS_CALLFRAME_TYPE_MODULE){
                         const char *token_def =
                             fus_symtable_get_token(symtable, def_sym_i);
                         fprintf(stderr, "%s: Nested defs not allowed: %s\n",
@@ -521,7 +524,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_arr_t *def_data = &value_def.p->data.a;
 
                 callframe->i = i + 1;
-                fus_runner_push_callframe(runner, def_data, true);
+                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
+                    def_data);
                 goto dont_update_i;
             }else if(!strcmp(token, "&")){
                 FUS_STATE_NEXT_VALUE()
@@ -550,7 +554,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_arr_t *data = &f->data;
 
                 callframe->i = i + 1;
-                fus_runner_push_callframe(runner, data, true);
+                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,
+                    data);
 
                 fus_value_detach(vm, value);
                 goto dont_update_i;
@@ -577,10 +582,37 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_arr_t *branch_taken = cond? branch1: branch2;
                 if(branch_taken != NULL){
                     callframe->i = i + 1;
-                    fus_runner_push_callframe(runner, branch_taken,
-                        callframe->in_def);
+                    fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,
+                        branch_taken);
                     goto dont_update_i;
                 }
+            }else if(!strcmp(token, "do")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                fus_arr_t *data = &token_value.p->data.a;
+
+                callframe->i = i + 1;
+                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DO,
+                    data);
+                goto dont_update_i;
+            }else if(!strcmp(token, "break") || !strcmp(token, "loop")){
+                while(callframe->type != FUS_CALLFRAME_TYPE_DO){
+                    fus_runner_pop_callframe(runner);
+                    callframe = fus_runner_get_callframe(runner);
+                    if(callframe == NULL){
+                        fprintf(stderr, "%s: %s not in do(...)\n",
+                            token, __func__);
+                        return -1;
+                    }
+                }
+                if(token[0] == 'b'){
+                    /* "break" */
+                    fus_runner_pop_callframe(runner);
+                }else{
+                    /* "loop" */
+                    callframe->i = 0;
+                }
+                goto dont_update_i;
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
@@ -588,7 +620,8 @@ int fus_runner_step(fus_runner_t *runner){
             }
         }else if(fus_value_is_arr(token_value)){
             callframe->i = i + 1;
-            fus_runner_push_callframe(runner, &token_value.p->data.a, callframe->in_def);
+            fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_PAREN,
+                &token_value.p->data.a);
             goto dont_update_i;
         }else{
             fprintf(stderr, "%s: Unexpected type in data to be run: %s\n",
@@ -597,8 +630,7 @@ int fus_runner_step(fus_runner_t *runner){
         }
     }
 
-    i++;
-    callframe->i = i;
+    callframe->i = i + 1;
 
 dont_update_i:
     /* Particularly if you push/pop a callframe, you should jump here so
