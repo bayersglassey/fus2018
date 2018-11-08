@@ -57,6 +57,7 @@ fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
 void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
     bool in_def);
+void fus_runner_pop_callframe(fus_runner_t *runner);
 int fus_runner_step(fus_runner_t *runner);
 
 

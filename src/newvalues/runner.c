@@ -134,15 +134,14 @@ void fus_runner_cleanup(fus_runner_t *runner){
 
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner){
-    return FUS_ARRAY_GET_REF(runner->callframes,
-        runner->callframes.len - 1);
+    int callframes_len = runner->callframes.len;
+    if(callframes_len <= 0)return NULL;
+    return FUS_ARRAY_GET_REF(runner->callframes, callframes_len - 1);
 }
 
 bool fus_runner_is_done(fus_runner_t *runner){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    fus_arr_t *data = &callframe->data;
-    fus_value_t *token_values = FUS_ARR_VALUES(*data);
-    return callframe->i >= data->values.len;
+    return callframe == NULL;
 }
 
 void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
@@ -153,22 +152,37 @@ void fus_runner_push_callframe(fus_runner_t *runner, fus_arr_t *data,
     fus_runner_callframe_init(callframe, runner, data, in_def);
 }
 
+void fus_runner_pop_callframe(fus_runner_t *runner){
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    fus_runner_callframe_cleanup(callframe);
+    fus_array_pop(&runner->callframes);
+}
+
 int fus_runner_step(fus_runner_t *runner){
 
-    /* If we're already finished, don't do anything
-    (TODO: pop from callframe) */
-    if(fus_runner_is_done(runner))return 0;
-
-    /* Get some variables from runner, state, etc */
-    fus_state_t *state = runner->state;
-    fus_vm_t *vm = state->vm;
-    fus_symtable_t *symtable = vm->symtable;
+    /* Get some variables from callframe */
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    if(callframe == NULL){
+        fprintf(stderr, "%s: Stepping a done runner is an error!\n",
+            __func__);
+        return -1;
+    }
     fus_arr_t *data = &callframe->data;
     int i = callframe->i;
     fus_value_t *token_values = FUS_ARR_VALUES(*data);
     int token_values_len = data->values.len;
+    if(i >= token_values_len){
+        /* Pop callframe if we've reached end of data.
+        Doing so counts as a complete step. */
+        fus_runner_pop_callframe(runner);
+        return 0;
+    }
     fus_value_t token_value = token_values[i];
+
+    /* Get some variables from state */
+    fus_state_t *state = runner->state;
+    fus_vm_t *vm = state->vm;
+    fus_symtable_t *symtable = vm->symtable;
 
     {
 
@@ -505,7 +519,10 @@ int fus_runner_step(fus_runner_t *runner){
                 int sym_i = fus_value_sym_decode(token_value);
                 fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
                 fus_arr_t *def_data = &value_def.p->data.a;
+
+                callframe->i = i + 1;
                 fus_runner_push_callframe(runner, def_data, true);
+                goto dont_update_i;
             }else if(!strcmp(token, "&")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
@@ -531,23 +548,35 @@ int fus_runner_step(fus_runner_t *runner){
                 }
                 fus_fun_t *f = &value.p->data.f;
                 fus_arr_t *data = &f->data;
+
+                callframe->i = i + 1;
                 fus_runner_push_callframe(runner, data, true);
+
                 fus_value_detach(vm, value);
+                goto dont_update_i;
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
                 return -1;
             }
         }else if(fus_value_is_arr(token_value)){
+            callframe->i = i + 1;
             fus_runner_push_callframe(runner, &token_value.p->data.a, callframe->in_def);
+            goto dont_update_i;
         }else{
             fprintf(stderr, "%s: Unexpected type in data to be run: %s\n",
                 __func__, fus_value_type_msg(token_value));
             return -1;
         }
     }
+
     i++;
     callframe->i = i;
+
+dont_update_i:
+    /* Particularly if you push/pop a callframe, you should jump here so
+    we don't attempt to access old callframe->i. */
+
     return 0;
 }
 
