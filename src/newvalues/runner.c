@@ -153,7 +153,7 @@ void fus_runner_cleanup(fus_runner_t *runner){
     fus_array_cleanup(&runner->callframes);
 }
 
-void fus_runner_dump(fus_runner_t *runner, FILE *file){
+void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here){
     fus_state_t *state = runner->state;
     fus_vm_t *vm = state->vm;
 
@@ -174,18 +174,18 @@ void fus_runner_dump(fus_runner_t *runner, FILE *file){
         printer.depth = i + 2;
         fus_printer_write_newline(&printer);
         fus_printer_print_data(&printer, vm, &callframe->data,
-            0, callframe->i);
+            0, callframe->i + 1);
     }
     fus_printer_write_text(&printer, "    <-- HERE");
-    for(int i = callframes_len - 1; i >= 0; i--){
+    if(!end_at_here)for(int i = callframes_len - 1; i >= 0; i--){
         fus_runner_callframe_t *callframe =
             FUS_ARRAY_GET_REF(runner->callframes, i);
 
         printer.depth = i + 2;
         fus_printer_print_data(&printer, vm, &callframe->data,
-            callframe->i, -1);
+            callframe->i + 1, -1);
     }
-    fprintf(file, "\n");
+    fus_printer_write_text(&printer, "\n");
 
     fus_printer_cleanup(&printer);
 }
@@ -740,7 +740,7 @@ dont_update_i:
     return 0;
 
 err:
-    fus_runner_dump(runner, stderr);
+    fus_runner_dump(runner, stderr, true);
     fus_state_dump(state, stderr, "V+vV-s");
     return -1;
 }

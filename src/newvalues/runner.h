@@ -63,7 +63,7 @@ void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe);
 void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
     fus_arr_t *data);
 void fus_runner_cleanup(fus_runner_t *runner);
-void fus_runner_dump(fus_runner_t *runner, FILE *file);
+void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here);
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
