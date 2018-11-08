@@ -554,6 +554,33 @@ int fus_runner_step(fus_runner_t *runner){
 
                 fus_value_detach(vm, value);
                 goto dont_update_i;
+            }else if(!strcmp(token, "if") || !strcmp(token, "ifelse")){
+                fus_arr_t *branch1 = NULL;
+                fus_arr_t *branch2 = NULL;
+
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                branch1 = &token_value.p->data.a;
+                if(token[2] != '\0'){
+                    /* "ifelse" */
+                    FUS_STATE_NEXT_VALUE()
+                    FUS_STATE_EXPECT_T(arr)
+                    branch2 = &token_value.p->data.a;
+                }
+
+                /* TODO: Check stack effects of the branches */
+
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                bool cond = fus_value_bool_decode(value);
+                fus_value_detach(vm, value);
+                fus_arr_t *branch_taken = cond? branch1: branch2;
+                if(branch_taken != NULL){
+                    callframe->i = i + 1;
+                    fus_runner_push_callframe(runner, branch_taken,
+                        callframe->in_def);
+                    goto dont_update_i;
+                }
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);

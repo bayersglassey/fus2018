@@ -1,2 +1,21 @@
 
 1 (2 3) 4
+4 == assert
+3 == assert
+2 == assert
+1 == assert
+
+10 ='x
+F if: 20 ='x
+'x 10 == assert
+T if: 30 ='x
+'x 30 == assert
+
+10 ='y
+F ifelse(20 ='y)(25 ='y)
+'y 25 == assert
+T ifelse(30 ='y)(35 ='y)
+'y 30 == assert
+
+
+"Block Tests OK!\n" str_p
