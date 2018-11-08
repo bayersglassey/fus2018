@@ -99,6 +99,10 @@ void fus_printer_write_text(fus_printer_t *printer, const char *text){
 }
 
 void fus_printer_write_long_int(fus_printer_t *printer, long int i){
+    if(i == 0){
+        fus_printer_write_text(printer, "0");
+        return;
+    }
     char buffer[20];
     char *s = &buffer[20 - 1];
     *s = '\0';
