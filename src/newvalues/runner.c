@@ -259,38 +259,28 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_neg(vm, value);
                 fus_arr_push(vm, &state->stack, new_value);
-            }else if(!strcmp(token, "+")){
-                fus_value_t value1;
-                fus_value_t value2;
-                FUS_STATE_STACK_POP(&value2)
-                FUS_STATE_STACK_POP(&value1)
-                fus_value_t value3 = fus_value_int_add(vm,
-                    value1, value2);
-                fus_arr_push(vm, &state->stack, value3);
-            }else if(!strcmp(token, "-")){
-                fus_value_t value1;
-                fus_value_t value2;
-                FUS_STATE_STACK_POP(&value2)
-                FUS_STATE_STACK_POP(&value1)
-                fus_value_t value3 = fus_value_int_sub(vm,
-                    value1, value2);
-                fus_arr_push(vm, &state->stack, value3);
-            }else if(!strcmp(token, "*")){
-                fus_value_t value1;
-                fus_value_t value2;
-                FUS_STATE_STACK_POP(&value2)
-                FUS_STATE_STACK_POP(&value1)
-                fus_value_t value3 = fus_value_int_mul(vm,
-                    value1, value2);
-                fus_arr_push(vm, &state->stack, value3);
-            }else if(!strcmp(token, "==")){
-                fus_value_t value1;
-                fus_value_t value2;
-                FUS_STATE_STACK_POP(&value2)
-                FUS_STATE_STACK_POP(&value1)
-                fus_value_t value3 = fus_value_int_eq(vm,
-                    value1, value2);
-                fus_arr_push(vm, &state->stack, value3);
+
+            #define FUS_RUNNER_INT_BINOP(TOK, OP) \
+            }else if(!strcmp(token, TOK)) { \
+                fus_value_t value1; \
+                fus_value_t value2; \
+                FUS_STATE_STACK_POP(&value2) \
+                FUS_STATE_STACK_POP(&value1) \
+                fus_value_t value3 = fus_value_int_##OP(vm, \
+                    value1, value2); \
+                fus_arr_push(vm, &state->stack, value3); \
+
+            FUS_RUNNER_INT_BINOP("+", add)
+            FUS_RUNNER_INT_BINOP("-", sub)
+            FUS_RUNNER_INT_BINOP("*", mul)
+            //FUS_RUNNER_INT_BINOP("/", div)
+            FUS_RUNNER_INT_BINOP("==", eq)
+            FUS_RUNNER_INT_BINOP("!=", ne)
+            FUS_RUNNER_INT_BINOP("<", lt)
+            FUS_RUNNER_INT_BINOP(">", gt)
+            FUS_RUNNER_INT_BINOP("<=", le)
+            FUS_RUNNER_INT_BINOP(">=", gt)
+
             }else if(!strcmp(token, "eq")){
                 fus_value_t value1;
                 fus_value_t value2;

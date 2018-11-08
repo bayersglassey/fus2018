@@ -31,3 +31,16 @@ def mkpoint:
     ='y ='x
     obj 'x =.x 'y =.y
 
+
+"INT OPS:\n" str_p
+1 2 +   3 == assert
+1 2 -  -1 == assert
+1 2 *   2 == assert
+#10 2 /  5 == assert
+1 2 ==  not assert
+1 2 !=  assert
+1 2 <   assert
+1 2 >   not assert
+1 2 <=  assert
+1 2 >=  not assert
+"INT OPS OK!\n" str_p
