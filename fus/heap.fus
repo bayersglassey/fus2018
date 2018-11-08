@@ -37,10 +37,11 @@ def add of(heap value -> heap key):
 def find of(heap key -> index):
     ='key ='heap
     'heap .entries ='entries
-    0 'entries len do loop:
-        over over >= if: null ='i break loop
+    0 'entries len do:
+        over over >= if: null ='i break
         swap dup ='i 1 + swap
-        'entries 'i .$ .key 'key == if: break loop
+        'entries 'i .$ .key 'key == if: break
+        loop
     drop drop
     'i
 
@@ -64,3 +65,5 @@ def del of(heap key -> heap):
     @find ='i
     ''heap
         ..entries 'i split lpop drop join =.entries
+
+@test
