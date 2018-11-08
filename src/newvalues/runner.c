@@ -29,6 +29,12 @@ void fus_state_cleanup(fus_state_t *state){
     fus_obj_cleanup(state->vm, &state->defs);
 }
 
+static void fus_swap_bools(bool *b1, bool *b2){
+    bool temp = *b1;
+    *b1 = *b2;
+    *b2 = temp;
+}
+
 void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
     fus_vm_t *vm = state->vm;
 
@@ -40,21 +46,36 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
     fprintf(file, "STATE:\n");
     char fmt_c;
     while(fmt_c = *fmt, fmt_c != '\0'){
-        if(fmt_c == 'd'){
+        if(strchr("dD", fmt_c)){
+            bool shallow_data = fmt_c == 'D';
+            fus_swap_bools(&shallow_data, &printer.shallow_data);
+
             fprintf(file, "  defs:\n");
             fus_printer_write_tabs(&printer);
             fus_printer_print_obj_as_data(&printer, vm, &state->defs);
             fprintf(file, "\n");
-        }else if(fmt_c == 'v'){
+
+            fus_swap_bools(&shallow_data, &printer.shallow_data);
+        }else if(strchr("vV", fmt_c)){
+            bool shallow_values = fmt_c == 'V';
+            fus_swap_bools(&shallow_values, &printer.shallow_values);
+
             fprintf(file, "  vars:\n");
             fus_printer_write_tabs(&printer);
             fus_printer_print_obj(&printer, vm, &state->vars);
             fprintf(file, "\n");
-        }else if(fmt_c == 's'){
+
+            fus_swap_bools(&shallow_values, &printer.shallow_values);
+        }else if(strchr("sS", fmt_c)){
+            bool shallow_values = fmt_c == 'S';
+            fus_swap_bools(&shallow_values, &printer.shallow_values);
+
             fprintf(file, "  stack:\n");
             fus_printer_write_tabs(&printer);
             fus_printer_print_arr(&printer, vm, &state->stack);
             fprintf(file, "\n");
+
+            fus_swap_bools(&shallow_values, &printer.shallow_values);
         }else if(fmt_c == 'D' || fmt_c == 'V'){
             bool *b_ptr = fmt_c == 'D'?
                 &printer.shallow_data: &printer.shallow_values;
