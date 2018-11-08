@@ -35,7 +35,7 @@ TODO: Fight Haskell and win.
             @pop  8 == assert
             @pop 13 == assert
             dup @cur_index  8 == assert
-            dup @cur_value 13 == assert
+            dup @cur_value 21 == assert
             drop
 
         def test_cache of(->):
@@ -43,9 +43,9 @@ TODO: Fight Haskell and win.
 
             @new
             # First call to @get does the calculations:
-            8 @get 13 == assert
+            7 @get 13 == assert
             # Second call to @get does a quick array lookup:
-            8 @get 13 == assert
+            7 @get 13 == assert
             drop
 
         def new of(-> gen):
@@ -53,7 +53,9 @@ TODO: Fight Haskell and win.
                 0 =.i
                 0 =.a
                 1 =.b
-                arr =.cache
+
+                # The cache starts off containing a and b:
+                arr 0, 1, =.cache
 
         def cur_index of(gen -> i): .i
         def cur_value of(gen -> val): .a
@@ -80,12 +82,12 @@ TODO: Fight Haskell and win.
                 ''b =.a
                 ''c =.b
 
-        def pop(gen -> gen val):
-            @cur_value ='val
+        def pop of(gen -> gen val):
+            dup @cur_value ='val
             @next
             ''val
 
-        def get(gen i -> gen val):
+        def get of(gen i -> gen val):
             # Get "i"th value of Fibonacci sequence
 
             ='i ='gen
@@ -100,6 +102,9 @@ TODO: Fight Haskell and win.
 
             # Return:
             ''gen ''val
+
+        # Run tests when module is loaded:
+        @test
 
 
 ## "Newvalues"
