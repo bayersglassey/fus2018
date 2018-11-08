@@ -80,6 +80,11 @@ const char *fus_err_code_msg(fus_err_code_t code);
 #define FUS_PRINT_ERRS_TO_STDERR 1
 #endif
 
+#ifndef FUS_PRINT_BACKTRACE_WITH_ERRS
+/* default */
+#define FUS_PRINT_BACKTRACE_WITH_ERRS 1
+#endif
+
 #ifndef FUS_USE_CURRENT_ERR_CODE
 /* default */
 #define FUS_USE_CURRENT_ERR_CODE 0

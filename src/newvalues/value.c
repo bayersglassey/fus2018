@@ -35,6 +35,9 @@ fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code){
 #if FUS_PRINT_ERRS_TO_STDERR
     const char *msg = fus_err_code_msg(code);
     fprintf(stderr, "{Fus err #%i: %s}", code, msg);
+#if FUS_PRINT_BACKTRACE_WITH_ERRS
+    fprintf(stderr, "\n"); FUS_BACKTRACE
+#endif
 #endif
 #if FUS_USE_CURRENT_ERR_CODE
     fus_current_err_code = code;
