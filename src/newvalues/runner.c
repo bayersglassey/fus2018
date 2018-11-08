@@ -715,6 +715,12 @@ int fus_runner_step(fus_runner_t *runner){
                     if(fus_runner_break_or_loop(runner, token, 'b') < 0)goto err;
                     goto dont_update_i;
                 }
+            }else if(!strcmp(token, "data")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                fus_value_t value = (fus_value_t)token_value.p;
+                fus_value_attach(vm, value);
+                fus_arr_push(vm, &state->stack, value);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
