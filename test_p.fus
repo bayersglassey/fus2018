@@ -1,0 +1,4 @@
+
+arr 1, (arr 2, 3,), 4, p
+obj 1 =.x (obj 2 =.x) =.y 3 =.z p
+fun(1 2 +) p

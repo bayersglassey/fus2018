@@ -279,7 +279,7 @@ int fus_runner_step(fus_runner_t *runner){
             FUS_RUNNER_INT_BINOP("<", lt)
             FUS_RUNNER_INT_BINOP(">", gt)
             FUS_RUNNER_INT_BINOP("<=", le)
-            FUS_RUNNER_INT_BINOP(">=", gt)
+            FUS_RUNNER_INT_BINOP(">=", ge)
 
             }else if(!strcmp(token, "eq")){
                 fus_value_t value1;

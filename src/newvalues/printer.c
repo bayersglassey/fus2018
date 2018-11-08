@@ -201,15 +201,19 @@ void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
         fus_printer_write_text(printer, "arr");
         fus_arr_t *a = &p->data.a;
         if(a->values.len > 0){
+            printer->depth++;
             fus_printer_write_newline(printer);
             fus_printer_write_arr(printer, p->vm, a);
+            printer->depth--;
         }
     }else if(type == FUS_BOXED_OBJ){
         fus_printer_write_text(printer, "obj");
         fus_obj_t *o = &p->data.o;
         if(o->keys.len > 0){
+            printer->depth++;
             fus_printer_write_newline(printer);
             fus_printer_write_obj(printer, p->vm, o);
+            printer->depth--;
         }
     }else if(type == FUS_BOXED_STR){
         fus_str_t *s = &p->data.s;
@@ -223,8 +227,10 @@ void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
             fus_arr_t *data = &f->data;
             if(data->values.len > 0){
                 fus_printer_write_text(printer, "fun:");
+                printer->depth++;
                 fus_printer_write_newline(printer);
                 fus_printer_write_data(printer, p->vm, data);
+                printer->depth--;
             }else{
                 fus_printer_write_text(printer, "fun()");
             }
