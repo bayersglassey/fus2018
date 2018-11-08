@@ -3,6 +3,14 @@
 #include "includes.h"
 
 
+#define FUS_RUNNER_SUPER_HACKY_DEBUG_INFO 0
+#define FUS_RUNNER_SUPER_HACKY_TABS() { \
+    printf(":D"); \
+    int callframes_len = runner->callframes.len; \
+    for(int i = 0; i < callframes_len; i++)printf("  "); \
+}
+
+
 
 /*********
  * STATE *
@@ -255,12 +263,25 @@ int fus_runner_step(fus_runner_t *runner){
         #define FUS_STATE_STACK_POP(VPTR) \
             if(fus_arr_pop(vm, &state->stack, (VPTR)))goto err;
 
+        #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
+        if(!fus_value_is_sym(token_value)){
+            FUS_RUNNER_SUPER_HACKY_TABS()
+            printf("%s\n", fus_value_type_msg(token_value));
+        }
+        #endif
+
         if(fus_value_is_int(token_value) || fus_value_is_str(token_value)){
             fus_value_attach(vm, token_value);
             fus_arr_push(vm, &state->stack, token_value);
         }else if(fus_value_is_sym(token_value)){
             int sym_i = fus_value_sym_decode(token_value);
             const char *token = fus_symtable_get_token(symtable, sym_i);
+
+            #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
+            FUS_RUNNER_SUPER_HACKY_TABS()
+            printf("%s\n", token);
+            #endif
+
             if(!strcmp(token, "`")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
@@ -536,6 +557,14 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(token_value);
+
+                #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
+                const char *token_def =
+                    fus_symtable_get_token(symtable, sym_i);
+                FUS_RUNNER_SUPER_HACKY_TABS()
+                printf("%s\n", token_def);
+                #endif
+
                 fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
                 fus_arr_t *def_data = &value_def.p->data.a;
 
