@@ -36,7 +36,9 @@ void fus_printer_init(fus_printer_t *printer){
 }
 
 void fus_printer_cleanup(fus_printer_t *printer){
-    /* Nuthin */
+    /* Do we want to add a bool field controlling whether the
+    following occurs?.. */
+    fus_printer_flush(printer);
 }
 
 
