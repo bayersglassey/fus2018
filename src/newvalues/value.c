@@ -111,9 +111,14 @@ fus_value_t fus_value_eq(fus_vm_t *vm,
     fus_unboxed_t tag_y = FUS_GET_TAG(value_y.i);
     if(tag_x != tag_y)return FUS_VALUE_FALSE;
 
-    if(tag_x == FUS_TAG_BOXED)return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-        /* Can't compare arr, obj, str, fun.
+    if(tag_x == FUS_TAG_BOXED){
+        if(fus_value_is_str(value_x)){
+            return fus_value_str_eq(vm, value_x, value_y);
+        }
+        return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        /* Can't compare arr, obj, fun.
         TODO: It should be possible to compare everything except fun */
+    }
 
     return fus_value_bool(vm, value_x.i == value_y.i);
 }

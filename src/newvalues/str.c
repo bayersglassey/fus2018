@@ -23,6 +23,54 @@ int fus_str_len(fus_vm_t *vm, fus_str_t *s){
     return s->len;
 }
 
+bool fus_str_eq(fus_vm_t *vm, fus_str_t *s1, fus_str_t *s2){
+    return s1->len == s2->len && !strncmp(s1->text, s2->text, s1->len);
+}
+
+void fus_str_join(fus_vm_t *vm, fus_str_t *s1, fus_str_t *s2){
+    int new_len = s1->len + s2->len;
+    size_t new_size = s1->size;
+
+    if(new_size < new_len + 1){
+        /* Grow array */
+        new_size = new_len + 1;
+        s1->text = fus_realloc(vm->core, s1->text, new_size);
+    }
+
+    /* Copy s2->text onto end of s1->text */
+    strncpy(s1->text + s1->len, s2->text, s2->len);
+
+    /* NUL terminate */
+    s1->text[new_len] = '\0';
+
+    /* Update len, size */
+    s1->len = new_len;
+    s1->size = new_size;
+}
+
+
+
+void fus_boxed_str_mkunique(fus_boxed_t **p_ptr){
+    /* Guarantees that p will have refcount 1.
+    Either leaves p alone if it already has refcount 1,
+    or "splits" p into two copies, with refcounts
+    old_refcount-1 and 1, and returning the copy with
+    refcount 1. */
+
+    fus_boxed_t *p = *p_ptr;
+    if(p->refcount > 1){
+        fus_vm_t *vm = p->vm;
+        fus_str_t *s = &p->data.s;
+
+        char *new_text = fus_malloc(vm->core, s->size);
+        fus_memcpy(vm->core, new_text, s->text, s->size);
+
+        fus_boxed_detach(p);
+        fus_boxed_t *new_p = fus_value_str(vm, new_text,
+            s->len, s->size).p;
+        *p_ptr = new_p;
+    }
+}
 
 
 fus_value_t fus_value_str(fus_vm_t *vm,
@@ -41,6 +89,16 @@ fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value){
     return fus_value_int(vm, fus_str_len(vm, &value.p->data.s));
 }
 
+fus_value_t fus_value_str_eq(fus_vm_t *vm, fus_value_t value1,
+    fus_value_t value2
+){
+    /* Return equality of str values as a new bool value */
+    if(!fus_value_is_str(value1))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!fus_value_is_str(value2))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    return fus_value_bool(vm, fus_str_eq(vm, &value1.p->data.s,
+        &value2.p->data.s));
+}
+
 const char *fus_value_str_decode(fus_value_t value){
     if(!fus_value_is_str(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
@@ -49,6 +107,31 @@ const char *fus_value_str_decode(fus_value_t value){
         return NULL;
     }
     return value.p->data.s.text;
+}
+
+void fus_value_str_join(fus_vm_t *vm, fus_value_t *value_s1_ptr,
+    fus_value_t value_s2
+){
+
+    /* Typecheck */
+    fus_value_t value_s1 = *value_s1_ptr;
+    if(!fus_value_is_str(value_s1) || !fus_value_is_str(value_s2)){
+        fus_value_detach(vm, value_s1);
+        fus_value_detach(vm, value_s2);
+        *value_s1_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_str_mkunique(&value_s1.p);
+
+    /* Get strs and do the join */
+    fus_str_t *s1 = &value_s1.p->data.s;
+    fus_str_t *s2 = &value_s2.p->data.s;
+    fus_str_join(vm, s1, s2);
+
+    /* Return */
+    *value_s1_ptr = value_s1;
 }
 
 

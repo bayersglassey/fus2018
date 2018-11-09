@@ -409,6 +409,8 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_t value3 = fus_value_eq(vm,
                     value1, value2);
+                fus_value_detach(vm, value1);
+                fus_value_detach(vm, value2);
                 fus_arr_push(vm, &state->stack, value3);
             }else if(!strcmp(token, "arr")){
                 fus_value_t value = fus_value_arr(vm);
@@ -501,6 +503,30 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_len = fus_value_arr_len(vm, value);
                 fus_arr_push(vm, &state->stack, value_len);
                 fus_value_detach(vm, value);
+            }else if(!strcmp(token, "str_len")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                fus_value_t value_len = fus_value_str_len(vm, value);
+                fus_arr_push(vm, &state->stack, value_len);
+                fus_value_detach(vm, value);
+            }else if(!strcmp(token, "str_eq")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_t value3 = fus_value_str_eq(vm,
+                    value1, value2);
+                fus_value_detach(vm, value1);
+                fus_value_detach(vm, value2);
+                fus_arr_push(vm, &state->stack, value3);
+            }else if(!strcmp(token, "str_join")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_str_join(vm, &value1, value2);
+                fus_arr_push(vm, &state->stack, value1);
+                fus_value_detach(vm, value2);
             }else if(!strcmp(token, "swap")){
                 fus_value_t value1;
                 fus_value_t value2;
@@ -746,6 +772,10 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value = (fus_value_t)token_value.p;
                 fus_value_attach(vm, value);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "ignore")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                fus_value_t value = (fus_value_t)token_value.p;
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
@@ -772,7 +802,7 @@ dont_update_i:
 
 err:
     fus_runner_dump(runner, stderr, true);
-    fus_state_dump(state, stderr, "V+vV-s");
+    fus_state_dump(state, stderr, "Vs");
     return -1;
 }
 
