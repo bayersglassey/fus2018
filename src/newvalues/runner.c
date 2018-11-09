@@ -355,7 +355,11 @@ int fus_runner_step(fus_runner_t *runner){
             if(!strcmp(token, "`")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                fus_value_t value = fus_value_stringparse_sym(vm, token);
+                int sym_i = fus_value_sym_decode(token_value);
+                const char *quoted_token = fus_symtable_get_token(
+                    symtable, sym_i);
+                fus_value_t value = fus_value_stringparse_sym(vm,
+                    quoted_token);
                 fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "null")){
                 fus_value_t value = fus_value_null(vm);
@@ -691,7 +695,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 branch1 = &token_value.p->data.a;
-                if(token[2] != '\0'){
+                if(token[2] == 'e'){
                     /* "ifelse" */
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
