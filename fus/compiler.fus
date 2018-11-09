@@ -1,0 +1,73 @@
+
+def replace of(data vars -> new_data):
+    ='vars ='data
+    0 ='i
+    arr do:
+        'i 'data len < while
+        'data 'i .$ ='word
+        do:
+            'word is_sym if: 'word ` $ sym_eq if:
+                ''i 1 + ='i
+                'data 'i .$ ='var_name
+                'vars 'var_name get join
+                break
+            'word join
+        ''i 1 + ='i loop
+
+def mkcompiler: obj
+    0 =.n_loops
+
+def sym_join_int:
+    ='int ='sym
+    'sym sym_tostr 'int int_tostr str_join str_tosym
+
+def compile of(compiler data -> compiler compiled_data):
+    ='data ='compiler
+    arr ='compiled_data
+
+    0 ='i
+    do:
+        'i 'data len < while
+        'data 'i .$ ='word
+        do:
+
+            'word is_sym if: 'word `int_for sym_eq if:
+
+                'compiler .n_loops ='loop_i
+                `__n 'loop_i @sym_join_int ='N
+                `__i 'loop_i @sym_join_int ='I
+
+                ''i 1 + ='i
+                'data 'i .$ ='BODY
+
+                :
+                    data:
+                        =' $N
+                        0 =' $I
+                        do:
+                            ' $I ' $N < while
+                            $BODY
+                            '' $I 1 + =' $I loop
+                    obj
+                        'N =.N
+                        'I =.I
+                        'BODY =.BODY
+                    @replace
+                ''compiled_data swap join ='compiled_data
+
+                ''compiler ..n_loops 1 + =.n_loops ='compiler
+
+                break
+
+            'word is_arr if:
+                'compiler 'word @compile ='compiled_word
+                ''compiled_data ''compiled_word join ='compiled_data
+                break
+
+            ''compiled_data 'word, ='compiled_data
+
+        ''i 1 + ='i loop
+
+    ''compiler ''compiled_data
+
+
