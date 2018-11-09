@@ -56,3 +56,11 @@ do:
 ''a dup p len 3 == assert
 
 "Do Tests OK!\n" str_p
+
+do:
+        do:
+            1 2
+    2 == assert
+    1 == assert
+
+"Indentation OK!\n" str_p

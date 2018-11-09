@@ -1,7 +1,4 @@
 
-# The following shows crappy error "{Fus err #0: Wrong type}fus_exit: status=1"
-#     arr 1, 2, (3, 4,),
-
 arr 1, 2, (arr 3, 4,),
 dup len swap
 dup
@@ -25,3 +22,40 @@ over 1 ..$
 "Arr set:"
 arr "A", "B", "C",
 "BEE" 1 =.$
+
+
+"Join & Split:"
+
+arr 1, 2, arr 3, 4, join
+lpop 1 == assert
+lpop 2 == assert
+lpop 3 == assert
+lpop 4 == assert
+len 0 == assert
+
+arr 1, 2, 3, 4,
+2 split
+lpop 3 == assert
+lpop 4 == assert
+len 0 == assert
+lpop 1 == assert
+lpop 2 == assert
+len 0 == assert
+
+
+"Str:"
+
+"abcd" str_len 4 == assert
+
+"ab" "cd" str_join
+"abcd" str_eq assert
+
+"abcd" 2 str_split
+"cd" str_eq assert
+"ab" str_eq assert
+
+"A" 0 str_getcode ='A
+"xxx" 'A 1 str_setcode "xAx" str_eq assert
+
+`xyzzy sym_tostr "xyzzy" str_eq assert
+"xyzzy" str_tosym `xyzzy sym_eq assert
