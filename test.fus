@@ -1,10 +1,10 @@
 
-"The result is:"
-
+"The result is: "
     1 2 + dup 3 == assert
     3 4 + dup 7 == assert
 * dup 21 == assert
 neg dup -21 == assert
+swap str_p p
 
 1 1 == assert
 1 2 == not assert
@@ -14,7 +14,8 @@ null null eq assert
 
 -999 drop
 
-T F
+T assert
+F not assert
 
 
 "LALALALA" p
@@ -44,3 +45,15 @@ def mkpoint:
 1 2 <=  assert
 1 2 >=  not assert
 "INT OPS OK!\n" str_p
+
+"BOOLS:\n" str_p
+T and(`and1 p T) assert
+T and(`and2 p F) not assert
+F and(`and3 p T) not assert
+F and(`and4 p F) not assert
+T or(`or1 p T) assert
+T or(`or2 p F) assert
+F or(`or3 p T) assert
+F or(`or4 p F) not assert
+"BOOLS OK!\n" str_p
+

@@ -355,7 +355,11 @@ int fus_runner_step(fus_runner_t *runner){
             if(!strcmp(token, "`")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                fus_value_t value = fus_value_stringparse_sym(vm, token);
+                int sym_i = fus_value_sym_decode(token_value);
+                const char *quoted_token = fus_symtable_get_token(
+                    symtable, sym_i);
+                fus_value_t value = fus_value_stringparse_sym(vm,
+                    quoted_token);
                 fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "null")){
                 fus_value_t value = fus_value_null(vm);
@@ -691,14 +695,16 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 branch1 = &token_value.p->data.a;
-                if(token[2] != '\0'){
+                if(token[2] == 'e'){
                     /* "ifelse" */
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
                     branch2 = &token_value.p->data.a;
                 }
 
-                /* TODO: Check stack effects of the branches */
+                /* TODO: Check stack effects of the branches.
+                if: +0
+                ifelse: both branches should have same effect */
 
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
@@ -710,6 +716,31 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,
                         branch_taken);
                     goto dont_update_i;
+                }
+            }else if(!strcmp(token, "or") || !strcmp(token, "and")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(arr)
+                fus_arr_t *branch = &token_value.p->data.a;
+
+                /* TODO: Check stack effects of the branches.
+                and/or: +1 */
+
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                bool cond = fus_value_bool_decode(value);
+
+                bool take_branch = token[0] == 'a'? cond: !cond;
+                    /* "and" takes branch if cond is true.
+                    "or" takes branch if cond is false. */
+
+                if(take_branch){
+                    fus_value_detach(vm, value);
+                    callframe->i = i + 1;
+                    fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,
+                        branch);
+                    goto dont_update_i;
+                }else{
+                    fus_arr_push(vm, &state->stack, value);
                 }
             }else if(!strcmp(token, "do")){
                 FUS_STATE_NEXT_VALUE()
