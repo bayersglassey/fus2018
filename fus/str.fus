@@ -1,0 +1,40 @@
+
+
+def a: "a" 0 str_getcode
+def z: "z" 0 str_getcode
+def A: "A" 0 str_getcode
+def Z: "Z" 0 str_getcode
+def TO_UPPER: @A @a -
+
+def isalpha_oldschool:
+    # old school ("inefficient")
+    ='c
+        'c @a >= 'c @z <= &&
+        'c @A >= 'c @Z <= &&
+    ||
+def isalpha_oldschool_alt:
+    # old school (alternate - what Chuck Moore would write)
+    F swap @a >= if: swap @z <= if: not
+    dup not if:
+        swap @A >= if: swap @Z <= if: not
+def isalpha_newschool:
+    # new school sexiness
+    ((@a >=) and(@z <=)) or((@A >=) and(@Z <=))
+def is_alpha: @is_alpha_oldschool
+
+def isupper: ='c
+    'c @isalpha and('c @A >=)
+def islower: ='c
+    'c @isalpha and('c @z <=)
+def upper of(s -> s):
+    dup len int_for: ='i
+        dup 'i str_getcode dup @islower if(@TO_UPPER +) 'i str_setcode
+def lower of(s -> s):
+    dup len int_for: ='i
+        dup 'i str_getcode dup @isupper if(@TO_UPPER -) 'i str_setcode
+
+
+def join: "" swap arr_for: str_join
+
+def say_hello: ='name (arr "Hello, ", 'name, "!",) @join
+
