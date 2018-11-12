@@ -319,7 +319,7 @@ int fus_runner_step(fus_runner_t *runner){
         #define FUS_STATE_EXPECT_SYM(TOKEN) \
             FUS_STATE_EXPECT_T(SYM) \
             { \
-                int __sym_i = fus_value_sym_decode(token_value); \
+                int __sym_i = fus_value_sym_decode(vm, token_value); \
                 const char *__token = fus_symtable_get_token(symtable, sym_i); \
                 const char *__token_expected = (TOKEN); \
                 if(strcmp(__token, __token_expected)){ \
@@ -344,7 +344,7 @@ int fus_runner_step(fus_runner_t *runner){
             fus_value_attach(vm, token_value);
             fus_arr_push(vm, &state->stack, token_value);
         }else if(fus_value_is_sym(token_value)){
-            int sym_i = fus_value_sym_decode(token_value);
+            int sym_i = fus_value_sym_decode(vm, token_value);
             const char *token = fus_symtable_get_token(symtable, sym_i);
 
             #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
@@ -355,7 +355,7 @@ int fus_runner_step(fus_runner_t *runner){
             if(!strcmp(token, "`")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 const char *quoted_token = fus_symtable_get_token(
                     symtable, sym_i);
                 fus_value_t value = fus_value_stringparse_sym(vm,
@@ -502,7 +502,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "=.")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value_o;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
@@ -512,7 +512,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, ".")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
@@ -522,7 +522,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "..")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
@@ -607,21 +607,21 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "='")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_obj_set(vm, &state->vars, sym_i, value);
             }else if(!strcmp(token, "'")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
                 fus_value_attach(vm, value);
                 fus_arr_push(vm, &state->stack, value);
             }else if(!strcmp(token, "''")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
                 fus_value_attach(vm, value);
                 fus_obj_set(vm, &state->vars, sym_i, fus_value_null(vm));
@@ -629,7 +629,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "assert")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                bool b = fus_value_bool_decode(value);
+                bool b = fus_value_bool_decode(vm, value);
                 if(!b){
                     fprintf(stderr, "%s: Failed assertion\n", __func__);
                     goto err;
@@ -666,7 +666,7 @@ int fus_runner_step(fus_runner_t *runner){
                 if(got_def){
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(sym)
-                    def_sym_i = fus_value_sym_decode(token_value);
+                    def_sym_i = fus_value_sym_decode(vm, token_value);
 
                     if(callframe->type != FUS_CALLFRAME_TYPE_MODULE){
                         const char *token_def =
@@ -680,7 +680,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_peek;
                 FUS_STATE_PEEK_NEXT_VALUE(value_peek)
                 if(fus_value_is_sym(value_peek)){
-                    int sym_i = fus_value_sym_decode(value_peek);
+                    int sym_i = fus_value_sym_decode(vm, value_peek);
                     const char *token_peek =
                         fus_symtable_get_token(symtable, sym_i);
                     if(strcmp(token_peek, "of")){
@@ -710,7 +710,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "@")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
 
                 #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
                 const char *token_def =
@@ -729,7 +729,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "&")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(token_value);
+                int sym_i = fus_value_sym_decode(vm, token_value);
                 const char *token_def =
                     fus_symtable_get_token(symtable, sym_i);
                 fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
@@ -776,7 +776,7 @@ int fus_runner_step(fus_runner_t *runner){
 
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                bool cond = fus_value_bool_decode(value);
+                bool cond = fus_value_bool_decode(vm, value);
                 fus_value_detach(vm, value);
                 fus_arr_t *branch_taken = cond? branch1: branch2;
                 if(branch_taken != NULL){
@@ -802,7 +802,7 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "while") || !strcmp(token, "until")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                bool cond = fus_value_bool_decode(value);
+                bool cond = fus_value_bool_decode(vm, value);
                 fus_value_detach(vm, value);
 
                 if(token[0] == 'w')cond = !cond; /* "while" */

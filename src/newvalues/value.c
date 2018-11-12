@@ -56,7 +56,7 @@ fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i){
     return value;
 }
 
-int fus_value_sym_decode(fus_value_t value){
+int fus_value_sym_decode(fus_vm_t *vm, fus_value_t value){
     if(!FUS_IS_SYM(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
@@ -74,7 +74,7 @@ fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i){
     return value;
 }
 
-fus_unboxed_t fus_value_int_decode(fus_value_t value){
+fus_unboxed_t fus_value_int_decode(fus_vm_t *vm, fus_value_t value){
     if(!FUS_IS_INT(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not an int}", value.i);
@@ -96,11 +96,11 @@ fus_value_t fus_value_bool(fus_vm_t *vm, bool b){
 
 fus_value_t fus_value_bool_not(fus_vm_t *vm, fus_value_t value_x){
     if(!FUS_IS_BOOL(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
-    bool b = fus_value_bool_decode(value_x);
+    bool b = fus_value_bool_decode(vm, value_x);
     return fus_value_bool(vm, !b);
 }
 
-bool fus_value_bool_decode(fus_value_t value){
+bool fus_value_bool_decode(fus_vm_t *vm, fus_value_t value){
     return value.i == FUS_VALUE_TRUE.i;
 }
 

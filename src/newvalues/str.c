@@ -110,7 +110,7 @@ fus_value_t fus_value_str_eq(fus_vm_t *vm, fus_value_t value1,
         &value2.p->data.s));
 }
 
-const char *fus_value_str_decode(fus_value_t value){
+const char *fus_value_str_decode(fus_vm_t *vm, fus_value_t value){
     if(!fus_value_is_str(value)){
 #if FUS_PRINT_ERRS_TO_STDERR
         fprintf(stderr, "{Fus error: %li is not a str}", value.i);
@@ -164,8 +164,8 @@ void fus_value_str_slice(fus_vm_t *vm, fus_value_t *value_s_ptr,
 
     /* Get str, i, len and do the slice */
     fus_str_t *s = &value_s.p->data.s;
-    int i = fus_value_int_decode(value_i);
-    int len = fus_value_int_decode(value_len);
+    int i = fus_value_int_decode(vm, value_i);
+    int len = fus_value_int_decode(vm, value_len);
     fus_str_slice(vm, s, i, len);
 
     /* Return */

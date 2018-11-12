@@ -103,15 +103,15 @@ fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code);
 
 
 fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i);
-int fus_value_sym_decode(fus_value_t value);
+int fus_value_sym_decode(fus_vm_t *vm, fus_value_t value);
 
 fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i);
-fus_unboxed_t fus_value_int_decode(fus_value_t value);
+fus_unboxed_t fus_value_int_decode(fus_vm_t *vm, fus_value_t value);
 
 fus_value_t fus_value_null(fus_vm_t *vm);
 fus_value_t fus_value_bool(fus_vm_t *vm, bool b);
 fus_value_t fus_value_bool_not(fus_vm_t *vm, fus_value_t value_x);
-bool fus_value_bool_decode(fus_value_t value);
+bool fus_value_bool_decode(fus_vm_t *vm, fus_value_t value);
 
 
 fus_value_t fus_value_eq(fus_vm_t *vm,

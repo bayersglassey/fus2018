@@ -35,7 +35,7 @@ fus_value_t fus_value_str(fus_vm_t *vm,
 fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value);
 fus_value_t fus_value_str_eq(fus_vm_t *vm, fus_value_t value1,
     fus_value_t value2);
-const char *fus_value_str_decode(fus_value_t value);
+const char *fus_value_str_decode(fus_vm_t *vm, fus_value_t value);
 void fus_value_str_join(fus_vm_t *vm, fus_value_t *value_s1_ptr,
     fus_value_t value_s2);
 void fus_value_str_slice(fus_vm_t *vm, fus_value_t *value_s_ptr,

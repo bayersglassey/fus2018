@@ -111,25 +111,25 @@
 void run_unboxed_tests(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Unboxed int/null/bool tests")
 
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm,  0)),  0)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, -1)), -1)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm,  1)),  1)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_int(vm,  0)),  0)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_int(vm, -1)), -1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_int(vm,  1)),  1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_int(vm, FUS_PAYLOAD_MIN)), FUS_PAYLOAD_MIN)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_int(vm, FUS_PAYLOAD_MAX)), FUS_PAYLOAD_MAX)
 
     int x = 2;
     int y = 3;
     fus_value_t vx = fus_value_int(vm, x);
     fus_value_t vy = fus_value_int(vm, y);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vx), x)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vy), y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vx), x)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vy), y)
 
     fus_value_t vaddxy = fus_value_int_add(vm, vx, vy);
     fus_value_t vsubxy = fus_value_int_sub(vm, vx, vy);
     fus_value_t vmulxy = fus_value_int_mul(vm, vx, vy);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vaddxy), x + y)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vsubxy), x - y)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vmulxy), x * y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vaddxy), x + y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vsubxy), x - y)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vmulxy), x * y)
 
     FUS_TEST_EQ_INT(vm->n_boxed, 0)
 
@@ -144,7 +144,7 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST(fus_value_is_arr(vx))
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx), 1)
 
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx)), 0)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_len(vm, vx)), 0)
 
     /* Create an arr and push simple (unboxed) values onto it */
     fus_value_t vx2 = vx;
@@ -152,8 +152,8 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TEST(fus_value_is_arr(vx2))
     FUS_TEST(vx2.p == vx.p)
 
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx2, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_len(vm, vx2)), 1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_get_i(vm, vx2, 0)), 10)
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
 
@@ -179,19 +179,19 @@ void run_arr_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_value_arr_pop(vm, &vx4, &vpopped);
     FUS_TEST(fus_value_is_arr(vx4))
     FUS_TEST(vx4.p != vx3.p)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vpopped), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, vpopped), 10)
 
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx2), 1)
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx3), 1)
     FUS_TEST_EQ_INT(FUS_REFCOUNT(vx4), 1)
 
     /* Make sure vx2, vx3, and v4 have correct elements */
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx2)), 1)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx2, 0)), 10)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx3)), 2)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 0)), 10)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_get_i(vm, vx3, 1)), 20)
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_arr_len(vm, vx4)), 0)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_len(vm, vx2)), 1)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_get_i(vm, vx2, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_len(vm, vx3)), 2)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_get_i(vm, vx3, 0)), 10)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_get_i(vm, vx3, 1)), 20)
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_arr_len(vm, vx4)), 0)
 
     /* Test printing an arr */
     fus_printer_t printer;
@@ -304,7 +304,7 @@ void run_str_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     fus_value_t vx = fus_value_str(vm, "ASD", 3, 0);
     fus_value_t vx_len = fus_value_str_len(vm, vx);
-    FUS_TEST_EQ_INT(fus_value_int_decode(vx_len), 3)
+    FUS_TEST_EQ_INT(fus_value_int_decode(vm, vx_len), 3)
 
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
     fus_value_detach(vm, vx);
@@ -485,16 +485,16 @@ void run_symtable_tests_full(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
 
     /* Make sym value x */
     int sym_i_x = fus_symtable_get_or_add_from_string(table, "x");
-    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_x)), sym_i_x)
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(vm, fus_value_sym(vm, sym_i_x)), sym_i_x)
 
     /* Make sym value y */
     int sym_i_y = fus_symtable_get_or_add_from_string(table, "y");
-    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_sym(vm, sym_i_y)), sym_i_y)
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(vm, fus_value_sym(vm, sym_i_y)), sym_i_y)
 
     FUS_TEST_NE_INT(sym_i_x, sym_i_y)
     FUS_TEST_NE_UNBOXED(
-        fus_value_sym_decode(fus_value_sym(vm, sym_i_x)),
-        fus_value_sym_decode(fus_value_sym(vm, sym_i_y)))
+        fus_value_sym_decode(vm, fus_value_sym(vm, sym_i_x)),
+        fus_value_sym_decode(vm, fus_value_sym(vm, sym_i_y)))
 
     FUS_TESTS_END()
 }
@@ -520,15 +520,15 @@ void run_obj_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     fus_printer_cleanup(&printer);
 
     /* Get the correct values back */
-    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, sx)), 10);
-    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, sy)), 20);
+    FUS_TEST_EQ_INT(fus_value_int_decode(vm, fus_value_obj_get(vm, vo, sx)), 10);
+    FUS_TEST_EQ_INT(fus_value_int_decode(vm, fus_value_obj_get(vm, vo, sy)), 20);
 
     /* Update an existing key-value pair */
     fus_value_obj_set(vm, &vo, sx, fus_value_int(vm, 30));
 
     /* Get the correct values back */
-    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, sx)), 30);
-    FUS_TEST_EQ_INT(fus_value_int_decode(fus_value_obj_get(vm, vo, sy)), 20);
+    FUS_TEST_EQ_INT(fus_value_int_decode(vm, fus_value_obj_get(vm, vo, sx)), 30);
+    FUS_TEST_EQ_INT(fus_value_int_decode(vm, fus_value_obj_get(vm, vo, sy)), 20);
 
     /* Make sure detaching frees the obj */
     FUS_TEST_EQ_INT(vm->n_boxed, 1)
@@ -542,27 +542,27 @@ void run_parser_tests_basic(fus_vm_t *vm, int *n_tests_ptr, int *n_fails_ptr){
     FUS_TESTS_BEGIN("Parser tests (values)")
 
     /* Test int parsing */
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "0")), 0);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "1")), 1);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "10")), 10);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "26")), 26);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "999")), 999);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-999")), -999);
-    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(fus_value_stringparse_int(vm, "-0")), 0);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "0")), 0);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "1")), 1);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "10")), 10);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "26")), 26);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "999")), 999);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "-999")), -999);
+    FUS_TEST_EQ_UNBOXED(fus_value_int_decode(vm, fus_value_stringparse_int(vm, "-0")), 0);
 
     /* Test sym parsing */
-    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "x")),
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(vm, fus_value_stringparse_sym(vm, "x")),
         fus_symtable_get_from_string(vm->symtable, "x"));
-    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(fus_value_stringparse_sym(vm, "ABC123!@#")),
+    FUS_TEST_EQ_UNBOXED(fus_value_sym_decode(vm, fus_value_stringparse_sym(vm, "ABC123!@#")),
         fus_symtable_get_from_string(vm->symtable, "ABC123!@#"));
 
     /* Test str parsing */
     fus_value_t vs1 = fus_value_stringparse_str(vm, "\"ABC\"");
-    FUS_TEST_STRCMP(fus_value_str_decode(vs1), "ABC");
+    FUS_TEST_STRCMP(fus_value_str_decode(vm, vs1), "ABC");
     fus_value_t vs2 = fus_value_stringparse_str(vm, "\"TWO\\nLINES\"");
-    FUS_TEST_STRCMP(fus_value_str_decode(vs2), "TWO\nLINES");
+    FUS_TEST_STRCMP(fus_value_str_decode(vm, vs2), "TWO\nLINES");
     fus_value_t vs3 = fus_value_stringparse_str(vm, "\"\\\"QUOTED\\\"\"");
-    FUS_TEST_STRCMP(fus_value_str_decode(vs3), "\"QUOTED\"");
+    FUS_TEST_STRCMP(fus_value_str_decode(vm, vs3), "\"QUOTED\"");
 
     /* TODO: Test arr parsing??? I guess it's tested by parser_tests_full */
 
