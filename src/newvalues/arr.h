@@ -23,7 +23,10 @@ fus_array_len_t fus_arr_len(fus_vm_t *vm, fus_arr_t *a);
 fus_value_t fus_arr_get(fus_vm_t *vm, fus_arr_t *a, int i);
 int fus_arr_set(fus_vm_t *vm, fus_arr_t *a, int i, fus_value_t value);
 void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value);
+void fus_arr_lpush(fus_vm_t *vm, fus_arr_t *a, fus_value_t value);
 int fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr);
+int fus_arr_lpop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr);
+void fus_arr_join(fus_vm_t *vm, fus_arr_t *a1, fus_arr_t *a2);
 
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr);
 
@@ -39,8 +42,14 @@ void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a, int i,
     fus_value_t value);
 void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
     fus_value_t value);
+void fus_value_arr_lpush(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value);
 void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
     fus_value_t *value_ptr);
+void fus_value_arr_lpop(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t *value_ptr);
+void fus_value_arr_join(fus_vm_t *vm, fus_value_t *value_a1_ptr,
+    fus_value_t value_a2);
 
 
 /*******************

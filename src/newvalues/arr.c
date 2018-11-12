@@ -44,30 +44,87 @@ int fus_arr_set(fus_vm_t *vm, fus_arr_t *a, int i, fus_value_t value){
     return 0;
 }
 
-void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
+static void _fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value,
+    bool l
+){
     /* Transfers ownership of value */
 
     /* Resize array */
     fus_array_push(&a->values);
 
-    /* Poke value into last array element */
-    FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
+    if(l){
+        /* Shift values to the right */
+        fus_array_rshift(&a->values);
+
+        /* Poke value into first array element */
+        FUS_ARR_VALUES(*a)[0] = value;
+    }else{
+        /* Poke value into last array element */
+        FUS_ARR_VALUES(*a)[a->values.len - 1] = value;
+    }
 }
 
-int fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
+void fus_arr_push(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
+    _fus_arr_push(vm, a, value, false);
+}
+
+void fus_arr_lpush(fus_vm_t *vm, fus_arr_t *a, fus_value_t value){
+    _fus_arr_push(vm, a, value, true);
+}
+
+static int _fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr,
+    bool l
+){
+
     /* Bounds check */
     if(a->values.len <= 0){
         *value_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
         return -1;
     }
 
-    /* Get value from last array element */
-    *value_ptr = FUS_ARR_VALUES(*a)[a->values.len - 1];
+    if(l){
+        /* Get value from first array element */
+        *value_ptr = FUS_ARR_VALUES(*a)[0];
+
+        /* Shift values to the left */
+        fus_array_lshift(&a->values);
+    }else{
+        /* Get value from last array element */
+        *value_ptr = FUS_ARR_VALUES(*a)[a->values.len - 1];
+    }
 
     /* Resize array */
     fus_array_pop(&a->values);
 
     return 0;
+}
+
+int fus_arr_pop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
+    return _fus_arr_pop(vm, a, value_ptr, false);
+}
+
+int fus_arr_lpop(fus_vm_t *vm, fus_arr_t *a, fus_value_t *value_ptr){
+    return _fus_arr_pop(vm, a, value_ptr, true);
+}
+
+void fus_arr_join(fus_vm_t *vm, fus_arr_t *a1, fus_arr_t *a2){
+
+    fus_array_len_t len1 = fus_arr_len(vm, a1);
+    fus_array_len_t len2 = fus_arr_len(vm, a2);
+    fus_array_len_t new_len = len1 + len2;
+
+    /* Grow array */
+    fus_array_grow(&a1->values, new_len, false);
+
+    fus_value_t *values1 = FUS_ARR_VALUES(*a1);
+    fus_value_t *values2 = FUS_ARR_VALUES(*a2);
+
+    /* Copy & attach values */
+    for(int i = 0; i < len2; i++){
+        fus_value_t value = values2[i];
+        fus_value_attach(vm, value);
+        values1[len1 + i] = value;
+    }
 }
 
 
@@ -175,8 +232,8 @@ void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a_ptr, int i,
     *value_a_ptr = value_a;
 }
 
-void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
-    fus_value_t value
+static void _fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value, bool l
 ){
     /* Represents a transfer of ownership of value to value_a.
     So refcounts of value and value_a are unchanged
@@ -196,14 +253,27 @@ void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Get arr and do the push */
     fus_arr_t *a = &value_a.p->data.a;
-    fus_arr_push(vm, a, value);
+    if(l)fus_arr_lpush(vm, a, value);
+    else fus_arr_push(vm, a, value);
 
     /* Return */
     *value_a_ptr = value_a;
 }
 
-void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
-    fus_value_t *value_ptr
+void fus_value_arr_push(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value
+){
+    _fus_value_arr_push(vm, value_a_ptr, value, false);
+}
+
+void fus_value_arr_lpush(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value
+){
+    _fus_value_arr_push(vm, value_a_ptr, value, true);
+}
+
+static void _fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t *value_ptr, bool l
 ){
     /* Represents a transfer of ownership of last value of value_a
     to value_ptr. */
@@ -222,7 +292,8 @@ void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Get arr and do the pop */
     fus_arr_t *a = &value_a.p->data.a;
-    if(fus_arr_pop(vm, a, value_ptr) < 0){
+    int e = l? fus_arr_lpop(vm, a, value_ptr): fus_arr_pop(vm, a, value_ptr);
+    if(e < 0){
         fus_value_detach(vm, value_a);
         *value_a_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
         /* fus_arr_pop already set *value_ptr to an err value */
@@ -231,6 +302,43 @@ void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
 
     /* Return */
     *value_a_ptr = value_a;
+}
+
+void fus_value_arr_pop(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t *value_ptr
+){
+    _fus_value_arr_pop(vm, value_a_ptr, value_ptr, false);
+}
+
+void fus_value_arr_lpop(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t *value_ptr
+){
+    _fus_value_arr_pop(vm, value_a_ptr, value_ptr, true);
+}
+
+void fus_value_arr_join(fus_vm_t *vm, fus_value_t *value_a1_ptr,
+    fus_value_t value_a2
+){
+
+    /* Typecheck */
+    fus_value_t value_a1 = *value_a1_ptr;
+    if(!fus_value_is_arr(value_a1) || !fus_value_is_arr(value_a2)){
+        fus_value_detach(vm, value_a1);
+        fus_value_detach(vm, value_a2);
+        *value_a1_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_arr_mkunique(&value_a1.p);
+
+    /* Get arrs and do the join */
+    fus_arr_t *a1 = &value_a1.p->data.a;
+    fus_arr_t *a2 = &value_a2.p->data.a;
+    fus_arr_join(vm, a1, a2);
+
+    /* Return */
+    *value_a1_ptr = value_a1;
 }
 
 

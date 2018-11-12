@@ -35,7 +35,7 @@ void fus_array_copy(fus_array_t *array, fus_array_t *other_array){
 }
 
 
-static void fus_array_grow(fus_array_t *array, fus_array_len_t new_len,
+void fus_array_grow(fus_array_t *array, fus_array_len_t new_len,
     bool do_init
 ){
     fus_class_t *class = array->class;
@@ -66,7 +66,7 @@ static void fus_array_grow(fus_array_t *array, fus_array_len_t new_len,
     array->len = new_len;
 }
 
-static void fus_array_shrink(fus_array_t *array, fus_array_len_t new_len,
+void fus_array_shrink(fus_array_t *array, fus_array_len_t new_len,
     bool do_cleanup
 ){
     fus_class_t *class = array->class;
@@ -111,6 +111,36 @@ void fus_array_pop(fus_array_t *array){
     of last element.
     TODO: That should probably be handled by this function */
     fus_array_shrink(array, array->len - 1, false);
+}
+
+void fus_array_lshift(fus_array_t *array){
+    /* Shifts array elements left by 1.
+    This removes the first element without cleaning it up,
+    and duplicates the last element. */
+    if(array->len <= 1)return;
+
+    fus_class_t *class = array->class;
+    fus_core_t *core = class->core;
+    size_t elem_size = class->instance_size;
+
+    char *elems = array->elems;
+    fus_memmove(core, elems, elems + elem_size,
+        (array->len - 1) * elem_size);
+}
+
+void fus_array_rshift(fus_array_t *array){
+    /* Shifts array elements right by 1.
+    This removes the last element without cleaning it up,
+    and duplicates the first element. */
+    if(array->len <= 1)return;
+
+    fus_class_t *class = array->class;
+    fus_core_t *core = class->core;
+    size_t elem_size = class->instance_size;
+
+    char *elems = array->elems;
+    fus_memmove(core, elems + elem_size, elems,
+        (array->len - 1) * elem_size);
 }
 
 
