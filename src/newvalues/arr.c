@@ -127,6 +127,28 @@ void fus_arr_join(fus_vm_t *vm, fus_arr_t *a1, fus_arr_t *a2){
     }
 }
 
+void fus_arr_slice(fus_vm_t *vm, fus_arr_t *a, int i0, int len){
+
+    fus_array_len_t old_len = fus_arr_len(vm, a);
+    if(old_len == 0)return;
+    if(i0 < 0){i0 = 0; len += i0;}
+    if(i0 + len >= old_len)len = old_len - i0;
+
+    fus_value_t *values = FUS_ARR_VALUES(*a);
+
+    /* Detach & replace values */
+    for(int i = 0; i < len; i++){
+        fus_value_t value = values[i0 + i];
+        fus_value_attach(vm, value);
+        fus_value_detach(vm, values[i]);
+        values[i] = value;
+    }
+
+    /* Shrink array */
+    fus_array_shrink(&a->values, len, true);
+}
+
+
 
 
 void fus_boxed_arr_mkunique(fus_boxed_t **p_ptr){
@@ -339,6 +361,33 @@ void fus_value_arr_join(fus_vm_t *vm, fus_value_t *value_a1_ptr,
 
     /* Return */
     *value_a1_ptr = value_a1;
+}
+
+void fus_value_arr_slice(fus_vm_t *vm, fus_value_t *value_a_ptr,
+    fus_value_t value_i, fus_value_t value_len
+){
+
+    /* Typecheck */
+    fus_value_t value_a = *value_a_ptr;
+    if(!fus_value_is_arr(value_a)){
+        fus_value_detach(vm, value_a);
+        fus_value_detach(vm, value_i);
+        fus_value_detach(vm, value_len);
+        *value_a_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_arr_mkunique(&value_a.p);
+
+    /* Get arr, i, len and do the slice */
+    fus_arr_t *a = &value_a.p->data.a;
+    int i = fus_value_int_decode(value_i);
+    int len = fus_value_int_decode(value_len);
+    fus_arr_slice(vm, a, i, len);
+
+    /* Return */
+    *value_a_ptr = value_a;
 }
 
 

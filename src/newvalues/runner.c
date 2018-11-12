@@ -454,6 +454,17 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_arr_join(vm, &value1, value2);
                 fus_arr_push(vm, &state->stack, value1);
                 fus_value_detach(vm, value2);
+            }else if(!strcmp(token, "slice")){
+                fus_value_t value_a;
+                fus_value_t value_i;
+                fus_value_t value_len;
+                FUS_STATE_STACK_POP(&value_len)
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_a)
+                fus_value_arr_slice(vm, &value_a, value_i, value_len);
+                fus_arr_push(vm, &state->stack, value_a);
+                fus_value_detach(vm, value_len);
+                fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "=.$")){
                 fus_value_t value_a;
                 fus_value_t value;
@@ -549,6 +560,17 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_str_join(vm, &value1, value2);
                 fus_arr_push(vm, &state->stack, value1);
                 fus_value_detach(vm, value2);
+            }else if(!strcmp(token, "str_slice")){
+                fus_value_t value_s;
+                fus_value_t value_i;
+                fus_value_t value_len;
+                FUS_STATE_STACK_POP(&value_len)
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_s)
+                fus_value_str_slice(vm, &value_s, value_i, value_len);
+                fus_arr_push(vm, &state->stack, value_s);
+                fus_value_detach(vm, value_len);
+                fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "swap")){
                 fus_value_t value1;
                 fus_value_t value2;

@@ -48,6 +48,17 @@ void fus_str_join(fus_vm_t *vm, fus_str_t *s1, fus_str_t *s2){
     s1->size = new_size;
 }
 
+void fus_str_slice(fus_vm_t *vm, fus_str_t *s, int i0, int len){
+    if(s->len == 0)return;
+    if(i0 < 0){i0 = 0; len += i0;}
+    if(i0 + len >= s->len)len = s->len - i0;
+    for(int i = 0; i < len; i++){
+        s->text[i] = s->text[i0 + i];
+    }
+    s->text[len] = '\0';
+    s->len = len;
+}
+
 
 
 void fus_boxed_str_mkunique(fus_boxed_t **p_ptr){
@@ -132,6 +143,33 @@ void fus_value_str_join(fus_vm_t *vm, fus_value_t *value_s1_ptr,
 
     /* Return */
     *value_s1_ptr = value_s1;
+}
+
+void fus_value_str_slice(fus_vm_t *vm, fus_value_t *value_s_ptr,
+    fus_value_t value_i, fus_value_t value_len
+){
+
+    /* Typecheck */
+    fus_value_t value_s = *value_s_ptr;
+    if(!fus_value_is_str(value_s)){
+        fus_value_detach(vm, value_s);
+        fus_value_detach(vm, value_i);
+        fus_value_detach(vm, value_len);
+        *value_s_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_str_mkunique(&value_s.p);
+
+    /* Get str, i, len and do the slice */
+    fus_str_t *s = &value_s.p->data.s;
+    int i = fus_value_int_decode(value_i);
+    int len = fus_value_int_decode(value_len);
+    fus_str_slice(vm, s, i, len);
+
+    /* Return */
+    *value_s_ptr = value_s;
 }
 
 

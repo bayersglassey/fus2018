@@ -26,22 +26,26 @@ arr "A", "B", "C",
 
 "Join & Split:"
 
-arr 1, 2, arr 3, 4, join
-lpop 1 == assert
-lpop 2 == assert
-lpop 3 == assert
-lpop 4 == assert
+arr "A", "B", arr "C", "D", join
+lpop "A" str_eq assert
+lpop "B" str_eq assert
+lpop "C" str_eq assert
+lpop "D" str_eq assert
 len 0 == assert
 
-ignore:
-    arr 1, 2, 3, 4,
-    2 split
-    lpop 3 == assert
-    lpop 4 == assert
-    len 0 == assert
-    lpop 1 == assert
-    lpop 2 == assert
-    len 0 == assert
+arr "A", "B", "C", "D",
+1 2 slice
+lpop "B" str_eq assert
+lpop "C" str_eq assert
+len 0 == assert
+
+arr "A", "B", "C", "D",
+-1 6 slice
+lpop "A" str_eq assert
+lpop "B" str_eq assert
+lpop "C" str_eq assert
+lpop "D" str_eq assert
+len 0 == assert
 
 
 "Str:"
@@ -59,11 +63,10 @@ ignore:
 'CD "CD" str_eq assert
 'ABCD "ABCD" str_eq assert
 
-ignore:
-    "abcd" 2 str_split
-    "cd" str_eq assert
-    "ab" str_eq assert
+"abcd" 1 2 str_slice "bc" str_eq assert
+"abcd" -1 6 str_slice "abcd" str_eq assert
 
+ignore:
     "A" 0 str_getcode ='A
     "xxx" 'A 1 str_setcode "xAx" str_eq assert
 
