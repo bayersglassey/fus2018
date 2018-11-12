@@ -1,4 +1,31 @@
 
+def test of(->):
+    @mkcompiler data:
+
+        def map of(xs f ->xs):
+            ='f ='xs
+            'xs len int_for: ='i
+                ''xs 'i ..$
+                    'f call(x -> y)
+                'i =.$ ='xs
+            ''xs
+
+        def fold of(xs x f -> x):
+            ='f ='x ='xs
+            'xs len int_for: ='i
+                ''x ('xs 'i .$) 'f call(x y -> z) ='x
+            ''x
+
+        def sum of(xs -> int):
+            0 fun(+) @fold
+
+        def prod of(xs -> int):
+            1 fun(*) @fold
+
+    @compile ='compiled_data ='compiler
+    'compiler p
+    'compiled_data p
+
 def replace of(data vars -> new_data):
     ='vars ='data
     0 ='i
@@ -11,7 +38,7 @@ def replace of(data vars -> new_data):
                 'data 'i .$ ='var_name
                 'vars 'var_name get join
                 break
-            'word join
+            'word push
         ''i 1 + ='i loop
 
 def mkcompiler: obj
@@ -70,4 +97,4 @@ def compile of(compiler data -> compiler compiled_data):
 
     ''compiler ''compiled_data
 
-
+@test

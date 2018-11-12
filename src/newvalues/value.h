@@ -116,6 +116,10 @@ bool fus_value_bool_decode(fus_vm_t *vm, fus_value_t value);
 
 fus_value_t fus_value_eq(fus_vm_t *vm,
     fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_value_sym_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_value_bool_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
 
 
 void fus_value_attach(fus_vm_t *vm, fus_value_t value);

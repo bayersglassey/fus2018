@@ -123,6 +123,22 @@ fus_value_t fus_value_eq(fus_vm_t *vm,
     return fus_value_bool(vm, value_x.i == value_y.i);
 }
 
+fus_value_t fus_value_sym_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y
+){
+    if(!FUS_IS_SYM(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_SYM(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    return fus_value_bool(vm, value_x.i == value_y.i);
+}
+
+fus_value_t fus_value_bool_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y
+){
+    if(!FUS_IS_BOOL(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_BOOL(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    return fus_value_bool(vm, value_x.i == value_y.i);
+}
+
 
 
 void fus_value_attach(fus_vm_t *vm, fus_value_t value){

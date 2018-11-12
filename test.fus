@@ -12,9 +12,29 @@ neg dup -21 == assert
 `x `x eq assert
 null null eq assert
 
+1 1 int_eq assert
+1 2 int_eq not assert
+
+`x `x sym_eq assert
+`x `y sym_eq not assert
+
+T T bool_eq assert
+T F bool_eq not assert
+F T bool_eq not assert
+F F bool_eq assert
+
 -999 drop
 
 T F
+
+1 is_int assert
+`x is_int not assert
+`x is_sym assert
+null is_null assert
+T is_bool assert
+arr is_arr assert
+obj is_obj assert
+fun() is_fun assert
 
 
 "LALALALA" p
