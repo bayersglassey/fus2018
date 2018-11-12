@@ -46,6 +46,7 @@ void fus_free(fus_core_t *core, void *ptr);
 
 void *fus_memset(fus_core_t *core, void *ptr, int value, size_t n);
 void *fus_memcpy(fus_core_t *core, void *ptr, void *srcptr, size_t n);
+void *fus_memmove(fus_core_t *core, void *ptr, void *srcptr, size_t n);
 size_t fus_strlen(fus_core_t *core, const char *s);
 size_t fus_strnlen(fus_core_t *core, const char *s, size_t maxlen);
 char *fus_strdup(fus_core_t *core, const char *s1);

@@ -77,6 +77,15 @@ void *fus_memcpy(fus_core_t *core, void *ptr, void *srcptr, size_t n){
     return new_ptr;
 }
 
+void *fus_memmove(fus_core_t *core, void *ptr, void *srcptr, size_t n){
+    void *new_ptr = memmove(ptr, srcptr, n);
+    if(new_ptr == NULL){
+        fus_perror(core, "fus_memmove");
+        fus_exit(core, EXIT_FAILURE);
+    }
+    return new_ptr;
+}
+
 size_t fus_strlen(fus_core_t *core, const char *s){
     return strlen(s);
 }
