@@ -425,6 +425,13 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_push(vm, &value_a, value);
                 fus_arr_push(vm, &state->stack, value_a);
+            }else if(!strcmp(token, "lpush")){
+                fus_value_t value_a;
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                FUS_STATE_STACK_POP(&value_a)
+                fus_value_arr_lpush(vm, &value_a, value);
+                fus_arr_push(vm, &state->stack, value_a);
             }else if(!strcmp(token, "pop")){
                 fus_value_t value_a;
                 fus_value_t value;
@@ -432,6 +439,21 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_arr_pop(vm, &value_a, &value);
                 fus_arr_push(vm, &state->stack, value_a);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "lpop")){
+                fus_value_t value_a;
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value_a)
+                fus_value_arr_lpop(vm, &value_a, &value);
+                fus_arr_push(vm, &state->stack, value_a);
+                fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "join")){
+                fus_value_t value1;
+                fus_value_t value2;
+                FUS_STATE_STACK_POP(&value2)
+                FUS_STATE_STACK_POP(&value1)
+                fus_value_arr_join(vm, &value1, value2);
+                fus_arr_push(vm, &state->stack, value1);
+                fus_value_detach(vm, value2);
             }else if(!strcmp(token, "=.$")){
                 fus_value_t value_a;
                 fus_value_t value;

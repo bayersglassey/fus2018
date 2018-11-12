@@ -24,16 +24,16 @@ arr "A", "B", "C",
 "BEE" 1 =.$
 
 
+"Join & Split:"
+
+arr 1, 2, arr 3, 4, join
+lpop 1 == assert
+lpop 2 == assert
+lpop 3 == assert
+lpop 4 == assert
+len 0 == assert
+
 ignore:
-    "Join & Split:"
-
-    arr 1, 2, arr 3, 4, join
-    lpop 1 == assert
-    lpop 2 == assert
-    lpop 3 == assert
-    lpop 4 == assert
-    len 0 == assert
-
     arr 1, 2, 3, 4,
     2 split
     lpop 3 == assert
