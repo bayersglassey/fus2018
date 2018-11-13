@@ -452,6 +452,19 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "obj")){
                 fus_value_t value = fus_value_obj(vm);
                 fus_arr_push(vm, &state->stack, value);
+            }else if(!strcmp(token, "tuple")){
+                FUS_STATE_NEXT_VALUE()
+                fus_value_t value_n = token_value;
+                int n = fus_value_int_decode(vm, value_n);
+
+                fus_value_t value_a = fus_value_arr(vm);
+                fus_arr_t *a = &value_a.p->data.a;
+                for(int i = 0; i < n; i++){
+                    fus_value_t value;
+                    FUS_STATE_STACK_POP(&value)
+                    fus_arr_lpush(vm, a, value);
+                }
+                fus_arr_push(vm, &state->stack, value_a);
             }else if(!strcmp(token, ",") || !strcmp(token, "push")){
                 fus_value_t value_a;
                 fus_value_t value;

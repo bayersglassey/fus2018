@@ -60,6 +60,12 @@ arr "A", "B", "C", ='ABC
     lpop "C" str_eq assert
     len 0 == assert
 
+"WAN" "DOO" "SRI" tuple 3
+lpop "WAN" str_eq assert
+lpop "DOO" str_eq assert
+lpop "SRI" str_eq assert
+len 0 == assert
+
 
 # Join & Split:
 
