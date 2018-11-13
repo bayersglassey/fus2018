@@ -114,6 +114,8 @@ len 0 == assert
 'xxx 'A 1 str_setcode "xAx" str_eq assert
 'xxx "xxx" str_eq assert
 
+0 int_tostr "0" str_eq assert
+12 int_tostr dup p "12" str_eq assert
 -999 int_tostr "-999" str_eq assert
 
 ignore:

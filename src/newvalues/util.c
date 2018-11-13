@@ -26,9 +26,15 @@ char *load_file(const char *filename){
     return f_buffer;
 }
 
-char *fus_write_long_int(char *buffer, size_t buffer_size, long int i){
+const char *fus_write_long_int(long int i){
     /* On success, returns pointer to start of written string.
     On failure (e.g. buffer is too small), returns NULL. */
+
+    if(i == 0)return "0";
+
+    static char buffer[20];
+    const size_t buffer_size = 20;
+
     char *s = &buffer[buffer_size - 1];
     *s = '\0';
     bool neg = i < 0;

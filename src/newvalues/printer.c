@@ -104,12 +104,7 @@ void fus_printer_write_text(fus_printer_t *printer, const char *text){
 }
 
 void fus_printer_write_long_int(fus_printer_t *printer, long int i){
-    if(i == 0){
-        fus_printer_write_text(printer, "0");
-        return;
-    }
-    char buffer[20];
-    char *s = fus_write_long_int(buffer, 20, i);
+    const char *s = fus_write_long_int(i);
     if(s)fus_printer_write_text(printer, s);
 }
 
