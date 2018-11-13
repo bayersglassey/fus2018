@@ -33,6 +33,11 @@ int fus_obj_find(fus_vm_t *vm, fus_obj_t *o, int sym_i){
     return -1;
 }
 
+bool fus_obj_has(fus_vm_t *vm, fus_obj_t *o, int sym_i){
+    int i = fus_obj_find(vm, o, sym_i);
+    return i >= 0;
+}
+
 fus_value_t fus_obj_get(fus_vm_t *vm, fus_obj_t *o, int sym_i){
     int i = fus_obj_find(vm, o, sym_i);
     if(i < 0)return fus_value_err(vm, FUS_ERR_MISSING_KEY);
@@ -93,9 +98,16 @@ fus_value_t fus_value_obj_from_obj(fus_vm_t *vm, fus_obj_t *o){
     return (fus_value_t)p;
 }
 
+fus_value_t fus_value_obj_has(fus_vm_t *vm, fus_value_t value_o, int sym_i){
+    /* Return bool value indicating whether obj value has key
+    with sym index sym_i. */
+    if(!fus_value_is_obj(value_o))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_obj_t *o = &value_o.p->data.o;
+    return fus_value_bool(vm, fus_obj_has(vm, o, sym_i));
+}
+
 fus_value_t fus_value_obj_get(fus_vm_t *vm, fus_value_t value_o, int sym_i){
-    /* Return element at index sym_i of value_a.
-    Increases element's refcount. */
+    /* Return element at index sym_i of value_a. */
     if(!fus_value_is_obj(value_o))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_obj_t *o = &value_o.p->data.o;
     fus_value_t value = fus_obj_get(vm, o, sym_i);
