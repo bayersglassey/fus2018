@@ -11,6 +11,21 @@ fus_value_t fus_value_int_neg(fus_vm_t *vm, fus_value_t value_x){
     return fus_value_int(vm, -x);
 }
 
+fus_value_t fus_value_int_tostr(fus_vm_t *vm, fus_value_t value_x){
+    if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
+    char buffer[20];
+    char *text = fus_write_long_int(buffer, 20, x);
+    if(text == NULL){
+        fprintf(stderr, "%s: Buffer too small\n", __func__);
+        return fus_value_err(vm, FUS_ERR_IDUNNO);
+    }
+    int len = fus_strlen(vm->core, text);
+    char *new_text = fus_strndup(vm->core, text, len);
+    return fus_value_str(vm, new_text, len, 20);
+}
+
+
 FUS_VALUE_INT_BINOP(add){
     if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     if(!FUS_IS_INT(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);

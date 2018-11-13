@@ -7,6 +7,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 fus_value_t fus_value_int_neg(fus_vm_t *vm, fus_value_t value_x);
+fus_value_t fus_value_int_tostr(fus_vm_t *vm, fus_value_t value_x);
 
 #define FUS_VALUE_INT_BINOP(OP) \
     fus_value_t fus_value_int_##OP(fus_vm_t *vm, \

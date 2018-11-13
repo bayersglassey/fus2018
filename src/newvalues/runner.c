@@ -380,6 +380,11 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_neg(vm, value);
                 fus_arr_push(vm, &state->stack, new_value);
+            }else if(!strcmp(token, "int_tostr")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                fus_value_t new_value = fus_value_int_tostr(vm, value);
+                fus_arr_push(vm, &state->stack, new_value);
 
             #define FUS_RUNNER_INT_BINOP(TOK, OP) \
             }else if(!strcmp(token, TOK)) { \
