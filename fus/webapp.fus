@@ -1,12 +1,17 @@
 
+
 def app_new of(request -> app):
+    ='request
+    'request @print_request
     obj
-        swap =.request
+        'request =.request
         0 =.line_i
+
+def header of(key value -> header): tuple 2
 
 def app_write_head of(app -> app status headers):
     200
-    arr "Content-Type: text/plain",
+    arr "Content-Type" "text/plain" @header,
 
 def app_write_body of(app -> app body_chunk):
     # NOTE: the returned body_chunk is a str or null.
@@ -20,8 +25,8 @@ def app_write_body of(app -> app body_chunk):
     # Generate a chunk of text to be written to the response body:
     'i 10 < ifelse:
         "Line: "
-        'i int_tostr str_concat
-        "\n" str_concat
+        'i int_tostr str_join
+        "\n" str_join
         ='chunk
     :
         'i 10 == ifelse: "Done!\n" ='chunk
@@ -31,3 +36,32 @@ def app_write_body of(app -> app body_chunk):
     ''app
         ..line_i 1 + =.line_i
     'chunk
+
+def print_request of(request ->):
+    # Print some info about this request
+
+    T if:
+        "WSGI request: " str_p
+        'request p
+
+    'request ?.wsgi_vars if:
+        "WSGI vars: " str_p
+        'request .wsgi_vars p
+
+    'request ?.body if:
+        "Request body: " str_p
+        'request .body p
+
+def test of(->):
+    obj @app_new
+    @app_write_head ='headers ='status
+    'status 200 == assert
+    "Got headers: " str_p 'headers p
+    do:
+        @app_write_body ='body_chunk
+        'body_chunk is_null if: break
+        "Got chunk: " str_p 'body_chunk p
+        loop
+    drop
+
+@test
