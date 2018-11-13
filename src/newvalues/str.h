@@ -40,6 +40,10 @@ void fus_value_str_join(fus_vm_t *vm, fus_value_t *value_s1_ptr,
     fus_value_t value_s2);
 void fus_value_str_slice(fus_vm_t *vm, fus_value_t *value_s_ptr,
     fus_value_t value_i, fus_value_t value_len);
+fus_value_t fus_value_str_getcode(fus_vm_t *vm, fus_value_t value_s,
+    fus_value_t value_i);
+void fus_value_str_setcode(fus_vm_t *vm, fus_value_t *value_s_ptr,
+    fus_value_t value_code, fus_value_t value_i);
 
 
 #endif

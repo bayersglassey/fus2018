@@ -172,4 +172,61 @@ void fus_value_str_slice(fus_vm_t *vm, fus_value_t *value_s_ptr,
     *value_s_ptr = value_s;
 }
 
+fus_value_t fus_value_str_getcode(fus_vm_t *vm, fus_value_t value_s,
+    fus_value_t value_i
+){
+    /* Return ASCII (and eventually Unicode, one hopes) value at given
+    index of str value as a new int value */
+    if(!fus_value_is_str(value_s))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    int i = fus_value_int_decode(vm, value_i);
+    fus_str_t *s = &value_s.p->data.s;
+    if(i < 0 || i >= s->len)return fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+    char c = s->text[i];
+    return fus_value_int(vm, c);
+}
+
+void fus_value_str_setcode(fus_vm_t *vm, fus_value_t *value_s_ptr,
+    fus_value_t value_code, fus_value_t value_i
+){
+    /* Set ASCII (and eventually Unicode, one hopes) value at given
+    index of str value */
+
+    /* Typecheck */
+    fus_value_t value_s = *value_s_ptr;
+    if(!fus_value_is_str(value_s)){
+        fus_value_detach(vm, value_s);
+        fus_value_detach(vm, value_i);
+        fus_value_detach(vm, value_code);
+        *value_s_ptr = fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+        return;
+    }
+
+    /* Uniqueness guarantee */
+    fus_boxed_str_mkunique(&value_s.p);
+
+    /* Get str, i, c and set the code */
+    int i = fus_value_int_decode(vm, value_i);
+    fus_str_t *s = &value_s.p->data.s;
+    if(i < 0 || i >= s->len){
+        fus_value_detach(vm, value_s);
+        fus_value_detach(vm, value_i);
+        fus_value_detach(vm, value_code);
+        *value_s_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
+        return;
+    }
+    int c = fus_value_int_decode(vm, value_code);
+    if(c <= 0 || c > CHAR_MAX){
+        fprintf(stderr, "%s: Can't interpret %i as a char. "
+            "(One day, we will attempt to interpret it as a Unicode "
+            "codepoint.\n", __func__, c);
+        if(c == 0)fprintf(stderr, "...Do we allow NUL bytes in str???\n");
+        *value_s_ptr = fus_value_err(vm, FUS_ERR_IDUNNO);
+        return;
+    }
+    s->text[i] = c;
+
+    /* Return */
+    *value_s_ptr = value_s;
+}
+
 

@@ -66,10 +66,10 @@ len 0 == assert
 "abcd" 1 2 str_slice "bc" str_eq assert
 "abcd" -1 6 str_slice "abcd" str_eq assert
 
-ignore:
-    "A" 0 str_getcode ='A
-    "xxx" 'A 1 str_setcode "xAx" str_eq assert
+"A" 0 str_getcode ='A
+"xxx" 'A 1 str_setcode "xAx" str_eq assert
 
+ignore:
     `xyzzy sym_tostr "xyzzy" str_eq assert
     "xyzzy" str_tosym `xyzzy sym_eq assert
 

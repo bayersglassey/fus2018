@@ -590,6 +590,27 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_arr_push(vm, &state->stack, value_s);
                 fus_value_detach(vm, value_len);
                 fus_value_detach(vm, value_i);
+            }else if(!strcmp(token, "str_getcode")){
+                fus_value_t value_s;
+                fus_value_t value_i;
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_s)
+                fus_value_t value_code = fus_value_str_getcode(vm,
+                    value_s, value_i);
+                fus_arr_push(vm, &state->stack, value_code);
+                fus_value_detach(vm, value_i);
+                fus_value_detach(vm, value_s);
+            }else if(!strcmp(token, "str_setcode")){
+                fus_value_t value_s;
+                fus_value_t value_code;
+                fus_value_t value_i;
+                FUS_STATE_STACK_POP(&value_i)
+                FUS_STATE_STACK_POP(&value_code)
+                FUS_STATE_STACK_POP(&value_s)
+                fus_value_str_setcode(vm, &value_s, value_code, value_i);
+                fus_arr_push(vm, &state->stack, value_s);
+                fus_value_detach(vm, value_i);
+                fus_value_detach(vm, value_code);
             }else if(!strcmp(token, "swap")){
                 fus_value_t value1;
                 fus_value_t value2;
