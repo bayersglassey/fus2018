@@ -25,3 +25,25 @@ char *load_file(const char *filename){
     fclose(f);
     return f_buffer;
 }
+
+char *fus_write_long_int(char *buffer, size_t buffer_size, long int i){
+    /* On success, returns pointer to start of written string.
+    On failure (e.g. buffer is too small), returns NULL. */
+    char *s = &buffer[buffer_size - 1];
+    *s = '\0';
+    bool neg = i < 0;
+    if(neg)i = -i;
+    while(i){
+        char digit = (i % 10) + '0';
+        i /= 10;
+        if(s == buffer)return NULL;
+        s--;
+        *s = digit;
+    }
+    if(neg){
+        if(s == buffer)return NULL;
+        s--;
+        *s = '-';
+    }
+    return s;
+}

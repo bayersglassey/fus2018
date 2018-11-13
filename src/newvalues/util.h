@@ -6,5 +6,6 @@
 #include <stdbool.h>
 
 char *load_file(const char *filename);
+char *fus_write_long_int(char *buffer, size_t buffer_size, long int i);
 
 #endif

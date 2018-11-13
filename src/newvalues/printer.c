@@ -109,21 +109,8 @@ void fus_printer_write_long_int(fus_printer_t *printer, long int i){
         return;
     }
     char buffer[20];
-    char *s = &buffer[20 - 1];
-    *s = '\0';
-    bool neg = i < 0;
-    if(neg)i = -i;
-    while(i){
-        char digit = (i % 10) + '0';
-        i /= 10;
-        s--;
-        *s = digit;
-    }
-    if(neg){
-        s--;
-        *s = '-';
-    }
-    fus_printer_write_text(printer, s);
+    char *s = fus_write_long_int(buffer, 20, i);
+    if(s)fus_printer_write_text(printer, s);
 }
 
 void fus_printer_write_tabs(fus_printer_t *printer){
