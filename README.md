@@ -132,9 +132,16 @@ Compile & Run "Runner":
 Compile & Run "Runner" on all test files in repo root:
 
     # Roughly equivalent to:
-    #     ./compile_newvalues run && ./main test*.fus
-    # ...except that doesn't actually work.
+    #     ./compile_newvalues run && ./main test/*.fus
+    # ...except that ./main doesn't actually accept that syntax.
+    ./run_test_files
+
+Run all tests:
+
+    # Roughly equivalent to:
+    #     ./compile_newvalues test && ./main && ./run_test_files
     ./runtests
+
 
 
 ## UWSGI plugin
