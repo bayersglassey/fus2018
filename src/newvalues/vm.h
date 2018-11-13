@@ -42,4 +42,7 @@ void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
 void fus_vm_cleanup(fus_vm_t *vm);
 
 
+void fus_vm_error(fus_vm_t *vm, fus_err_code_t code);
+
+
 #endif

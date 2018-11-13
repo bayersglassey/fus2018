@@ -32,19 +32,7 @@ const char *fus_err_code_msg(fus_err_code_t code){
 
 
 fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code){
-#if FUS_PRINT_ERRS_TO_STDERR
-    const char *msg = fus_err_code_msg(code);
-    fprintf(stderr, "{Fus err #%i: %s}", code, msg);
-#if FUS_PRINT_BACKTRACE_WITH_ERRS
-    fprintf(stderr, "\n"); FUS_BACKTRACE
-#endif
-#endif
-#if FUS_USE_CURRENT_ERR_CODE
-    fus_current_err_code = code;
-#endif
-#if FUS_EXIT_ON_ERR
-    fus_exit(vm->core, EXIT_FAILURE);
-#endif
+    fus_vm_error(vm, code);
     return FUS_VALUE_ERR;
 }
 
@@ -58,9 +46,7 @@ fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i){
 
 int fus_value_sym_decode(fus_vm_t *vm, fus_value_t value){
     if(!FUS_IS_SYM(value)){
-#if FUS_PRINT_ERRS_TO_STDERR
-        fprintf(stderr, "{Fus error: %li is not a sym}", value.i);
-#endif
+        fus_vm_error(vm, FUS_ERR_WRONG_TYPE);
         return 0;
     }
     return FUS_GET_PAYLOAD(value.i);
@@ -76,9 +62,7 @@ fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i){
 
 fus_unboxed_t fus_value_int_decode(fus_vm_t *vm, fus_value_t value){
     if(!FUS_IS_INT(value)){
-#if FUS_PRINT_ERRS_TO_STDERR
-        fprintf(stderr, "{Fus error: %li is not an int}", value.i);
-#endif
+        fus_vm_error(vm, FUS_ERR_WRONG_TYPE);
         return 0;
     }
     return FUS_GET_PAYLOAD(value.i);
@@ -101,6 +85,10 @@ fus_value_t fus_value_bool_not(fus_vm_t *vm, fus_value_t value_x){
 }
 
 bool fus_value_bool_decode(fus_vm_t *vm, fus_value_t value){
+    if(!FUS_IS_BOOL(value)){
+        fus_vm_error(vm, FUS_ERR_WRONG_TYPE);
+        return false;
+    }
     return value.i == FUS_VALUE_TRUE.i;
 }
 

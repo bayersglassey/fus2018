@@ -46,3 +46,19 @@ void fus_vm_cleanup(fus_vm_t *vm){
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_CLEANUP)
 }
 
+
+void fus_vm_error(fus_vm_t *vm, fus_err_code_t code){
+#if FUS_PRINT_ERRS_TO_STDERR
+    const char *msg = fus_err_code_msg(code);
+    fprintf(stderr, "{Fus err #%i: %s}", code, msg);
+#if FUS_PRINT_BACKTRACE_WITH_ERRS
+    fprintf(stderr, "\n"); FUS_BACKTRACE
+#endif
+#endif
+#if FUS_USE_CURRENT_ERR_CODE
+    fus_current_err_code = code;
+#endif
+#if FUS_EXIT_ON_ERR
+    fus_exit(vm->core, EXIT_FAILURE);
+#endif
+}
