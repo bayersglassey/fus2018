@@ -1,30 +1,67 @@
 
 arr 1, 2, (arr 3, 4,),
-dup len swap
-dup
-dup pop
+dup len 3 == assert
+pop
+    lpop 3 == assert
+    lpop 4 == assert
+    len 0 == assert
+lpop 1 == assert
+lpop 2 == assert
+len 0 == assert
 
+obj 10 =.x
+    dup ?.x assert
+    dup ?.y not assert
+    dup `x has assert
+    dup `y has not assert
+    dup `x get 10 == assert
+drop
 
 obj 10 =.x 20 =.y 30 =.x obj =.nested
 dup .nested
     "I was .nested" =.msg
-    "Ich bin .nested" =.msg
+    dup .msg "I was .nested" str_eq assert
+    "Ich bin .nested" `msg set
+    dup .msg "Ich bin .nested" str_eq assert
+    drop
+dup .x 30 == assert
+dup .y 20 == assert
+dup .nested ?.msg not assert
+drop
 
-"And then:"
 obj arr 10, =.x arr 20, =.y
     ..x
+        lpop 10 == assert
+        len 0 == assert
+    dup .x is_null assert
+    dup .y
+        lpop 20 == assert
+        len 0 == assert
+    drop
 
-"Arr get:"
 arr "A", "B", "C",
-dup 1 .$
-over 1 ..$
+dup 1 .$ "B" str_eq assert
+1 ..$
+    "B" str_eq assert
+    lpop "A" str_eq assert
+    lpop is_null assert
+    lpop "C" str_eq assert
+    len 0 == assert
 
-"Arr set:"
-arr "A", "B", "C",
-"BEE" 1 =.$
+arr "A", "B", "C", ='ABC
+    'ABC "BEE" 1 =.$
+    lpop "A" str_eq assert
+    lpop "BEE" str_eq assert
+    lpop "C" str_eq assert
+    len 0 == assert
+    'ABC
+    lpop "A" str_eq assert
+    lpop "B" str_eq assert
+    lpop "C" str_eq assert
+    len 0 == assert
 
 
-"Join & Split:"
+# Join & Split:
 
 arr "A", "B", arr "C", "D", join
 lpop "A" str_eq assert
@@ -48,7 +85,7 @@ lpop "D" str_eq assert
 len 0 == assert
 
 
-"Str:"
+# Str:
 
 "abcd" str_len 4 == assert
 
