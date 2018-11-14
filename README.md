@@ -13,7 +13,11 @@ without a fancy type system. In theory.
 
 TODO: Fight Haskell and win.
 
-* [Example programs and utility libraries](/fus/)
+* [Example](#example)
+
+* [Getting Started](#getting-started)
+
+* [UWSGI plugin](#uwsgi-plugin)
 
 
 ## Example
@@ -107,10 +111,19 @@ TODO: Fight Haskell and win.
         @test
 
 
-## "Newvalues"
+## Getting Started
 
 A revamp of the basic datastructure for fus values is under way.
 Previously they were a struct; now they are a tagged pointer.
+
+The old runtime is in [src/*.[ch]](/src) and [src/main/*.c](/src/main).
+
+The new runtime is in [src/newvalues/*.[ch]](/src/newvalues) and [src/newvalues/main/*.c](/src/newvalues/main).
+
+Example fus programs are in [fus/*.fus](/fus),
+but many don't work with the new runtime yet.
+
+Tests which work with the new runtime are in [test/*.fus](/test).
 
 Compile & Run Test Suite:
 
@@ -159,30 +172,4 @@ Possible next steps:
 * Write a [Redis](https://redis.io/) client
 
 * Hook into more UWSGI features, like shared memory, caching, etc
-
-
-## Getting started
-
-### NOTE: Examples in this section may not work until the "newvalues" stuff is merged back in.
-
-Compile:
-
-    ./compile   # basically just 'gcc -o main src/*.c'
-
-Run:
-
-    ./main
-    # runs ./test.fus
-
-    ./main -f fus/math.fus
-    # run a different file (fus/math.fus in this case)
-
-    ./main -c '1 2 + 3 * p'
-    # run code directly (do some math and print the result)
-
-    ./main -c 'load(fus math) @(math test)'
-    # load and use another file (fus/math.fus in this case) and calling a function from it
-
-    ./main -c 'load(fus math) use(math test) @test'
-    # like "using math::test;" in C++, or "from math import test" in Python
 
