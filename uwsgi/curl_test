@@ -1,10 +1,15 @@
 
+if [ -z "$HOST" ]
+then
+    HOST="localhost:9090"
+fi
+
 if [ -z "$1" ]
 then
-    PORT="9090"
+    DATA="@./uwsgi/test_execpost.fus"
 else
-    PORT="$1"
+    DATA="$1"
     shift
 fi
 
-curl -X POST --data-binary @test.fus localhost:"$PORT"
+curl -X POST --data-binary "$DATA" $@ "$HOST"

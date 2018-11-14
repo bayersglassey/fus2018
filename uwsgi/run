@@ -1,11 +1,8 @@
 
-if [ -z "$1" ]
+if [ -z "$SOCKET" ]
 then
     SOCKET=":9090"
-else
-    SOCKET="$1"
-    shift
 fi
 
 
-uwsgi --plugin fus --http-socket "$SOCKET" --http-socket-modifier1 18
+uwsgi --plugin fus --http-socket "$SOCKET" --http-socket-modifier1 18 $@

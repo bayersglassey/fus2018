@@ -9,6 +9,67 @@
 #include "../includes.h"
 
 
+
+/***********
+ * FUS_APP *
+ ***********/
+
+typedef struct fus_app {
+    bool execpost;
+    const char *filename;
+    char *code;
+    int code_len;
+    bool loaded;
+    fus_t fus;
+} fus_app_t;
+
+static int fus_app_init(fus_app_t *app){
+    app->execpost = false;
+    app->filename = "<no file>";
+    app->code = NULL;
+    app->code_len = 0;
+    app->loaded = false;
+    fus_init(&app->fus);
+    return 0;
+}
+
+static int fus_app_cleanup(fus_app_t *app){
+    if(app->loaded){
+        fprintf(stderr, "%s: Cleaning up fus app loaded from: %s\n",
+            __func__, app->filename);
+        free(app->code);
+    }
+    fus_cleanup(&app->fus);
+    return 0;
+}
+
+static int fus_app_load(fus_app_t *app, const char *filename){
+    if(app->loaded){
+        fprintf(stderr, "%s: Fus app already loaded from %s, "
+            "can't load from: %s\n",
+            __func__, app->filename, filename);
+        return -1;
+    }
+
+    fprintf(stderr, "%s: Loading fus app from: %s\n",
+        __func__, filename);
+
+    char *code = load_file(filename);
+    if(code == NULL)return -1;
+
+    app->filename = filename;
+    app->loaded = true;
+    app->code = code;
+    app->code_len = strlen(code);
+    return 0;
+}
+
+
+
+/****************************
+ * FUS WEB SERVER FUNCTIONS *
+ ****************************/
+
 static int flush_to_request_body(fus_printer_t *printer){
     struct wsgi_request *request = printer->data;
     if(uwsgi_response_write_body_do(request, printer->buffer, printer->buffer_len))return -1;
@@ -16,9 +77,9 @@ static int flush_to_request_body(fus_printer_t *printer){
 }
 
 
-static int run(fus_t *fus, const char *body, int body_len){
+static int run(fus_t *fus, const char *code, int code_len){
     fus_lexer_t *lexer = &fus->lexer;
-    fus_lexer_load_chunk(lexer, body, body_len);
+    fus_lexer_load_chunk(lexer, code, code_len);
     fus_lexer_mark_final(lexer);
 
     fus_state_t *state = &fus->state;
@@ -29,11 +90,11 @@ static int run(fus_t *fus, const char *body, int body_len){
         return -1;
     }
 
-    return UWSGI_OK;
+    return 0;
 }
 
 
-static int serve(fus_t *fus, struct wsgi_request *request){
+static int serve_execpost(fus_t *fus, struct wsgi_request *request){
 
     /* Parse vars */
     if(uwsgi_parse_vars(request))return -1;
@@ -61,7 +122,7 @@ static int serve(fus_t *fus, struct wsgi_request *request){
     //if(uwsgi_response_write_body_do(request, "Another test!\n", 14))return -1;
 
     /* Run body as fus code */
-    run(fus, body, body_len);
+    if(run(fus, body, body_len) < 0)return -1;
 
     /* Write result to request body */
     fus_printer_set_flush(&fus->printer, &flush_to_request_body, request);
@@ -69,29 +130,138 @@ static int serve(fus_t *fus, struct wsgi_request *request){
     fus_printer_write_char(&fus->printer, '\n');
     if(fus_printer_flush(&fus->printer) < 0)return -1;
 
+    return 0;
+}
+
+static int serve_app(fus_app_t *app, struct wsgi_request *request){
+    fus_t *fus = &app->fus;
+    fus_vm_t *vm = &fus->vm;
+    fus_symtable_t *symtable = &fus->symtable;
+
+    /* Parse vars */
+    if(uwsgi_parse_vars(request))return -1;
+
+    /* Get body */
+    ssize_t body_len = 0;
+    char *body = uwsgi_request_body_read(request, -1, &body_len);
+    if(body == NULL)return -1;
+
+    /* Get fus symbol indices */
+    int sym_i_body = fus_symtable_get_or_add_from_string(
+        symtable, "body");
+    int sym_i_wsgi_vars = fus_symtable_get_or_add_from_string(
+        symtable, "wsgi_vars");
+
+    /* Build request obj */
+    fus_value_t value_request = fus_value_obj(vm);
+    fus_obj_t *o_request = &value_request.p->data.o;
+    fus_value_t value_body = fus_value_str(vm,
+        fus_strndup(vm->core, body, body_len),
+        body_len, body_len + 1);
+    fus_obj_set(vm, o_request, sym_i_body, value_body);
+    fus_value_t value_wsgi_vars = fus_value_arr(vm);
+    fus_obj_set(vm, o_request, sym_i_wsgi_vars, value_wsgi_vars);
+
+    /* Push request onto stack */
+    fus_arr_push(vm, &fus->state.stack, value_request);
+
+    /* Run fus webapp code */
+    if(run(fus, app->code, app->code_len) < 0)return -1;
+
+    /* Write status & headers */
+    if(uwsgi_response_prepare_headers(request, "200 OK", 6))return -1;
+    if(uwsgi_response_add_content_type(request, "text/plain", 10))return -1;
+    //if(uwsgi_response_add_header(request, "X-Fus", 5, "Yes", 3))return -1;
+
+    /* Example: write to response body */
+    //if(uwsgi_response_write_body_do(request, "Test!\n", 6))return -1;
+    //if(uwsgi_response_write_body_do(request, "Another test!\n", 14))return -1;
+
+    /* Write result to request body */
+    fus_printer_set_flush(&fus->printer, &flush_to_request_body, request);
+    fus_printer_write_arr(&fus->printer, &fus->vm, &fus->state.stack);
+    fus_printer_write_char(&fus->printer, '\n');
+    if(fus_printer_flush(&fus->printer) < 0)return -1;
+
+    return 0;
+}
+
+
+
+
+/************************************
+ * UWSGI FUS CALLBACKS & STRUCTURES *
+ ************************************/
+
+
+fus_app_t app;
+bool app_execpost = false;
+const char *app_filename = NULL;
+
+static int uwsgi_fus_init(){
+    fprintf(stderr, "%s: Initializing...\n", __func__);
+    if(fus_app_init(&app) < 0)return -1;
+    if(app_execpost){
+        fprintf(stderr, "%s: Running in execpost mode!\n", __func__);
+        app.execpost = app_execpost;
+    }else if(app_filename){
+        fprintf(stderr, "%s: Running in app mode!\n", __func__);
+        if(fus_app_load(&app, app_filename) < 0)return -1;
+    }else{
+        fprintf(stderr, "%s: Please use --fus or --fus_execpost "
+            "to select a mode\n", __func__);
+        return -1;
+    }
+    fprintf(stderr, "%s: OK!\n", __func__);
     return UWSGI_OK;
 }
 
-int uwsgi_fus_request(struct wsgi_request *request){
+static void uwsgi_fus_cleanup(){
+    fus_app_cleanup(&app);
+}
+
+static int uwsgi_fus_request_execpost(struct wsgi_request *request){
+    /* Implements an "execute POST"-style webserver, which expects POSTed
+    data to be valid fus source code, which it runs, returning the resulting
+    stack */
     fus_t fus;
     fus_init(&fus);
-
-    int status = serve(&fus, request);
-
+    if(serve_execpost(&fus, request) < 0)return -1;
     fus_cleanup(&fus);
     return UWSGI_OK;
 }
 
+static int uwsgi_fus_request_app(struct wsgi_request *request){
+    /* Implements an "execute POST"-style webserver, which expects POSTed
+    data to be valid fus source code, which it runs, returning the resulting
+    stack */
+    if(!app.loaded){
+        fprintf(stderr, "%s: App not loaded\n", __func__);
+        return -1;
+    }
+    if(serve_app(&app, request) < 0)return -1;
+    return UWSGI_OK;
+}
 
+static int uwsgi_fus_request(struct wsgi_request *request){
+    if(app.execpost)return uwsgi_fus_request_execpost(request);
+    else return uwsgi_fus_request_app(request);
+}
 
 static struct uwsgi_option uwsgi_fus_options[] = {
-    //{"fus", no_argument, 0, "load fus app", uwsgi_opt_set_str, &uwsgi_fus_filename, 0},
+    {"fus", required_argument, 0, "load fus app", uwsgi_opt_set_str, &app_filename, 0},
+    {"fus_execpost", no_argument, 0, "execpost mode: POST will be executed, stack returned", uwsgi_opt_true, &app_execpost, 0},
     {0, 0, 0, 0},
 };
 
 struct uwsgi_plugin fus_plugin = {
     .name = "fus",
     .modifier1 = 18,
+
+    .init = uwsgi_fus_init,
+    //.init_apps = ?..
+    .master_cleanup = uwsgi_fus_cleanup,
+
     .options = uwsgi_fus_options,
     .request = uwsgi_fus_request,
 };
