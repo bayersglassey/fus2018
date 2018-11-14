@@ -34,7 +34,7 @@ To see this in action, with uwsgi still running, open another terminal window an
 In this mode, you tell the plugin which file to run as a web app.
 Work in progress!
 
-    ./uwsgi/run --fus fus/webapp.fus
+    ./uwsgi/run --fus fus/webapp_simple.fus
 
 Then in a separate terminal window:
 

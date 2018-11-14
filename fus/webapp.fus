@@ -40,6 +40,8 @@ def app_write_body of(app -> app body_chunk):
 def print_request of(request ->):
     # Print some info about this request
 
+    ='request
+
     T if:
         "WSGI request: " str_p
         'request p

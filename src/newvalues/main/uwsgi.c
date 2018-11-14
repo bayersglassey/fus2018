@@ -104,22 +104,9 @@ static int serve_execpost(fus_t *fus, struct wsgi_request *request){
     char *body = uwsgi_request_body_read(request, -1, &body_len);
     if(body == NULL)return -1;
 
-    /* Debug: print the body */
-    //fprintf(stderr, "GOT BODY: %.*s\n", (int)body_len, body);
-
-    /* Example: get a var */
-    //uint16_t remote_addr_len = 0;
-    //char *remote_addr = uwsgi_get_var(request,
-    //    "REMOTE_ADDR", 11, &remote_addr_len);
-
     /* Write status & headers */
     if(uwsgi_response_prepare_headers(request, "200 OK", 6))return -1;
     if(uwsgi_response_add_content_type(request, "text/plain", 10))return -1;
-    //if(uwsgi_response_add_header(request, "X-Fus", 5, "Yes", 3))return -1;
-
-    /* Example: write to response body */
-    //if(uwsgi_response_write_body_do(request, "Test!\n", 6))return -1;
-    //if(uwsgi_response_write_body_do(request, "Another test!\n", 14))return -1;
 
     /* Run body as fus code */
     if(run(fus, body, body_len) < 0)return -1;
@@ -133,10 +120,63 @@ static int serve_execpost(fus_t *fus, struct wsgi_request *request){
     return 0;
 }
 
+static int parse_vars_arr(fus_vm_t *vm, fus_arr_t *a, struct wsgi_request *request){
+    fus_symtable_t *table = vm->symtable;
+    int sym_i_key = fus_symtable_get_or_add_from_string(table, "name");
+    int sym_i_val = fus_symtable_get_or_add_from_string(table, "value");
+    for(int i = 0; i < request->var_cnt; i += 2){
+        char *key = request->hvec[i].iov_base;
+        uint16_t key_len = request->hvec[i].iov_len;
+        char *val = request->hvec[i + 1].iov_base;
+        uint16_t val_len = request->hvec[i + 1].iov_len;
+
+        fus_value_t value_key = fus_value_str(vm,
+            fus_strndup(vm->core, key, key_len),
+            key_len, key_len + 1);
+        fus_value_t value_val = fus_value_str(vm,
+            fus_strndup(vm->core, val, val_len),
+            val_len, val_len + 1);
+
+        fus_value_t value_keyval = fus_value_obj(vm);
+        fus_obj_t *o_keyval = &value_keyval.p->data.o;
+        fus_obj_set(vm, o_keyval, sym_i_key, value_key);
+        fus_obj_set(vm, o_keyval, sym_i_val, value_val);
+        /* Example value_keyval:
+            obj
+              "HTTP_HOST" =.name
+              "localhost:9090" =.value
+        */
+
+        fus_arr_push(vm, a, value_keyval);
+    }
+    return 0;
+}
+
+static int write_headers_arr(fus_vm_t *vm, fus_arr_t *a, struct wsgi_request *request){
+    fus_symtable_t *table = vm->symtable;
+    int sym_i_key = fus_symtable_get_or_add_from_string(table, "name");
+    int sym_i_val = fus_symtable_get_or_add_from_string(table, "value");
+
+    fus_array_len_t len = fus_arr_len(vm, a);
+    fus_value_t *values = FUS_ARR_VALUES(*a);
+    for(int i = 0; i < len; i++){
+        fus_value_t value = values[i];
+        fus_obj_t *o = fus_value_obj_decode(vm, value);
+
+        fus_value_t value_key = fus_obj_get(vm, o, sym_i_key);
+        fus_value_t value_val = fus_obj_get(vm, o, sym_i_val);
+        char *key = fus_value_str_decode_dup(vm, value_key);
+        char *val = fus_value_str_decode_dup(vm, value_val);
+        if(uwsgi_response_add_header(request, key, strlen(key), val, strlen(val)))return -1;
+    }
+    return 0;
+}
+
 static int serve_app(fus_app_t *app, struct wsgi_request *request){
     fus_t *fus = &app->fus;
     fus_vm_t *vm = &fus->vm;
     fus_symtable_t *symtable = &fus->symtable;
+    fus_arr_t *stack = &fus->state.stack;
 
     /* Parse vars */
     if(uwsgi_parse_vars(request))return -1;
@@ -147,6 +187,10 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     if(body == NULL)return -1;
 
     /* Get fus symbol indices */
+    int sym_i_status = fus_symtable_get_or_add_from_string(
+        symtable, "status");
+    int sym_i_headers = fus_symtable_get_or_add_from_string(
+        symtable, "headers");
     int sym_i_body = fus_symtable_get_or_add_from_string(
         symtable, "body");
     int sym_i_wsgi_vars = fus_symtable_get_or_add_from_string(
@@ -160,32 +204,41 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
         body_len, body_len + 1);
     fus_obj_set(vm, o_request, sym_i_body, value_body);
     fus_value_t value_wsgi_vars = fus_value_arr(vm);
+    fus_arr_t *a_wsgi_vars = &value_wsgi_vars.p->data.a;
+    if(parse_vars_arr(vm, a_wsgi_vars, request))return -1;
     fus_obj_set(vm, o_request, sym_i_wsgi_vars, value_wsgi_vars);
 
     /* Push request onto stack */
-    fus_arr_push(vm, &fus->state.stack, value_request);
+    fus_arr_push(vm, stack, value_request);
 
     /* Run fus webapp code */
     if(run(fus, app->code, app->code_len) < 0)return -1;
 
-    /* Write status & headers */
-    if(uwsgi_response_prepare_headers(request, "200 OK", 6))return -1;
-    if(uwsgi_response_add_content_type(request, "text/plain", 10))return -1;
-    //if(uwsgi_response_add_header(request, "X-Fus", 5, "Yes", 3))return -1;
+    /* Pop response from stack */
+    if(fus_arr_len(vm, stack) != 1){
+        fprintf(stderr, "%s: Expected 1 value (response obj) left on stack, "
+            "but found %i values\n", __func__, fus_arr_len(vm, stack));
+        return -1;
+    }
+    fus_value_t value_resp;
+    if(fus_arr_pop(vm, stack, &value_resp) < 0)return -1;
+    fus_obj_t *o_resp = fus_value_obj_decode(vm, value_resp);
 
-    /* Example: write to response body */
-    //if(uwsgi_response_write_body_do(request, "Test!\n", 6))return -1;
-    //if(uwsgi_response_write_body_do(request, "Another test!\n", 14))return -1;
+    /* Get status, headers, body from response */
+    fus_value_t value_resp_status = fus_obj_get(vm, o_resp, sym_i_status);
+    fus_value_t value_resp_headers = fus_obj_get(vm, o_resp, sym_i_headers);
+    fus_value_t value_resp_body = fus_obj_get(vm, o_resp, sym_i_body);
+    int status = fus_value_int_decode(vm, value_resp_status);
+    fus_arr_t *a_resp_headers = fus_value_arr_decode(vm, value_resp_headers);
+    char *resp_body = fus_value_str_decode_dup(vm, value_resp_body);
 
-    /* Write result to request body */
-    fus_printer_set_flush(&fus->printer, &flush_to_request_body, request);
-    fus_printer_write_arr(&fus->printer, &fus->vm, &fus->state.stack);
-    fus_printer_write_char(&fus->printer, '\n');
-    if(fus_printer_flush(&fus->printer) < 0)return -1;
+    /* Write status, headers, body */
+    if(uwsgi_response_prepare_headers_int(request, status))return -1;
+    if(write_headers_arr(vm, a_resp_headers, request) < 0)return -1;
+    if(uwsgi_response_write_body_do(request, resp_body, strlen(resp_body)))return -1;
 
     return 0;
 }
-
 
 
 

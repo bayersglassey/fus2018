@@ -1,0 +1,73 @@
+
+# This file is intended to be run by the fus UWSGI plugin,
+# using its simple protocol.
+# In other words, this entire file can be treated like a
+# def of(request -> response).
+
+
+
+
+
+='request
+"Handling request: " str_p 'request p
+
+
+
+# Find vars we care about and poke their vaules onto request:
+0 ='i
+'request .wsgi_vars ='vars
+def NOT_FOUND: "<WSGI VAR NOT FOUND>"
+''request
+    @NOT_FOUND =.host
+    @NOT_FOUND =.path
+    @NOT_FOUND =.method
+    @NOT_FOUND =.qs
+do:
+    # NOTE: This loop has the request at top of stack,
+    # and modifies it implicitly.
+    'i 'vars len < while
+    'vars 'i .$ ='var
+    'var .name ='name
+    'var .value ='value
+    do:
+        # If name matches, poke corresponding value onto top of
+        # stack (the request object)
+        'name "HTTP_HOST"      str_eq if: 'value =.host break
+        'name "PATH_INFO"      str_eq if: 'value =.path break
+        'name "REQUEST_METHOD" str_eq if: 'value =.method break
+        'name "QUERY_STRING"   str_eq if: 'value =.qs break
+    ''i 1 + ='i loop
+='request
+
+
+# Generate response headers:
+def header:
+    ='value ='name
+    obj 'name =.name 'value =.value
+arr
+    "Server" "fus lol" @header,
+    "Content-Type" "text/plain" @header,
+='headers
+
+
+# Generate response body:
+def format of(arr -> str):
+    ='a
+    0 ='i
+    "" do:
+        'i 'a len < while
+        'a 'i .$ str_join
+        ''i 1 + ='i loop
+arr
+    "Fus is ", 'request .method, "ing ",
+    'request .path, " at ", 'request .host, "\n",
+    "An echo says: ", 'request .body, "\n",
+    "Whoo!\n",
+@format ='body
+
+
+# Return response object:
+obj
+    200 =.status
+    ''headers =.headers
+    ''body =.body
