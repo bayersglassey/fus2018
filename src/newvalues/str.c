@@ -120,6 +120,11 @@ const char *fus_value_str_decode(fus_vm_t *vm, fus_value_t value){
     return value.p->data.s.text;
 }
 
+char *fus_value_str_decode_dup(fus_vm_t *vm, fus_value_t value){
+    const char *text = fus_value_str_decode(vm, value);
+    return fus_strndup(vm->core, text, value.p->data.s.len);
+}
+
 void fus_value_str_join(fus_vm_t *vm, fus_value_t *value_s1_ptr,
     fus_value_t value_s2
 ){

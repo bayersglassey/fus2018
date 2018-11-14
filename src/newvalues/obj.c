@@ -98,6 +98,14 @@ fus_value_t fus_value_obj_from_obj(fus_vm_t *vm, fus_obj_t *o){
     return (fus_value_t)p;
 }
 
+fus_obj_t *fus_value_obj_decode(fus_vm_t *vm, fus_value_t value){
+    if(!fus_value_is_obj(value)){
+        fus_vm_error(vm, FUS_ERR_WRONG_TYPE);
+        return NULL;
+    }
+    return &value.p->data.o;
+}
+
 fus_value_t fus_value_obj_has(fus_vm_t *vm, fus_value_t value_o, int sym_i){
     /* Return bool value indicating whether obj value has key
     with sym index sym_i. */

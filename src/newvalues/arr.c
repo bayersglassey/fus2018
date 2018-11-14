@@ -186,6 +186,14 @@ fus_value_t fus_value_arr_from_arr(fus_vm_t *vm, fus_arr_t *a){
     return (fus_value_t)p;
 }
 
+fus_arr_t *fus_value_arr_decode(fus_vm_t *vm, fus_value_t value){
+    if(!fus_value_is_arr(value)){
+        fus_vm_error(vm, FUS_ERR_WRONG_TYPE);
+        return NULL;
+    }
+    return &value.p->data.a;
+}
+
 fus_value_t fus_value_arr_len(fus_vm_t *vm, fus_value_t value){
     /* Return len of arr value as a new int value */
     if(!fus_value_is_arr(value))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
