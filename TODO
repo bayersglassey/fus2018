@@ -40,5 +40,13 @@ The latter is like "data(...)" but loaded from a file (like "load(...)").
 Nov 14, 2018:
 -------------
 
-newvalues: Vars need to be pushed/popped on fun calls.
+(newvalues)
 
+Vars need to be pushed/popped on fun calls.
+
+While running the following:
+    ./uwsgi/run --fus_execpost
+And then running the following in separate terminal:
+    ./uwsgi/curl_test "21"
+We get this error:
+    <no file>: row 1: col 1: split token "21": Lexer finished with status != done (OK)
