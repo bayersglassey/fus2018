@@ -1,91 +1,131 @@
 
-#include "includes.h"
+#include <stdbool.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "symtable.h"
 
 
-void fus_sym_cleanup(fus_sym_t *sym){
-    free(sym->token);
-    sym->token = NULL;
+
+void fus_symtable_entry_init_zero(fus_symtable_entry_t *entry){
+    entry->table = NULL;
+    entry->token = NULL;
+    entry->token_len = 0;
+    entry->is_name = false;
 }
 
-int fus_sym_init(fus_sym_t *sym, const char *token, int token_len){
-    sym->token = strndup(token, token_len);
-    if(sym->token == NULL)return 1;
-    sym->token_len = token_len;
-    sym->argtype = FUS_SYMCODE_ARGTYPE_NOT_OPCODE;
-    sym->autocompile = false;
-    sym->is_name = token[0] == '_' || isalpha(token[0]);
-    return 0;
+void fus_symtable_entry_init(fus_symtable_entry_t *entry,
+    fus_symtable_t *table, const char *token, int token_len
+){
+    entry->table = table;
+    entry->token = fus_strndup(table->core, token, token_len);
+    entry->token_len = token_len;
+    entry->is_name = token_len > 0 &&
+        (token[0] == '_' || isalpha(token[0]));
 }
 
-
-
-
-void fus_symtable_cleanup(fus_symtable_t *symtable){
-    ARRAY_FREE(fus_sym_t, symtable->syms, fus_sym_cleanup);
-}
-
-int fus_symtable_init(fus_symtable_t *symtable){
-    int err;
-    ARRAY_INIT(symtable->syms)
-    #define DEF_SYMCODE(m_code, m_token, m_argtype, m_autocompile) { \
-        fus_sym_t sym; \
-        err = fus_sym_init(&sym, m_token, strlen(m_token)); \
-        if(err)return err; \
-        sym.argtype = FUS_SYMCODE_ARGTYPE_##m_argtype; \
-        sym.autocompile = m_autocompile; \
-        ARRAY_PUSH(fus_sym_t, symtable->syms, sym) \
-    }
-    #include "symcodes.inc"
-    #undef DEF_SYMCODE
-    return 0;
+void fus_symtable_entry_cleanup(fus_symtable_entry_t *entry){
+    free(entry->token);
 }
 
 
-int fus_symtable_find(fus_symtable_t *symtable,
+
+void fus_symtable_init(fus_symtable_t *table, fus_core_t *core){
+    table->core = core;
+    fus_class_init(&table->class_entry, core, "symtable_entry",
+        sizeof(fus_symtable_entry_t), table,
+        &fus_class_init_symtable_entry,
+        &fus_class_cleanup_symtable_entry);
+    fus_array_init(&table->entries, &table->class_entry);
+}
+
+void fus_symtable_cleanup(fus_symtable_t *table){
+    fus_array_cleanup(&table->entries);
+    fus_class_cleanup(&table->class_entry);
+}
+
+
+
+static int fus_symtable_append_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
-    /* Returns sym's index if found, -1 if not found */
-    for(int i = 0; i < symtable->syms_len; i++){
-        fus_sym_t *sym = &symtable->syms[i];
-        if(sym->token_len == token_len
-            && !strncmp(sym->token, token, token_len)
-        ){
-            return i;
-        }
+    fus_array_push(&table->entries);
+    int sym_i = table->entries.len - 1;
+    fus_symtable_entry_t *entry = fus_symtable_get_entry(table, sym_i);
+    fus_symtable_entry_init(entry, table, token, token_len);
+    return sym_i;
+}
+
+int fus_symtable_len(fus_symtable_t *table){
+    return table->entries.len;
+}
+
+fus_symtable_entry_t *fus_symtable_get_entry(fus_symtable_t *table,
+    int sym_i
+){
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    return &entries[sym_i];
+}
+
+const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i){
+    fus_symtable_entry_t *entry = fus_symtable_get_entry(table, sym_i);
+    return entry->token;
+}
+
+int fus_symtable_add_from_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    /* Assumes token is not in table. Adds it and returns its index */
+    return fus_symtable_append_from_token(table, token, token_len);
+}
+
+int fus_symtable_get_from_token(fus_symtable_t *table,
+    const char *token, int token_len
+){
+    /* Returns index of token in table, or -1 if not found */
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    int len = table->entries.len;
+    for(int sym_i = len - 1; sym_i >= 0; sym_i--){
+        fus_symtable_entry_t *entry = &entries[sym_i];
+        if(
+            entry->token_len == token_len &&
+            !strncmp(entry->token, token, token_len)
+        )return sym_i;
     }
     return -1;
 }
 
-fus_sym_t *fus_symtable_get(fus_symtable_t *symtable, int sym_i){
-    if(sym_i < 0 || sym_i >= symtable->syms_len)return NULL;
-    return &symtable->syms[sym_i];
-}
-
-const char *fus_symtable_get_token(fus_symtable_t *symtable, int sym_i){
-    fus_sym_t *sym = fus_symtable_get(symtable, sym_i);
-    if(sym == NULL)return NULL;
-    return sym->token;
-}
-
-int fus_symtable_add(fus_symtable_t *symtable,
+int fus_symtable_get_or_add_from_token(fus_symtable_t *table,
     const char *token, int token_len
 ){
-    int err;
-    fus_sym_t sym;
-    err = fus_sym_init(&sym, token, token_len);
-    if(err)return err;
-    ARRAY_PUSH(fus_sym_t, symtable->syms, sym)
-    return 0;
+    /* Returns token's index in table, adding it first if not found */
+    int sym_i = fus_symtable_get_from_token(table, token, token_len);
+    if(sym_i < 0)return fus_symtable_append_from_token(table, token, token_len);
+    return sym_i;
 }
 
-int fus_symtable_find_or_add(fus_symtable_t *symtable,
-    const char *token, int token_len
-){
-    int sym_i = fus_symtable_find(symtable, token, token_len);
-    if(sym_i >= 0)return sym_i;
-    int err = fus_symtable_add(symtable, token, token_len);
-    if(err)return -1;
-    int new_sym_i = symtable->syms_len - 1;
-    return new_sym_i;
+
+int fus_symtable_add_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_add_from_token(table, string, strlen(string));
+}
+int fus_symtable_get_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_from_token(table, string, strlen(string));
+}
+int fus_symtable_get_or_add_from_string(fus_symtable_t *table, const char *string){
+    return fus_symtable_get_or_add_from_token(table, string, strlen(string));
+}
+
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_symtable_entry(fus_class_t *class, void *ptr){
+    fus_symtable_entry_init_zero(ptr);
+}
+
+void fus_class_cleanup_symtable_entry(fus_class_t *class, void *ptr){
+    fus_symtable_entry_cleanup(ptr);
 }
 

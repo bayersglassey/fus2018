@@ -7,7 +7,7 @@ then
     rm *.{gcda,gcno,gcov}
 elif [ -z "$CMD" ]
 then
-    ./compile_newvalues test --coverage $@ && ./main && gcov *.gcda
+    ./compile test --coverage $@ && ./main && gcov *.gcda
 else
     echo "Usage (one of):"
     echo "    $(basename $0)"

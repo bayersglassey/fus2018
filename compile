@@ -1,1 +1,61 @@
-./_compile_base src/main/main.c $@
+
+set -e
+
+if [ -z "$1" ]
+then
+    echo "Usage (pick one):"
+    echo "    $(basename "$0") MAIN [GCC_ARGS...]"
+    echo "    $(basename "$0") uwsgi [GCC_ARGS...]"
+    echo "Where:"
+    echo "    MAIN is one of:"
+    for F in src/main/*.c
+    do
+        F=$(basename "$F")
+        echo "        ${F%%.c}"
+    done
+    exit 1
+fi
+
+MAIN="$1"
+shift
+
+MAIN_C="src/main/$MAIN.c"
+CFLAGS="-g -std=c99 -Wall -Werror -Wno-unused"
+CFILES="src/*.c"
+OUTFILE="main"
+
+if [ "$MAIN" = "lib" ]
+then
+    CFLAGS+=" -fPIC --shared"
+    OUTFILE="libfus.so"
+    >&2 echo "Compiling $OUTFILE..."
+    >&2 echo "To install, try: sudo ./compile lib_install"
+elif [ "$MAIN" = "lib_install" ]
+then
+    OUTFILE="libfus.so"
+    cp "$OUTFILE" /usr/lib/
+    mkdir -p /usr/include/fus
+    cp src/*.h /usr/include/fus/
+    exit 0
+elif [ "$MAIN" = "libtest" ]
+then
+    CFLAGS+=" -lfus"
+    CFILES=""
+elif [ "$MAIN" = "uwsgi" ]
+then
+    CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
+    OUTFILE="fus_plugin.so"
+elif [ "$MAIN" = "uwsgi_fuslib" ]
+then
+    CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
+    OUTFILE="fus_plugin.so"
+fi
+
+CFLAGS+=" -rdynamic -DFUS_ENABLE_BACKTRACE" # for backtrace_symbols
+CFLAGS+=" -DFUS_ENABLE_BOXED_LLIST"
+
+gcc $CFLAGS \
+    -o "$OUTFILE" \
+    $CFILES \
+    "$MAIN_C" \
+    $@

@@ -4,7 +4,7 @@ set -e
 
 
 echo "Compiling \"test\"..."
-./compile_newvalues test
+./compile test
 echo "Compiled OK"
 echo "Running \"test\"..."
 ./main

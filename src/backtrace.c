@@ -1,18 +1,20 @@
 
-#include "includes.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <execinfo.h>
+
+#include "backtrace.h"
+
 
 #ifdef FUS_ENABLE_BACKTRACE
-
-#define FUS_MAX_BACKTRACE_FRAMES 128
-
-void fus_backtrace(){
+void fus_backtrace(FILE *file, int tab_depth){
     void* callstack[FUS_MAX_BACKTRACE_FRAMES];
     int frames = backtrace(callstack, FUS_MAX_BACKTRACE_FRAMES);
     char** strs = backtrace_symbols(callstack, frames);
     for(int i = 0; i < frames; i++){
-        printf("%s\n", strs[i]);
+        for(int j = 0; j < tab_depth; j++)fprintf(file, " ");
+        fprintf(file, "%s\n", strs[i]);
     }
     free(strs);
 }
-
 #endif

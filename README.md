@@ -113,46 +113,59 @@ TODO: Fight Haskell and win.
 
 ## Getting Started
 
-A revamp of the basic datastructure for fus values is under way.
-Previously they were a struct; now they are a tagged pointer.
+### Where stuff's at
 
-The old runtime is in [src/*.[ch]](/src) and [src/main/*.c](/src/main).
+The runtime is in [src/*.[ch]](/src).
 
-The new runtime is in [src/newvalues/*.[ch]](/src/newvalues) and [src/newvalues/main/*.c](/src/newvalues/main).
+Various applications using the runtime are in [src/main/*.c](/src/main).
+The ``compile`` script's first argument lets you choose which of these ``.c`` files to use.
 
-Example fus programs are in [fus/*.fus](/fus),
-but many don't work with the new runtime yet.
+Example fus programs are in [fus/*.fus](/fus).
+They're not all guaranteed to work yet!
 
-Tests which work with the new runtime are in [test/*.fus](/test).
+Tests which are guaranteed to work are in [test/*.fus](/test).
+
+### Usage
 
 Compile & Run Test Suite:
 
-    ./compile_newvalues test && ./main
+    ./compile test && ./main
 
 Compile & Run Parser:
 
     # Parse a fus file:
-    ./compile_newvalues parse && ./main fus/sql.fus
+    ./compile parse && ./main fus/sql.fus
 
     # With ANSI colors!
-    ./compile_newvalues parse -DFUS_COLOR && ./main fus/sql.fus
+    ./compile parse -DFUS_COLOR && ./main fus/sql.fus
 
 Compile & Run "Runner":
 
     # Parse and execute a fus file:
-    ./compile_newvalues run && ./main fus/fib.fus
+    ./compile run && ./main fus/fib.fus
+
+    # Parse and execute a fus file, dumping VM state:
+    ./compile run && ./main -ds dsv fus/fib.fus
+
+    # NOTE: the -ds ("dump state") option takes an argument whose
+    # characters indicate what to dump:
+    #     d - dump defs (function definitions)
+    #     s - dump stack
+    #     v - dump variables
+    # So, "-ds dsv" dumps defs, then stack, then variables,
+    # while "-ds s" just dumps stack, etc.
 
 Compile & Run "Runner" on all test files in repo root:
 
     # Roughly equivalent to:
-    #     ./compile_newvalues run && ./main test/*.fus
+    #     ./compile run && ./main test/*.fus
     # ...except that ./main doesn't actually accept that syntax.
     ./run_test_files
 
 Run all tests:
 
     # Roughly equivalent to:
-    #     ./compile_newvalues test && ./main && ./run_test_files
+    #     ./compile test && ./main && ./run_test_files
     ./runtests
 
 

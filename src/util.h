@@ -1,24 +1,11 @@
-
 #ifndef _FUS_UTIL_H_
 #define _FUS_UTIL_H_
 
-#define ERR_INFO() fprintf(stderr, "%s:%s:%i: ", \
-    __FILE__, __func__, __LINE__)
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
-#define MAX_SPACES 256
-
-int int_min(int x, int y);
-int int_max(int x, int y);
-int linear_interpolation(int x0, int x1, int t, int t_max);
-int strlen_of_int(int i);
-void strncpy_of_int(char *s, int i, int i_len);
-char *strcpy_int(int i);
-int getln(char buf[], int buf_len);
 char *load_file(const char *filename);
-bool streq(const char *s1, const char *s2);
-size_t strnlen(const char *s, size_t maxlen);
-char *strdup(const char *s1);
-char *strndup(const char *s1, size_t len);
-void get_spaces(char *spaces, int max_spaces, int n_spaces);
+const char *fus_write_long_int(long int i);
 
 #endif

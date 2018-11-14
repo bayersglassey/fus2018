@@ -1,98 +1,87 @@
 #ifndef _FUS_LEXER_H_
 #define _FUS_LEXER_H_
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <ctype.h>
 #include <string.h>
+#include <ctype.h>
 
-/*
-    Lexer usage example:
 
-        fus_lexer_t lexer;
-        int err = fus_lexer_init(&lexer, "1 2 (3 4) 5", "Test");
-        if(err)return err;
+typedef enum fus_lexer_token_type {
+    FUS_TOKEN_DONE,
+    FUS_TOKEN_ERROR,
+    FUS_TOKEN_INT,
+    FUS_TOKEN_SYM,
+    FUS_TOKEN_STR,
+    FUS_TOKEN_ARR_OPEN,
+    FUS_TOKEN_ARR_CLOSE,
+    FUS_TOKEN_SPLIT,
+        /* A "split" token is one which touches end of chunk, so is
+        probably "unfinished" and caller should load next chunk */
+    FUS_TOKENS
+} fus_lexer_token_type_t;
 
-        while(1){
-            if(fus_lexer_done(&lexer))break;
-            printf("Lexed: ");
-            fus_lexer_show(&lexer, stdout);
-            printf("\n");
-            int err = fus_lexer_next(&lexer);
-            if(err)return err;
-        }
+const char *fus_lexer_token_type_msg(fus_lexer_token_type_t type);
 
-*/
+typedef enum fus_lexer_errcode {
+    FUS_LEXER_ERRCODE_OK,
+    FUS_LEXER_ERRCODE_BAD_INDENT_CHAR,
+    FUS_LEXER_ERRCODE_STR_UNFINISHED,
+    FUS_LEXER_ERRCODE_TOO_MANY_INDENTS,
+    FUS_LEXER_ERRCODE_TOO_FEW_INDENTS,
+    FUS_LEXER_ERRCODE_NEGATIVE_INDENT,
+    FUS_LEXER_ERRCODE_IDUNNO,
+    FUS_LEXER_ERRCODES
+} fus_lexer_errcode_t;
+
+const char *fus_lexer_errcode_msg(fus_lexer_errcode_t errcode);
+
+#define FUS_LEXER_MAX_INDENTS 64
 
 typedef struct fus_lexer {
-    bool debug;
+    const char *chunk;
+    size_t chunk_size;
+    int chunk_i; /* position within chunk */
+    bool chunk_is_final;
+        /* end of chunk is end of file, even if no terminating NUL */
 
-    const char *filename;
+    char *filename;
+    int pos; /* position within file */
+    int row; /* row within file */
+    int col; /* column within file */
 
-    int text_len;
-    const char *text;
-
-    int token_len;
-    const char *token;
-    enum {
-        FUS_LEXER_TOKEN_DONE,
-        FUS_LEXER_TOKEN_INT,
-        FUS_LEXER_TOKEN_SYM,
-        FUS_LEXER_TOKEN_OP,
-        FUS_LEXER_TOKEN_STR,
-        FUS_LEXER_TOKEN_BLOCKSTR,
-        FUS_LEXER_TOKEN_OPEN,
-        FUS_LEXER_TOKEN_CLOSE,
-        FUS_LEXER_TOKEN_TYPES
-    } token_type;
-
-    int pos;
-    int row;
-    int col;
     int indent;
-    int indents_size;
+    int indents[FUS_LEXER_MAX_INDENTS];
     int n_indents;
-    int *indents;
-
-    /* If positive, represents a series of "(" tokens being returned.
-    If negative, represents a series of ")" tokens being returned. */
     int returning_indents;
+
+    const char *token;
+    int token_len;
+    fus_lexer_token_type_t token_type;
+
+    fus_lexer_errcode_t errcode;
 } fus_lexer_t;
 
 
+void fus_lexer_init(fus_lexer_t *lexer, char *filename);
+void fus_lexer_reset(fus_lexer_t *lexer, char *filename);
 void fus_lexer_cleanup(fus_lexer_t *lexer);
-int fus_lexer_init(fus_lexer_t *lexer, const char *text,
-    const char *filename);
-int fus_lexer_copy(fus_lexer_t *lexer, fus_lexer_t *lexer2);
-void fus_lexer_dump(fus_lexer_t *lexer, FILE *f);
-void fus_lexer_info(fus_lexer_t *lexer, FILE *f);
-void fus_lexer_err_info(fus_lexer_t *lexer);
-int fus_lexer_get_pos(fus_lexer_t *lexer);
-void fus_lexer_set_pos(fus_lexer_t *lexer, int pos);
-int fus_lexer_next(fus_lexer_t *lexer);
-bool fus_lexer_done(fus_lexer_t *lexer);
-bool fus_lexer_got(fus_lexer_t *lexer, const char *text);
-bool fus_lexer_got_name(fus_lexer_t *lexer);
-bool fus_lexer_got_op(fus_lexer_t *lexer);
-bool fus_lexer_got_sym(fus_lexer_t *lexer);
-bool fus_lexer_got_str(fus_lexer_t *lexer);
-bool fus_lexer_got_int(fus_lexer_t *lexer);
-void fus_lexer_show(fus_lexer_t *lexer, FILE *f);
-int fus_lexer_get(fus_lexer_t *lexer, const char *text);
-int fus_lexer_get_name(fus_lexer_t *lexer, char **name);
-int fus_lexer_get_str(fus_lexer_t *lexer, char **s);
-int fus_lexer_get_chr(fus_lexer_t *lexer, char *c);
-int fus_lexer_get_int(fus_lexer_t *lexer, int *i);
-int fus_lexer_get_bool(fus_lexer_t *lexer, bool *b);
-int fus_lexer_get_int_fancy(fus_lexer_t *lexer, int *i_ptr);
-int fus_lexer_get_int_range(fus_lexer_t *lexer, int maxlen,
-    int *i_ptr, int *len_ptr);
-int fus_lexer_get_attr_int(fus_lexer_t *lexer, const char *attr, int *i,
-    bool optional);
-int fus_lexer_get_attr_bool(fus_lexer_t *lexer, const char *attr, bool *b,
-    bool optional);
-int fus_lexer_unexpected(fus_lexer_t *lexer, const char *expected);
-int fus_lexer_parse_silent(fus_lexer_t *lexer);
+void fus_lexer_set_error(fus_lexer_t *lexer, fus_lexer_errcode_t errcode);
+void fus_lexer_load_chunk(fus_lexer_t *lexer,
+    const char *chunk, size_t chunk_size);
+void fus_lexer_mark_final(fus_lexer_t *lexer);
+
+bool fus_lexer_is_ok(fus_lexer_t *lexer);
+bool fus_lexer_is_done(fus_lexer_t *lexer);
+bool fus_lexer_is_split(fus_lexer_t *lexer);
+bool fus_lexer_is_error(fus_lexer_t *lexer);
+bool fus_lexer_got(fus_lexer_t *lexer, const char *token);
+
+void fus_lexer_print_token(fus_lexer_t *lexer, FILE *file, bool print_type);
+void fus_lexer_pinfo(fus_lexer_t *lexer, FILE *file);
+void fus_lexer_perror(fus_lexer_t *lexer, const char *msg);
+
+void fus_lexer_next(fus_lexer_t *lexer);
 
 #endif

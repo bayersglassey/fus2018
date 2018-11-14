@@ -43,4 +43,4 @@ Then in a separate terminal window:
 
 ## Source Code
 
-See [src/newvalues/main/uwsgi.c](/src/newvalues/main/uwsgi.c) and [src/newvalues/uwsgi](/src/newvalues/uwsgi).
+See [src/main/uwsgi.c](/src/main/uwsgi.c) and [src/uwsgi](/src/uwsgi).

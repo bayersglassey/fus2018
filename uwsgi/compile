@@ -1,1 +1,1 @@
-compile_newvalues uwsgi $@
+./compile uwsgi $@

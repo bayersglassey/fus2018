@@ -1,176 +1,152 @@
 #ifndef _FUS_VALUE_H_
 #define _FUS_VALUE_H_
 
-enum {
-    FUS_TYPE_NULL,
-    FUS_TYPE_BOOL,
-    FUS_TYPE_INT,
-    FUS_TYPE_BIGINT,
-    FUS_TYPE_STR,
-    FUS_TYPE_SYM,
-    FUS_TYPE_OBJ,
-    FUS_TYPE_ARR,
-    FUS_TYPE_FUN,
-    FUS_TYPES
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * This file expects to be included by "includes.h"  *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+#define FUS_TAG_BOXED      0
+#define FUS_TAG_INT        1
+#define FUS_TAG_SYM        2
+#define FUS_TAG_OTHER      3
+
+#define FUS_TAG_SHIFT      2
+#define FUS_TAG_MASK       ((1 << FUS_TAG_SHIFT) - 1)
+
+#define FUS_GET_TAG(X)          ((X) & FUS_TAG_MASK)
+#define FUS_GET_PAYLOAD(X)      ((X) >> FUS_TAG_SHIFT)
+#define FUS_ADD_TAG(TAG, PLOAD) ( ((PLOAD) << FUS_TAG_SHIFT) | (TAG))
+
+
+/* WARNING: The following may be wrong... gotta test */
+#define FUS_PAYLOAD_MIN (FUS_UNBOXED_MIN >> FUS_TAG_SHIFT)
+#define FUS_PAYLOAD_MAX (FUS_UNBOXED_MAX >> FUS_TAG_SHIFT)
+
+
+#define FUS_VALUE_CAST  (fus_value_t)(fus_unboxed_t)
+
+#define FUS_VALUE_ERR   ((fus_value_t)(fus_boxed_t*) NULL)
+#define FUS_VALUE_NULL  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 0))
+#define FUS_VALUE_TRUE  (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 1))
+#define FUS_VALUE_FALSE (FUS_VALUE_CAST FUS_ADD_TAG(FUS_TAG_OTHER, 2))
+
+
+#define FUS_IS_INT(VALUE)  (FUS_GET_TAG((VALUE).i) == FUS_TAG_INT)
+#define FUS_IS_SYM(VALUE)  (FUS_GET_TAG((VALUE).i) == FUS_TAG_SYM)
+#define FUS_IS_NULL(VALUE) ((VALUE).i == FUS_VALUE_NULL.i)
+#define FUS_IS_TRUE(VALUE) ((VALUE).i == FUS_VALUE_TRUE.i)
+#define FUS_IS_FALSE(VALUE) ((VALUE).i == FUS_VALUE_FALSE.i)
+#define FUS_IS_BOOL(VALUE) (FUS_IS_TRUE(VALUE) || FUS_IS_FALSE(VALUE))
+#define FUS_IS_ERR(VALUE)  ((VALUE).p == NULL)
+#define FUS_IS_BOXED(VALUE) \
+    ( FUS_GET_TAG((VALUE).i) == FUS_TAG_BOXED && (VALUE).p != NULL )
+
+
+typedef long int fus_unboxed_t;
+#define FUS_UNBOXED_MIN LONG_MIN
+#define FUS_UNBOXED_MAX LONG_MAX
+
+
+union fus_value {
+    fus_unboxed_t i;
+    fus_boxed_t *p;
 };
-#define FUS_TYPE_ANY FUS_TYPES
 
-typedef unsigned char fus_type_t;
 
-typedef struct fus_value {
-    fus_type_t type;
-    union {
-        int i;
-        bool b;
-        struct fus_bigint *bi;
-        struct fus_str *s;
-        struct fus_arr *a;
-        struct fus_obj *o;
-        struct fus_code *f;
-        const char *msg;
-    } data;
-} fus_value_t;
+typedef enum {
+    FUS_ERR_WRONG_TYPE,
+    FUS_ERR_OVERFLOW,
+    FUS_ERR_UNDERFLOW,
+    FUS_ERR_OUT_OF_BOUNDS,
+    FUS_ERR_CANT_PARSE,
+    FUS_ERR_MISSING_KEY,
+    FUS_ERR_IDUNNO,
+    FUS_ERRS
+} fus_err_code_t;
 
-typedef struct fus_bigint {
-    int refcount;
-    ARRAY_DECL(int, digits)
-} fus_bigint_t;
-
-typedef struct fus_str {
-    int refcount;
-    ARRAY_DECL(char, text)
-} fus_str_t;
-
-typedef struct fus_arr {
-    int refcount;
-    ARRAY_DECL(struct fus_value, values)
-} fus_arr_t;
-
-typedef struct fus_obj_entry {
-    int sym_i;
-    fus_value_t value;
-} fus_obj_entry_t;
-
-typedef struct fus_obj {
-    int refcount;
-    ARRAY_DECL(fus_obj_entry_t, entries)
-} fus_obj_t;
+const char *fus_value_type_msg(fus_value_t value);
+const char *fus_err_code_msg(fus_err_code_t code);
 
 
 
-int fus_type_get_sym_i(fus_type_t type);
-char fus_type_to_c(fus_type_t type);
-fus_type_t fus_type_from_c(char c);
+#ifndef FUS_EXIT_ON_ERR
+/* default */
+#define FUS_EXIT_ON_ERR 1
+#endif
 
-#if FUS_ENABLE_BACKTRACE
-    #define FUS_ATTACH_DEBUG_PRINT(T, t, txt) { \
-        printf(">>> "); \
-        fus_##T##_print(t, NULL, stdout, 0, 0); \
-        printf(" refcount=%i " txt "\n", t->refcount); \
-        FUS_BACKTRACE \
-    }
-#else
-    #define FUS_ATTACH_DEBUG_PRINT(T, t, txt) ;
+#ifndef FUS_PRINT_ERRS_TO_STDERR
+/* default */
+#define FUS_PRINT_ERRS_TO_STDERR 1
+#endif
+
+#ifndef FUS_PRINT_BACKTRACE_WITH_ERRS
+/* default */
+#define FUS_PRINT_BACKTRACE_WITH_ERRS 1
+#endif
+
+#ifndef FUS_USE_CURRENT_ERR_CODE
+/* default */
+#define FUS_USE_CURRENT_ERR_CODE 0
+#endif
+
+#if FUS_USE_CURRENT_ERR_CODE
+extern fus_err_code_t fus_current_err_code;
 #endif
 
 
-#define FUS_ATTACH(T, t0) { \
-    fus_##T##_t *t = (t0); \
-    if(t != NULL){ \
-        FUS_ATTACH_DEBUG_PRINT(T, t, "++") \
-        t->refcount++; \
-    } \
-}
 
-#define FUS_DETACH(T, t0) { \
-    fus_##T##_t *t = (t0); \
-    if(t != NULL){ \
-        FUS_ATTACH_DEBUG_PRINT(T, t, "--") \
-        t->refcount--; \
-        if(t->refcount <= 0){ \
-            if(t->refcount < 0){ \
-                fprintf(stderr, #T " with negative refcount: "); \
-                fus_##T##_print(t, NULL, stderr, 0, 0); \
-                fprintf(stderr, "\n"); \
-                FUS_BACKTRACE \
-            } \
-            fus_##T##_cleanup(t); \
-            free(t); \
-            (t0) = NULL; \
-        } \
-    } \
-}
 
-#define FUS_VALUE_MKUNIQUE(T, t) { \
-    if((t) == NULL){ \
-        fus_##T##_t *new_t = malloc(sizeof(*new_t)); \
-        if(new_t == NULL)return 1; \
-        fus_##T##_init(new_t); \
-        (t) = new_t; \
-    }else{ \
-        if((t)->refcount > 1){ \
-            fus_##T##_t *new_t = malloc(sizeof(*t)); \
-            if(new_t == NULL)return 1; \
-            fus_##T##_copy(new_t, (t)); \
-            (t) = new_t; \
-        } \
-    } \
-    (t)->refcount = 1; \
-}
 
-void fus_value_attach(fus_value_t value);
-void fus_value_detach(fus_value_t value);
-void fus_value_cleanup(fus_value_t value);
 
-fus_value_t fus_value_null();
-fus_value_t fus_value_bool(bool b);
-fus_value_t fus_value_int(int i);
-fus_str_t *fus_str(char *ss);
-fus_value_t fus_value_str(fus_str_t *s);
-fus_value_t fus_value_sym(int sym_i);
-fus_value_t fus_value_arr(fus_arr_t *a);
-fus_value_t fus_value_obj(fus_obj_t *o);
-fus_value_t fus_value_fun(struct fus_code *code);
+fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code);
 
-void fus_bigint_cleanup(fus_bigint_t *bi);
-void fus_str_cleanup(fus_str_t *s);
-int fus_str_len(fus_str_t *s);
-bool fus_str_eq(fus_str_t *s1, fus_str_t *s2);
-void fus_arr_cleanup(fus_arr_t *a);
-int fus_arr_init(fus_arr_t *a);
-int fus_arr_copy(fus_arr_t *a, fus_arr_t *a0);
-struct fus_stack;
-    int fus_arr_copy_stack(fus_arr_t *a, struct fus_stack *stack);
-int fus_arr_push(fus_arr_t *a, fus_value_t value);
-int fus_arr_push_l(fus_arr_t *a, fus_value_t value);
-int fus_arr_get(fus_arr_t *a, int i, fus_value_t *value_ptr);
-int fus_arr_rip(fus_arr_t *a, int i, fus_value_t *value_ptr);
-int fus_arr_set(fus_arr_t *a, int i, fus_value_t value);
-int fus_arr_pop(fus_arr_t *a, fus_value_t *value_ptr);
-int fus_arr_pop_l(fus_arr_t *a, fus_value_t *value_ptr);
-int fus_arr_len(fus_arr_t *a);
-void fus_obj_entry_cleanup(fus_obj_entry_t *entry);
-int fus_obj_entry_init(fus_obj_entry_t *entry, int sym_i,
-    fus_value_t value);
-void fus_obj_cleanup(fus_obj_t *o);
-int fus_obj_init(fus_obj_t *o);
-int fus_obj_copy(fus_obj_t *o, fus_obj_t *o0);
-fus_obj_entry_t *fus_obj_get(fus_obj_t *o, int sym_i);
-int fus_obj_set(fus_obj_t *o, int sym_i, fus_value_t value);
-int fus_obj_keys(fus_obj_t *o, fus_arr_t **a_ptr);
 
-void fus_bigint_print(fus_bigint_t *bi, fus_symtable_t *symtable, FILE *f,
-    int indent, int depth);
-void fus_str_print(fus_str_t *s, fus_symtable_t *symtable, FILE *f,
-    int indent, int depth);
-void fus_arr_print(fus_arr_t *a, fus_symtable_t *symtable, FILE *f,
-    int indent, int depth);
-void fus_obj_print(fus_obj_t *o, fus_symtable_t *symtable, FILE *f,
-    int indent, int depth);
-struct fus_code;
-    void fus_fun_print(struct fus_code *code, fus_symtable_t *symtable, FILE *f,
-        int indent, int depth);
-void fus_value_print(fus_value_t value, fus_symtable_t *symtable,
-    FILE *f, int indent, int depth);
+fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i);
+int fus_value_sym_decode(fus_vm_t *vm, fus_value_t value);
+
+fus_value_t fus_value_int(fus_vm_t *vm, fus_unboxed_t i);
+fus_unboxed_t fus_value_int_decode(fus_vm_t *vm, fus_value_t value);
+
+fus_value_t fus_value_null(fus_vm_t *vm);
+fus_value_t fus_value_bool(fus_vm_t *vm, bool b);
+fus_value_t fus_value_bool_not(fus_vm_t *vm, fus_value_t value_x);
+bool fus_value_bool_decode(fus_vm_t *vm, fus_value_t value);
+
+
+fus_value_t fus_value_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_value_sym_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
+fus_value_t fus_value_bool_eq(fus_vm_t *vm,
+    fus_value_t value_x, fus_value_t value_y);
+
+
+void fus_value_attach(fus_vm_t *vm, fus_value_t value);
+void fus_value_detach(fus_vm_t *vm, fus_value_t value);
+
+bool fus_value_is_int(fus_value_t value);
+bool fus_value_is_sym(fus_value_t value);
+bool fus_value_is_null(fus_value_t value);
+bool fus_value_is_true(fus_value_t value);
+bool fus_value_is_false(fus_value_t value);
+bool fus_value_is_bool(fus_value_t value);
+bool fus_value_is_err(fus_value_t value);
+bool fus_value_is_arr(fus_value_t value);
+bool fus_value_is_str(fus_value_t value);
+bool fus_value_is_obj(fus_value_t value);
+bool fus_value_is_fun(fus_value_t value);
+
+void fus_value_fprint(fus_vm_t *vm, fus_value_t value, FILE *file);
+void fus_value_print(fus_vm_t *vm, fus_value_t value);
+
+
+/*******************
+ * FUS_CLASS STUFF *
+ *******************/
+
+void fus_class_init_value(fus_class_t *class, void *ptr);
+void fus_class_cleanup_value(fus_class_t *class, void *ptr);
+
 
 #endif
