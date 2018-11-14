@@ -37,24 +37,8 @@ Need "load data(...)".
 The latter is like "data(...)" but loaded from a file (like "load(...)").
 
 
-Oct 15, 2018:
+Nov 14, 2018:
 -------------
 
-fus_int_decode, fus_sym_decode, fus_bool_decode:
-    If the type is wrong, how do we report it?
-    We're not returning a fus value, so we can't return fus_err(...).
-    Do we pass a pointer to the value to be decoded, and turn it into
-    a fus_err if it's the wrong type????
-    Or do we add fus_vm_err() which is called by fus_err()?
-    ...it's not really "safe" since the error has escaped the VM
-    as a "decoded" thing, but at least VM can choose to bring the house
-    down with an abort, or whatever... hmmmmm.
-    Current approach where we get nice debug output is maybe superior option.
-
-Oct 23, 2018:
--------------
-
-HAVE A LOOK AT THIS LEXER PROBLEM:
-    ./compile_newvalues parse && ./main fus/lexer_problem.fus
-...ADD A TEST FOR IT.
+newvalues: Vars need to be pushed/popped on fun calls.
 
