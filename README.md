@@ -150,13 +150,15 @@ What use is a language which can't be used as a web server?
 
 Step 1: [Write a plugin](/uwsgi) for [UWSGI](https://uwsgi-docs.readthedocs.io/en/latest/)
 
-Step 2: [Write a web app](/fus/webapp.fus)
+Step 2: [Write a web app](/fus/webapp_simple.fus)
 
-There is some work to be done before this really works.
-For one thing, the plugin currently just allows you to POST fus source code which
-is evaluated and returned.
-That's cool and all, but really the plugin needs to turn a UWSGI request
-into a fus object, pass that to server.fus, and let that decide what to return.
+Possible next steps:
+
+* Generate HTML
+
+* Write a [Redis](https://redis.io/) client
+
+* Hook into more UWSGI features, like shared memory, caching, etc
 
 
 ## Getting started

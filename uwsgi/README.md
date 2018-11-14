@@ -38,8 +38,9 @@ Work in progress!
 
 Then in a separate terminal window:
 
+    # Alternatively, just visit localhost:9090 in your browser
     ./uwsgi/curl_test "This is the POST body!"
 
 ## Source Code
 
-See [src/newvalues/main/uwsgi.c](src/newvalues/main/uwsgi.c) and [src/newvalues/uwsgi](/src/newvalues/uwsgi).
+See [src/newvalues/main/uwsgi.c](/src/newvalues/main/uwsgi.c) and [src/newvalues/uwsgi](/src/newvalues/uwsgi).
