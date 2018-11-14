@@ -13,7 +13,7 @@
 
 
 
-# Find vars we care about and poke their vaules onto request:
+# Find vars we care about and poke their values onto request:
 0 ='i
 'request .wsgi_vars ='vars
 def NOT_FOUND: "<WSGI VAR NOT FOUND>"
@@ -40,6 +40,29 @@ do:
 ='request
 
 
+# Parse querystring:
+'request .qs ='qs
+def or of(bool bool -> bool): if: drop T
+def str_split_on_char of(s c -> arr):
+    ='find_c ='s
+    's str_len ='s_len
+    0 ='i
+    'i ='i0
+    arr do:
+        'i 's_len < while
+        's 'i 1 str_slice ='c
+        ('c 'find_c str_eq) ('i 's_len 1 - ==) @or if:
+            'i 'i0 - ='len
+            'len 0 > if:
+                's 'i0 'len str_slice push
+            ''i 1 + ='i
+            'i ='i0 loop
+        ''i 1 + ='i loop
+'qs "&" @str_split_on_char ='qs_parts
+# ...ok, I'm exhausted.
+# TODO: split each part into variable name and value
+
+
 # Generate response headers:
 def header:
     ='value ='name
@@ -62,6 +85,12 @@ arr
     "Fus is ", 'request .method, "ing ",
     'request .path, " at ", 'request .host, "\n",
     "An echo says: ", 'request .body, "\n",
+    "Query params:\n",
+    0 ='i do:
+        'i 'qs_parts len < while
+        'qs_parts 'i .$ ='part
+        "  ", 'part, "\n",
+        ''i 1 + ='i loop
     "Whoo!\n",
 @format ='body
 
