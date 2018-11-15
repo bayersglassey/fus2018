@@ -16,34 +16,25 @@
  * STATE *
  *********/
 
-void fus_state_init(fus_state_t *state, fus_vm_t *vm){
-    state->vm = vm;
-    fus_arr_init(vm, &state->stack);
-    fus_obj_init(vm, &state->vars);
-    fus_obj_init(vm, &state->defs);
-}
-
-void fus_state_cleanup(fus_state_t *state){
-    fus_arr_cleanup(state->vm, &state->stack);
-    fus_obj_cleanup(state->vm, &state->vars);
-    fus_obj_cleanup(state->vm, &state->defs);
-}
-
 static void fus_swap_bools(bool *b1, bool *b2){
     bool temp = *b1;
     *b1 = *b2;
     *b2 = temp;
 }
 
-void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
-    fus_vm_t *vm = state->vm;
+void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt){
+    fus_vm_t *vm = runner->vm;
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    fus_obj_t *defs = &runner->defs;
+    fus_arr_t *stack = fus_runner_get_stack(runner);
+    fus_obj_t *vars = fus_runner_get_vars(runner);
 
     fus_printer_t printer;
     fus_printer_init(&printer);
     fus_printer_set_file(&printer, file);
     printer.depth = 2;
 
-    fprintf(file, "STATE:\n");
+    fprintf(file, "RUNNER STATE:\n");
     char fmt_c;
     while(fmt_c = *fmt, fmt_c != '\0'){
         if(strchr("dD", fmt_c)){
@@ -52,7 +43,7 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
 
             fprintf(file, "  defs:\n");
             fus_printer_write_tabs(&printer);
-            fus_printer_print_obj_as_data(&printer, vm, &state->defs);
+            fus_printer_print_obj_as_data(&printer, vm, defs);
             fprintf(file, "\n");
 
             fus_swap_bools(&shallow_data, &printer.shallow_data);
@@ -62,7 +53,7 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
 
             fprintf(file, "  vars:\n");
             fus_printer_write_tabs(&printer);
-            fus_printer_print_obj(&printer, vm, &state->vars);
+            fus_printer_print_obj(&printer, vm, vars);
             fprintf(file, "\n");
 
             fus_swap_bools(&shallow_values, &printer.shallow_values);
@@ -72,10 +63,11 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
 
             fprintf(file, "  stack:\n");
             fus_printer_write_tabs(&printer);
-            fus_printer_print_arr(&printer, vm, &state->stack);
+            fus_printer_print_arr(&printer, vm, stack);
             fprintf(file, "\n");
 
             fus_swap_bools(&shallow_values, &printer.shallow_values);
+        /*
         }else if(fmt_c == 'D' || fmt_c == 'V'){
             bool *b_ptr = fmt_c == 'D'?
                 &printer.shallow_data: &printer.shallow_values;
@@ -87,6 +79,7 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
                 fprintf(stderr, "%s: Unrecognized fmt_c after %c: %c\n",
                     __func__, fmt_c, fmt_c2);
             }
+        */
         }else{
             fprintf(stderr, "%s: Unrecognized fmt_c: %c\n",
                 __func__, fmt_c);
@@ -98,17 +91,17 @@ void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt){
 }
 
 
-int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer,
+int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
     bool dump_parser
 ){
     int status = -1;
 
     fus_parser_t parser;
-    fus_parser_init(&parser, state->vm);
+    fus_parser_init(&parser, runner->vm);
 
     if(fus_parser_parse_lexer(&parser, lexer) < 0)goto err;
     if(dump_parser)fus_parser_dump(&parser, stderr);
-    if(fus_state_exec_data(state, &parser.arr) < 0)goto err;
+    if(fus_runner_exec_data(runner, &parser.arr) < 0)goto err;
 
     status = 0; /* OK! */
 err:
@@ -116,20 +109,13 @@ err:
     return status;
 }
 
-int fus_state_exec_data(fus_state_t *state, fus_arr_t *data){
-    int status = -1;
-
-    fus_runner_t runner;
-    fus_runner_init(&runner, state, data);
-
-    while(!fus_runner_is_done(&runner)){
-        if(fus_runner_step(&runner) < 0)goto err;
+int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
+    if(fus_runner_load(runner, data) < 0)return -1;
+    while(!fus_runner_is_done(runner)){
+        if(fus_runner_step(runner) < 0)return -1;
     }
-
-    status = 0; /* OK! */
-err:
-    fus_runner_cleanup(&runner);
-    return status;
+    if(fus_runner_unload(runner) < 0)return -1;
+    return 0;
 }
 
 
@@ -138,28 +124,46 @@ err:
  * RUNNER *
  **********/
 
+static bool fus_runner_callframe_type_inherits(
+    fus_runner_callframe_type_t type
+){
+    /* Decide whether this type of callframe inherits stack+vars from
+    previous callframe */
+    static const bool inherits_by_type[FUS_CALLFRAME_TYPES] = {
+        false, /* MODULE */
+        false, /* DEF */
+        true,  /* PAREN */
+        true,  /* IF */
+        true   /* DO */
+    };
+    return inherits_by_type[type];
+}
+
 void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
-    fus_runner_t *runner,
-    fus_runner_callframe_type_t type,
+    fus_runner_t *runner, fus_runner_callframe_type_t type,
     fus_arr_t *data
 ){
     callframe->runner = runner;
     callframe->type = type;
-    fus_arr_copy(runner->state->vm, &callframe->data, data);
+    callframe->inherits = fus_runner_callframe_type_inherits(type);
+    callframe->data = data;
     callframe->i = 0;
+
+    fus_arr_init(runner->vm, &callframe->stack);
+    fus_obj_init(runner->vm, &callframe->vars);
 }
 
 void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe){
-    fus_arr_cleanup(callframe->runner->state->vm, &callframe->data);
+    fus_arr_cleanup(callframe->runner->vm, &callframe->stack);
+    fus_obj_cleanup(callframe->runner->vm, &callframe->vars);
 }
 
-void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
-    fus_arr_t *data
-){
-    runner->state = state;
+void fus_runner_init(fus_runner_t *runner, fus_vm_t *vm){
+    runner->vm = vm;
+
+    fus_obj_init(vm, &runner->defs);
 
     /* Init callframe class */
-    fus_vm_t *vm = state->vm;
     fus_class_init(&runner->class_callframe, vm->core,
         "runner_callframe", sizeof(fus_runner_callframe_t), runner,
         fus_class_instance_init_zero,
@@ -167,16 +171,51 @@ void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
 
     /* Init callframe array */
     fus_array_init(&runner->callframes, &runner->class_callframe);
-    fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_MODULE, data);
+    fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_MODULE, NULL);
+}
+
+static fus_runner_callframe_t *fus_runner_get_root_callframe(
+    fus_runner_t *runner
+){
+    if(runner->callframes.len < 1){
+        fprintf(stderr, "%s: Runner has no root callframe\n", __func__);
+        return NULL;
+    }
+    if(runner->callframes.len > 1){
+        fprintf(stderr, "%s: Runner is not at root callframe (%i deep)\n",
+            __func__, runner->callframes.len);
+        return NULL;
+    }
+    return fus_runner_get_callframe(runner);
+}
+
+int fus_runner_load(fus_runner_t *runner, fus_arr_t *data){
+    fus_runner_callframe_t *callframe =
+        fus_runner_get_root_callframe(runner);
+    if(callframe == NULL)return -1;
+    callframe->data = data;
+    callframe->i = 0;
+    return 0;
+}
+
+int fus_runner_unload(fus_runner_t *runner){
+    fus_runner_callframe_t *callframe =
+        fus_runner_get_root_callframe(runner);
+    if(callframe == NULL)return -1;
+    callframe->data = NULL;
+    callframe->i = 0;
+    return 0;
 }
 
 void fus_runner_cleanup(fus_runner_t *runner){
+    fus_obj_cleanup(runner->vm, &runner->defs);
     fus_array_cleanup(&runner->callframes);
 }
 
-void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here){
-    fus_state_t *state = runner->state;
-    fus_vm_t *vm = state->vm;
+void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
+    bool end_at_here
+){
+    fus_vm_t *vm = runner->vm;
 
     fus_printer_t printer;
     fus_printer_init(&printer);
@@ -184,27 +223,35 @@ void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here){
 
     printer.shallow_data = true;
 
-    fprintf(file, "RUNNER:\n");
+    fprintf(file, "RUNNER CALLFRAMES:\n");
 
-    fprintf(file, "  callframes:");
     int callframes_len = runner->callframes.len;
     for(int i = 0; i < callframes_len; i++){
+        printer.depth = i + 1;
         fus_runner_callframe_t *callframe =
             FUS_ARRAY_GET_REF(runner->callframes, i);
 
-        printer.depth = i + 2;
-        fus_printer_write_newline(&printer);
-        fus_printer_print_data(&printer, vm, &callframe->data,
-            0, callframe->i + 1);
+        if(!callframe->inherits){
+            /* Print stack, vars?.. */
+        }
+
+        if(callframe->data != NULL){
+            fus_printer_write_newline(&printer);
+            fus_printer_print_data(&printer, vm, callframe->data,
+                0, callframe->i + 1);
+        }
     }
     fus_printer_write_text(&printer, "    <-- HERE");
     if(!end_at_here)for(int i = callframes_len - 1; i >= 0; i--){
+        printer.depth = i + 1;
         fus_runner_callframe_t *callframe =
             FUS_ARRAY_GET_REF(runner->callframes, i);
 
-        printer.depth = i + 2;
-        fus_printer_print_data(&printer, vm, &callframe->data,
-            callframe->i + 1, -1);
+        if(callframe->data != NULL){
+            fus_printer_write_newline(&printer);
+            fus_printer_print_data(&printer, vm, callframe->data,
+                callframe->i + 1, -1);
+        }
     }
     fus_printer_write_text(&printer, "\n");
 
@@ -215,18 +262,50 @@ void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here){
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner){
     int callframes_len = runner->callframes.len;
-    if(callframes_len <= 0)return NULL;
+    if(callframes_len < 1)return NULL;
     return FUS_ARRAY_GET_REF(runner->callframes, callframes_len - 1);
+}
+
+static fus_runner_callframe_t *fus_runner_get_data_callframe(fus_runner_t *runner){
+    /* The "data callframe" is the one which owns current stack and vars.
+    All callframes after it "inherit" its stack and vars. */
+    int callframes_len = runner->callframes.len;
+    for(int i = callframes_len - 1; i >= 0; i--){
+        fus_runner_callframe_t *callframe =
+            FUS_ARRAY_GET_REF(runner->callframes, i);
+        if(!callframe->inherits)return callframe;
+    }
+    return NULL;
+}
+
+fus_arr_t *fus_runner_get_stack(fus_runner_t *runner){
+    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(runner);
+    if(callframe == NULL)return NULL;
+    return &callframe->stack;
+}
+
+fus_obj_t *fus_runner_get_vars(fus_runner_t *runner){
+    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(runner);
+    if(callframe == NULL)return NULL;
+    return &callframe->vars;
 }
 
 bool fus_runner_is_done(fus_runner_t *runner){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    return callframe == NULL;
+    if(callframe == NULL)return true;
+    if(runner->callframes.len == 1){
+        /* This is the root callframe */
+        fus_arr_t *data = callframe->data;
+        int i = callframe->i;
+        fus_value_t *token_values = FUS_ARR_VALUES(*data);
+        int token_values_len = data->values.len;
+        return i >= token_values_len;
+    }
+    return false;
 }
 
 void fus_runner_push_callframe(fus_runner_t *runner,
-    fus_runner_callframe_type_t type,
-    fus_arr_t *data
+    fus_runner_callframe_type_t type, fus_arr_t *data
 ){
     fus_array_push(&runner->callframes);
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
@@ -237,6 +316,14 @@ void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
     fus_runner_callframe_cleanup(callframe);
     fus_array_pop(&runner->callframes);
+}
+
+void fus_runner_end_callframe(fus_runner_t *runner){
+    if(runner->callframes.len > 1){
+        /* Don't pop the root callframe!
+        That's how caller can inspect stack/vars/etc. */
+        fus_runner_pop_callframe(runner);
+    }
 }
 
 static int fus_runner_break_or_loop(fus_runner_t *runner, const char *token,
@@ -274,22 +361,25 @@ int fus_runner_step(fus_runner_t *runner){
             __func__);
         goto err;
     }
-    fus_arr_t *data = &callframe->data;
+    fus_arr_t *data = callframe->data;
     int i = callframe->i;
     fus_value_t *token_values = FUS_ARR_VALUES(*data);
     int token_values_len = data->values.len;
     if(i >= token_values_len){
-        /* Pop callframe if we've reached end of data.
+        /* End callframe if we've reached end of data.
         Doing so counts as a complete step. */
-        fus_runner_pop_callframe(runner);
+        fus_runner_end_callframe(runner);
         return 0;
     }
     fus_value_t token_value = token_values[i];
 
-    /* Get some variables from state */
-    fus_state_t *state = runner->state;
-    fus_vm_t *vm = state->vm;
+    /* Get some variables from vm */
+    fus_vm_t *vm = runner->vm;
     fus_symtable_t *symtable = vm->symtable;
+
+    /* Get stack, vars */
+    fus_arr_t *stack = fus_runner_get_stack(runner);
+    fus_obj_t *vars = fus_runner_get_vars(runner);
 
     {
 
@@ -331,7 +421,10 @@ int fus_runner_step(fus_runner_t *runner){
             }
 
         #define FUS_STATE_STACK_POP(VPTR) \
-            if(fus_arr_pop(vm, &state->stack, (VPTR)))goto err;
+            if(fus_arr_pop(vm, stack, (VPTR)))goto err;
+
+        #define FUS_STATE_STACK_PUSH(VALUE) \
+            fus_arr_push(vm, stack, (VALUE));
 
         #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
         if(!fus_value_is_sym(token_value)){
@@ -342,7 +435,7 @@ int fus_runner_step(fus_runner_t *runner){
 
         if(fus_value_is_int(token_value) || fus_value_is_str(token_value)){
             fus_value_attach(vm, token_value);
-            fus_arr_push(vm, &state->stack, token_value);
+            FUS_STATE_STACK_PUSH(token_value)
         }else if(fus_value_is_sym(token_value)){
             int sym_i = fus_value_sym_decode(vm, token_value);
             const char *token = fus_symtable_get_token(symtable, sym_i);
@@ -360,31 +453,31 @@ int fus_runner_step(fus_runner_t *runner){
                     symtable, sym_i);
                 fus_value_t value = fus_value_stringparse_sym(vm,
                     quoted_token);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "null")){
                 fus_value_t value = fus_value_null(vm);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "T")){
                 fus_value_t value = fus_value_bool(vm, true);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "F")){
                 fus_value_t value = fus_value_bool(vm, false);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "not")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_bool_not(vm, value);
-                fus_arr_push(vm, &state->stack, new_value);
+                FUS_STATE_STACK_PUSH(new_value)
             }else if(!strcmp(token, "neg")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_neg(vm, value);
-                fus_arr_push(vm, &state->stack, new_value);
+                FUS_STATE_STACK_PUSH(new_value)
             }else if(!strcmp(token, "int_tostr")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_tostr(vm, value);
-                fus_arr_push(vm, &state->stack, new_value);
+                FUS_STATE_STACK_PUSH(new_value)
 
             #define FUS_RUNNER_INT_BINOP(TOK, OP) \
             }else if(!strcmp(token, TOK)) { \
@@ -394,7 +487,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value1) \
                 fus_value_t value3 = fus_value_int_##OP(vm, \
                     value1, value2); \
-                fus_arr_push(vm, &state->stack, value3);
+                FUS_STATE_STACK_PUSH(value3)
 
             FUS_RUNNER_INT_BINOP("+", add)
             FUS_RUNNER_INT_BINOP("-", sub)
@@ -414,7 +507,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_is = fus_value_bool(vm, \
                     fus_value_is_##T(value)); \
                 fus_value_detach(vm, value); \
-                fus_arr_push(vm, &state->stack, value_is);
+                FUS_STATE_STACK_PUSH(value_is)
 
             FUS_RUNNER_IS(int)
             FUS_RUNNER_IS(sym)
@@ -435,7 +528,7 @@ int fus_runner_step(fus_runner_t *runner){
                     value1, value2); \
                 fus_value_detach(vm, value1); \
                 fus_value_detach(vm, value2); \
-                fus_arr_push(vm, &state->stack, value3);
+                FUS_STATE_STACK_PUSH(value3)
 
             FUS_RUNNER_EQ()
             FUS_RUNNER_EQ(int_)
@@ -448,10 +541,10 @@ int fus_runner_step(fus_runner_t *runner){
 
             }else if(!strcmp(token, "arr")){
                 fus_value_t value = fus_value_arr(vm);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "obj")){
                 fus_value_t value = fus_value_obj(vm);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "tuple")){
                 FUS_STATE_NEXT_VALUE()
                 fus_value_t value_n = token_value;
@@ -464,42 +557,42 @@ int fus_runner_step(fus_runner_t *runner){
                     FUS_STATE_STACK_POP(&value)
                     fus_arr_lpush(vm, a, value);
                 }
-                fus_arr_push(vm, &state->stack, value_a);
+                FUS_STATE_STACK_PUSH(value_a)
             }else if(!strcmp(token, ",") || !strcmp(token, "push")){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_push(vm, &value_a, value);
-                fus_arr_push(vm, &state->stack, value_a);
+                FUS_STATE_STACK_PUSH(value_a)
             }else if(!strcmp(token, "lpush")){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_lpush(vm, &value_a, value);
-                fus_arr_push(vm, &state->stack, value_a);
+                FUS_STATE_STACK_PUSH(value_a)
             }else if(!strcmp(token, "pop")){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_pop(vm, &value_a, &value);
-                fus_arr_push(vm, &state->stack, value_a);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value_a)
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "lpop")){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_lpop(vm, &value_a, &value);
-                fus_arr_push(vm, &state->stack, value_a);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value_a)
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "join")){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_arr_join(vm, &value1, value2);
-                fus_arr_push(vm, &state->stack, value1);
+                FUS_STATE_STACK_PUSH(value1)
                 fus_value_detach(vm, value2);
             }else if(!strcmp(token, "slice")){
                 fus_value_t value_a;
@@ -509,7 +602,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_i)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_slice(vm, &value_a, value_i, value_len);
-                fus_arr_push(vm, &state->stack, value_a);
+                FUS_STATE_STACK_PUSH(value_a)
                 fus_value_detach(vm, value_len);
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "=.$")){
@@ -520,7 +613,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_set(vm, &value_a, value_i, value);
-                fus_arr_push(vm, &state->stack, value_a);
+                FUS_STATE_STACK_PUSH(value_a)
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, ".$")){
                 fus_value_t value_a;
@@ -529,7 +622,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_t value = fus_value_arr_get(vm, value_a, value_i);
                 fus_value_attach(vm, value);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_a);
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "..$")){
@@ -543,8 +636,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_attach(vm, value);
                 fus_value_arr_set(vm, &value_a, value_i, fus_value_null(vm));
 
-                fus_arr_push(vm, &state->stack, value_a);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value_a)
+                FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "=.") || !strcmp(token, "set")){
                 int sym_i = -1;
@@ -565,7 +658,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_obj_set(vm, &value_o, sym_i, value);
-                fus_arr_push(vm, &state->stack, value_o);
+                FUS_STATE_STACK_PUSH(value_o)
             }else if(!strcmp(token, ".") || !strcmp(token, "get")){
                 int sym_i = -1;
                 if(token[0] == 'g'){
@@ -584,7 +677,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
                 fus_value_attach(vm, value);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_o);
             }else if(!strcmp(token, "..") || !strcmp(token, "rip")){
                 int sym_i = -1;
@@ -605,8 +698,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value = fus_value_obj_get(vm, value_o, sym_i);
                 fus_value_attach(vm, value);
                 fus_value_obj_set(vm, &value_o, sym_i, fus_value_null(vm));
-                fus_arr_push(vm, &state->stack, value_o);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value_o)
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "?.") || !strcmp(token, "has")){
                 int sym_i = -1;
                 if(token[0] == 'h'){
@@ -624,19 +717,19 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_t value_has = fus_value_obj_has(vm, value_o, sym_i);
-                fus_arr_push(vm, &state->stack, value_has);
+                FUS_STATE_STACK_PUSH(value_has)
                 fus_value_detach(vm, value_o);
             }else if(!strcmp(token, "len")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t value_len = fus_value_arr_len(vm, value);
-                fus_arr_push(vm, &state->stack, value_len);
+                FUS_STATE_STACK_PUSH(value_len)
                 fus_value_detach(vm, value);
             }else if(!strcmp(token, "str_len")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t value_len = fus_value_str_len(vm, value);
-                fus_arr_push(vm, &state->stack, value_len);
+                FUS_STATE_STACK_PUSH(value_len)
                 fus_value_detach(vm, value);
             }else if(!strcmp(token, "str_join")){
                 fus_value_t value1;
@@ -644,7 +737,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_str_join(vm, &value1, value2);
-                fus_arr_push(vm, &state->stack, value1);
+                FUS_STATE_STACK_PUSH(value1)
                 fus_value_detach(vm, value2);
             }else if(!strcmp(token, "str_slice")){
                 fus_value_t value_s;
@@ -654,7 +747,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_i)
                 FUS_STATE_STACK_POP(&value_s)
                 fus_value_str_slice(vm, &value_s, value_i, value_len);
-                fus_arr_push(vm, &state->stack, value_s);
+                FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_len);
                 fus_value_detach(vm, value_i);
             }else if(!strcmp(token, "str_getcode")){
@@ -664,7 +757,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_s)
                 fus_value_t value_code = fus_value_str_getcode(vm,
                     value_s, value_i);
-                fus_arr_push(vm, &state->stack, value_code);
+                FUS_STATE_STACK_PUSH(value_code)
                 fus_value_detach(vm, value_i);
                 fus_value_detach(vm, value_s);
             }else if(!strcmp(token, "str_setcode")){
@@ -675,7 +768,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_code)
                 FUS_STATE_STACK_POP(&value_s)
                 fus_value_str_setcode(vm, &value_s, value_code, value_i);
-                fus_arr_push(vm, &state->stack, value_s);
+                FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_i);
                 fus_value_detach(vm, value_code);
             }else if(!strcmp(token, "swap")){
@@ -683,13 +776,13 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
-                fus_arr_push(vm, &state->stack, value2);
-                fus_arr_push(vm, &state->stack, value1);
+                FUS_STATE_STACK_PUSH(value2)
+                FUS_STATE_STACK_PUSH(value1)
             }else if(!strcmp(token, "dup")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                fus_arr_push(vm, &state->stack, value);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
+                FUS_STATE_STACK_PUSH(value)
                 fus_value_attach(vm, value);
             }else if(!strcmp(token, "drop")){
                 fus_value_t value;
@@ -701,15 +794,15 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_detach(vm, value1);
-                fus_arr_push(vm, &state->stack, value2);
+                FUS_STATE_STACK_PUSH(value2)
             }else if(!strcmp(token, "over")){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
-                fus_arr_push(vm, &state->stack, value1);
-                fus_arr_push(vm, &state->stack, value2);
-                fus_arr_push(vm, &state->stack, value1);
+                FUS_STATE_STACK_PUSH(value1)
+                FUS_STATE_STACK_PUSH(value2)
+                FUS_STATE_STACK_PUSH(value1)
                 fus_value_attach(vm, value1);
             }else if(!strcmp(token, "='")){
                 FUS_STATE_NEXT_VALUE()
@@ -717,22 +810,22 @@ int fus_runner_step(fus_runner_t *runner){
                 int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                fus_obj_set(vm, &state->vars, sym_i, value);
+                fus_obj_set(vm, vars, sym_i, value);
             }else if(!strcmp(token, "'")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
-                fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
+                fus_value_t value = fus_obj_get(vm, vars, sym_i);
                 fus_value_attach(vm, value);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "''")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
-                fus_value_t value = fus_obj_get(vm, &state->vars, sym_i);
+                fus_value_t value = fus_obj_get(vm, vars, sym_i);
                 fus_value_attach(vm, value);
-                fus_obj_set(vm, &state->vars, sym_i, fus_value_null(vm));
-                fus_arr_push(vm, &state->stack, value);
+                fus_obj_set(vm, vars, sym_i, fus_value_null(vm));
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "assert")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
@@ -809,14 +902,33 @@ int fus_runner_step(fus_runner_t *runner){
 
                 if(got_def){
                     /* def */
-                    fus_obj_set(vm, &state->defs, def_sym_i, token_value);
+                    if(fus_obj_has(vm, &runner->defs, def_sym_i)){
+                        const char *token_def =
+                            fus_symtable_get_token(symtable, def_sym_i);
+                        fprintf(stderr, "%s: Redefinition of defs not "
+                            "allowed: %s\n",
+                            __func__, token_def);
+                        goto err;
+                    }
+                    fus_obj_set(vm, &runner->defs, def_sym_i, token_value);
                     fus_value_attach(vm, token_value);
                 }else{
                     /* fun */
                     fus_value_t value_fun = fus_value_fun(vm, NULL,
                         &token_value.p->data.a);
-                    fus_arr_push(vm, &state->stack, value_fun);
+                    FUS_STATE_STACK_PUSH(value_fun)
                 }
+            }else if(!strcmp(token, "&")){
+                FUS_STATE_NEXT_VALUE()
+                FUS_STATE_EXPECT_T(sym)
+                int sym_i = fus_value_sym_decode(vm, token_value);
+                const char *token_def =
+                    fus_symtable_get_token(symtable, sym_i);
+                fus_value_t value_def = fus_obj_get(vm, &runner->defs, sym_i);
+                fus_arr_t *def_data = &value_def.p->data.a;
+                fus_value_t value_fun = fus_value_fun(vm,
+                    fus_strdup(vm->core, token_def), def_data);
+                FUS_STATE_STACK_PUSH(value_fun)
             }else if(!strcmp(token, "@")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
@@ -829,24 +941,13 @@ int fus_runner_step(fus_runner_t *runner){
                 printf("%s\n", token_def);
                 #endif
 
-                fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
+                fus_value_t value_def = fus_obj_get(vm, &runner->defs, sym_i);
                 fus_arr_t *def_data = &value_def.p->data.a;
 
                 callframe->i = i + 1;
                 fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
                     def_data);
                 goto dont_update_i;
-            }else if(!strcmp(token, "&")){
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
-                const char *token_def =
-                    fus_symtable_get_token(symtable, sym_i);
-                fus_value_t value_def = fus_obj_get(vm, &state->defs, sym_i);
-                fus_arr_t *def_data = &value_def.p->data.a;
-                fus_value_t value_fun = fus_value_fun(vm,
-                    fus_strdup(vm->core, token_def), def_data);
-                fus_arr_push(vm, &state->stack, value_fun);
             }else if(!strcmp(token, "call")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
@@ -863,7 +964,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_arr_t *data = &f->data;
 
                 callframe->i = i + 1;
-                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,
+                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
                     data);
 
                 fus_value_detach(vm, value);
@@ -925,11 +1026,17 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_EXPECT_T(arr)
                 fus_value_t value = (fus_value_t)token_value.p;
                 fus_value_attach(vm, value);
-                fus_arr_push(vm, &state->stack, value);
+                FUS_STATE_STACK_PUSH(value)
             }else if(!strcmp(token, "ignore")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 fus_value_t value = (fus_value_t)token_value.p;
+            }else if(!strcmp(token, "dump_callframes")){
+                fus_runner_dump_callframes(runner, stderr, true);
+            }else if(!strcmp(token, "dump_state")){
+                FUS_STATE_NEXT_VALUE()
+                const char *dump_state = fus_value_str_decode(vm, token_value);
+                fus_runner_dump_state(runner, stderr, dump_state);
             }else{
                 fprintf(stderr, "%s: Builtin not found: %s\n",
                     __func__, token);
@@ -955,8 +1062,8 @@ dont_update_i:
     return 0;
 
 err:
-    fus_runner_dump(runner, stderr, true);
-    fus_state_dump(state, stderr, "Vs");
+    fus_runner_dump_callframes(runner, stderr, true);
+    fus_runner_dump_state(runner, stderr, "Vs");
     return -1;
 }
 

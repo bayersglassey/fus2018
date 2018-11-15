@@ -82,8 +82,8 @@ static int run(fus_t *fus, const char *code, int code_len){
     fus_lexer_load_chunk(lexer, code, code_len);
     fus_lexer_mark_final(lexer);
 
-    fus_state_t *state = &fus->state;
-    if(fus_state_exec_lexer(state, lexer, false) < 0)return -1;
+    fus_runner_t *runner = &fus->runner;
+    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
@@ -111,9 +111,11 @@ static int serve_execpost(fus_t *fus, struct wsgi_request *request){
     /* Run body as fus code */
     if(run(fus, body, body_len) < 0)return -1;
 
-    /* Write result to request body */
+    /* Write stack to request body */
+    fus_runner_t *runner = &fus->runner;
+    fus_arr_t *stack = fus_runner_get_stack(runner);
     fus_printer_set_flush(&fus->printer, &flush_to_request_body, request);
-    fus_printer_write_arr(&fus->printer, &fus->vm, &fus->state.stack);
+    fus_printer_write_arr(&fus->printer, &fus->vm, stack);
     fus_printer_write_char(&fus->printer, '\n');
     if(fus_printer_flush(&fus->printer) < 0)return -1;
 
@@ -176,7 +178,8 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     fus_t *fus = &app->fus;
     fus_vm_t *vm = &fus->vm;
     fus_symtable_t *symtable = &fus->symtable;
-    fus_arr_t *stack = &fus->state.stack;
+    fus_runner_t *runner = &fus->runner;
+    fus_arr_t *stack = NULL;
 
     /* Parse vars */
     if(uwsgi_parse_vars(request))return -1;
@@ -209,12 +212,14 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     fus_obj_set(vm, o_request, sym_i_wsgi_vars, value_wsgi_vars);
 
     /* Push request onto stack */
+    stack = fus_runner_get_stack(runner);
     fus_arr_push(vm, stack, value_request);
 
     /* Run fus webapp code */
     if(run(fus, app->code, app->code_len) < 0)return -1;
 
     /* Pop response from stack */
+    stack = fus_runner_get_stack(runner);
     if(fus_arr_len(vm, stack) != 1){
         fprintf(stderr, "%s: Expected 1 value (response obj) left on stack, "
             "but found %i values\n", __func__, fus_arr_len(vm, stack));

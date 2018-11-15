@@ -12,11 +12,11 @@ static int test(fus_t *fus){
         "\"The answer is three: \" swap";
 
     fus_lexer_t *lexer = &fus->lexer;
-    fus_state_t *state = &fus->state;
+    fus_runner_t *runner = &fus->runner;
 
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
-    if(fus_state_exec_lexer(state, lexer, false) < 0)return -1;
-    fus_state_dump(state, stdout, "dvs");
+    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
+    fus_runner_dump_state(runner, stdout, "dvs");
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");

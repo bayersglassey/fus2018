@@ -16,22 +16,23 @@ typedef enum fus_runner_callframe_type {
     FUS_CALLFRAME_TYPES
 } fus_runner_callframe_type_t;
 
-struct fus_state {
-    fus_vm_t *vm;
-    fus_arr_t stack;
-    fus_obj_t vars;
-    fus_obj_t defs;
-};
 
 struct fus_runner_callframe {
-    fus_runner_t *runner;
+    fus_runner_t *runner; /* parent */
+
     fus_runner_callframe_type_t type;
-    fus_arr_t data;
+    bool inherits;
+    fus_arr_t *data;
     int i;
+
+    fus_arr_t stack;
+    fus_obj_t vars;
 };
 
 struct fus_runner {
-    fus_state_t *state;
+    fus_vm_t *vm;
+
+    fus_obj_t defs;
     fus_array_t callframes;
 
     fus_class_t class_callframe;
@@ -42,13 +43,11 @@ struct fus_runner {
  * STATE *
  *********/
 
-void fus_state_init(fus_state_t *state, fus_vm_t *vm);
-void fus_state_cleanup(fus_state_t *state);
-void fus_state_dump(fus_state_t *state, FILE *file, const char *fmt);
+void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt);
 
-int fus_state_exec_lexer(fus_state_t *state, fus_lexer_t *lexer,
+int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
     bool dump_parser);
-int fus_state_exec_data(fus_state_t *state, fus_arr_t *data);
+int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data);
 
 
 /**********
@@ -56,21 +55,24 @@ int fus_state_exec_data(fus_state_t *state, fus_arr_t *data);
  **********/
 
 void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
-    fus_runner_t *runner,
-    fus_runner_callframe_type_t type,
+    fus_runner_t *runner, fus_runner_callframe_type_t type,
     fus_arr_t *data);
 void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe);
-void fus_runner_init(fus_runner_t *runner, fus_state_t *state,
-    fus_arr_t *data);
+void fus_runner_init(fus_runner_t *runner, fus_vm_t *vm);
+int fus_runner_load(fus_runner_t *runner, fus_arr_t *data);
+int fus_runner_unload(fus_runner_t *runner);
 void fus_runner_cleanup(fus_runner_t *runner);
-void fus_runner_dump(fus_runner_t *runner, FILE *file, bool end_at_here);
+void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
+    bool end_at_here);
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
+fus_arr_t *fus_runner_get_stack(fus_runner_t *runner);
+fus_obj_t *fus_runner_get_vars(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
 void fus_runner_push_callframe(fus_runner_t *runner,
-    fus_runner_callframe_type_t type,
-    fus_arr_t *data);
+    fus_runner_callframe_type_t type, fus_arr_t *data);
 void fus_runner_pop_callframe(fus_runner_t *runner);
+void fus_runner_end_callframe(fus_runner_t *runner);
 int fus_runner_step(fus_runner_t *runner);
 
 

@@ -13,9 +13,9 @@ static int run(fus_t *fus, const char *filename, const char *text,
     fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
 
-    fus_state_t *state = &fus->state;
-    if(fus_state_exec_lexer(state, lexer, dump_parser) < 0)return EXIT_FAILURE;
-    if(dump_state)fus_state_dump(&fus->state, stderr, dump_state);
+    fus_runner_t *runner = &fus->runner;
+    if(fus_runner_exec_lexer(runner, lexer, dump_parser) < 0)return EXIT_FAILURE;
+    if(dump_state)fus_runner_dump_state(&fus->runner, stderr, dump_state);
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
