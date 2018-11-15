@@ -33,9 +33,20 @@ then
 elif [ "$MAIN" = "lib_install" ]
 then
     OUTFILE="libfus.so"
-    cp "$OUTFILE" /usr/lib/
-    mkdir -p /usr/include/fus
-    cp src/*.h /usr/include/fus/
+    LIBDIR="/usr/lib/"
+    INCDIR="/usr/include/fus/"
+    SRCFILES="src/*.h"
+
+    >&2 echo "Installing libfus..."
+
+    >&2 echo "Copying $OUTFILE to $LIBDIR ..."
+    cp "$OUTFILE" "$LIBDIR"
+
+    >&2 echo "Copying $SRCFILES to $LIBDIR ..."
+    mkdir -p "$INCDIR"
+    cp $SRCFILES "$INCDIR"
+
+    >&2 echo "Installation complete!"
     exit 0
 elif [ "$MAIN" = "libtest" ]
 then
