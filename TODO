@@ -17,3 +17,13 @@ And then running the following in separate terminal:
     ./uwsgi/curl_test "21"
 We get this error:
     <no file>: row 1: col 1: split token "21": Lexer finished with status != done (OK)
+
+
+Also, fus_runner_dump shows 1 sym past where it needs to.
+Because calls increment i *before* pushing new frame.
+You see?..
+
+
+Also, time to add vm error callbacks, so e.g. fus_runner_step can set
+up a longjmp, so we get proper error traces instead of "{Fus err #0: Wrong type}"
+
