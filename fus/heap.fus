@@ -17,6 +17,8 @@ def test of(->):
     'heap 'key1 @get "Rofl" str_eq assert
     'heap 'key2 @get "Rawr" str_eq assert
 
+    'heap "ZZZ" @find is_null assert
+
     'heap 'key1 @has assert
     ''heap 'key1 @del ='heap
     'heap 'key1 @has not assert
@@ -37,6 +39,7 @@ def add of(heap value -> heap key):
 def find of(heap key -> index):
     ='key ='heap
     'heap .entries ='entries
+    null ='i
     0 'entries len do:
         over over >= if: null ='i break
         swap dup ='i 1 + swap
@@ -60,10 +63,17 @@ def set of(heap key value -> heap):
     ''heap
         ..entries 'i ..$ 'value =.value 'i =.$ =.entries
 
+
+def arr_del of(arr i -> arr):
+    ='i ='a
+    'a 0 'i slice
+    ''a ('i 1 +) (over len over -) slice
+    join
+
 def del of(heap key -> heap):
     over ='heap
     @find ='i
     ''heap
-        ..entries 'i split lpop drop join =.entries
+        ..entries 'i @arr_del =.entries
 
 @test

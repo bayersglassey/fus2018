@@ -70,3 +70,4 @@ def test of(->):
         @point_new
     @eq assert
 
+@test

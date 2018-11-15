@@ -2,20 +2,18 @@
 def unbox of(boxed -> unboxed): call(-> x)
 
 
-module Cycle:
-
-    def A:
-        obj
-            100 =.label
-            &B =.link
-    def B:
-        obj
-            200 =.label
-            &C =.link
-    def C:
-        obj
-            300 =.label
-            &A =.link
+def A:
+    obj
+        100 =.label
+        &B =.link
+def B:
+    obj
+        200 =.label
+        &C =.link
+def C:
+    obj
+        300 =.label
+        &A =.link
 
 def test of(->):
     # The links of A, B, C form a cycle.
@@ -26,12 +24,18 @@ def test of(->):
     # structure, there should be no cost to following
     # its links.
 
-    @(Cycle A)
+    @A
+        dup p
         dup .label 100 == assert
         .link @unbox
+        dup p
         dup .label 200 == assert
         .link @unbox
+        dup p
         dup .label 300 == assert
         .link @unbox
+        dup p
         dup .label 100 == assert
     drop
+
+@test
