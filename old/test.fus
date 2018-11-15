@@ -1,0 +1,8 @@
+
+1 2 3
+arr 1, 2, p
+obj 1 =.x 2 =.y ='o
+
+vars p
+
+"Test OK!\n" str_p

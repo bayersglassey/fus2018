@@ -1,0 +1,1 @@
+./_compile_base src/main/main.c $@
