@@ -17,7 +17,7 @@ def test of(->):
     'heap 'key1 @get "Rofl" str_eq assert
     'heap 'key2 @get "Rawr" str_eq assert
 
-    'heap "ZZZ" @find is_null assert
+    'heap 99 @find is_null assert
 
     'heap 'key1 @has assert
     ''heap 'key1 @del ='heap
