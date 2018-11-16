@@ -24,7 +24,7 @@ static void fus_swap_bools(bool *b1, bool *b2){
 
 static void fus_runner_dump_error(fus_runner_t *runner){
     fus_runner_dump_callframes(runner, stderr, true);
-    fus_runner_dump_state(runner, stderr, "Vs");
+    //fus_runner_dump_state(runner, stderr, "Vs");
 }
 
 void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt){
@@ -316,6 +316,8 @@ void fus_vm_error_callback_runner_setjmp(fus_vm_t *vm, fus_err_code_t code){
     const char *msg = fus_err_code_msg(code);
     fus_runner_t *runner = vm->error_callback_data;
     fprintf(stderr, "%s: Caught error: %s\n", __func__, msg);
+    FUS_BACKTRACE
+
 #if FUS_USE_SETJMP
     longjmp(runner->error_jmp_buf, 1);
 #else
