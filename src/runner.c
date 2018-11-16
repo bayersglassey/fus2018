@@ -513,12 +513,16 @@ int fus_runner_step(fus_runner_t *runner){
                 (VALUE) = token_values[i + 1]; \
             }
 
-        #define FUS_STATE_EXPECT_T(T) \
-            if(!fus_value_is_##T(token_value)){ \
-                fprintf(stderr, "%s: Expected " #T " after %s, got: %s\n", \
-                    __func__, token, fus_value_type_msg(token_value)); \
+        #define FUS_STATE_ASSERT_T(VALUE, T) { \
+            fus_value_t __value = (VALUE); \
+            if(!fus_value_is_##T(__value)){ \
+                fprintf(stderr, "%s: Expected " #T ", got: %s\n", \
+                    __func__, fus_value_type_msg(__value)); \
                 goto err; \
-            }
+            } \
+        }
+
+        #define FUS_STATE_EXPECT_T(T) FUS_STATE_ASSERT_T(token_value, T)
 
         #define FUS_STATE_EXPECT_SYM(TOKEN) \
             FUS_STATE_EXPECT_T(SYM) \
@@ -975,14 +979,26 @@ int fus_runner_step(fus_runner_t *runner){
                     fprintf(stderr, "%s: Failed assertion\n", __func__);
                     goto err;
                 }
-            }else if(!strcmp(token, "p") || !strcmp(token, "error")){
+            }else if(!strcmp(token, "p") || !strcmp(token, "p_data")
+                || !strcmp(token, "error")
+            ){
                 bool is_error = token[0] == 'e';
+                bool is_data = token[1] == '_';
                 if(is_error)fprintf(stderr, "%s: Error raised: ", __func__);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_printer_t printer;
                 fus_printer_init(&printer);
-                fus_printer_write_value(&printer, vm, value);
+                fus_printer_set_file(&printer, stderr);
+                if(is_data){
+                    FUS_STATE_ASSERT_T(value, arr)
+                    fus_printer_write_text(&printer, "data:");
+                    printer.depth++;
+                    fus_printer_write_newline(&printer);
+                    fus_printer_write_data(&printer, vm, &value.p->data.a,
+                        0, -1);
+                    printer.depth--;
+                }else fus_printer_write_value(&printer, vm, value);
                 fus_printer_write_newline(&printer);
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
@@ -991,14 +1007,11 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "str_p")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                if(!fus_value_is_str(value)){
-                    fprintf(stderr, "%s: Not a str: %s\n", __func__,
-                        fus_value_type_msg(value));
-                    goto err;
-                }
+                FUS_STATE_ASSERT_T(value, str)
                 fus_str_t *s = &value.p->data.s;
                 fus_printer_t printer;
                 fus_printer_init(&printer);
+                fus_printer_set_file(&printer, stderr);
                 fus_printer_write(&printer, s->text, s->len);
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
@@ -1097,11 +1110,7 @@ int fus_runner_step(fus_runner_t *runner){
 
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                if(!fus_value_is_fun(value)){
-                    fprintf(stderr, "%s: Not a fun: %s\n", __func__,
-                        fus_value_type_msg(value));
-                    goto err;
-                }
+                FUS_STATE_ASSERT_T(value, fun)
                 fus_fun_t *f = &value.p->data.f;
 
                 callframe->i = i + 1;
