@@ -40,6 +40,7 @@ int fus_symtable_len(fus_symtable_t *table);
 fus_symtable_entry_t *fus_symtable_get_entry(fus_symtable_t *table,
     int sym_i);
 const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i);
+const char *fus_symtable_get_token_safe(fus_symtable_t *table, int sym_i);
 int fus_symtable_add_from_token(fus_symtable_t *table,
     const char *token, int token_len);
 int fus_symtable_get_from_token(fus_symtable_t *table,

@@ -63,13 +63,20 @@ int fus_symtable_len(fus_symtable_t *table){
 fus_symtable_entry_t *fus_symtable_get_entry(fus_symtable_t *table,
     int sym_i
 ){
+    if(sym_i < 0)return NULL;
     fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
     return &entries[sym_i];
 }
 
 const char *fus_symtable_get_token(fus_symtable_t *table, int sym_i){
     fus_symtable_entry_t *entry = fus_symtable_get_entry(table, sym_i);
+    if(entry == NULL)return NULL;
     return entry->token;
+}
+
+const char *fus_symtable_get_token_safe(fus_symtable_t *table, int sym_i){
+    const char *token = fus_symtable_get_token(table, sym_i);
+    return token? token: "<SYM NOT FOUND>";
 }
 
 int fus_symtable_add_from_token(fus_symtable_t *table,
