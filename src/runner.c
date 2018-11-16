@@ -996,18 +996,17 @@ int fus_runner_step(fus_runner_t *runner){
 
                 /* Try to parse signature, e.g. of(x -> y z) */
                 fus_arr_t *sig = NULL;
-                fus_value_t value_peek;
-                FUS_STATE_PEEK_NEXT_VALUE(value_peek)
-                if(fus_value_is_sym(value_peek)){
-                    int sym_i = fus_value_sym_decode(vm, value_peek);
-                    const char *token_peek =
+                {
+                    FUS_STATE_NEXT_VALUE()
+                    FUS_STATE_EXPECT_T(sym)
+                    int sym_i = fus_value_sym_decode(vm, token_value);
+                    const char *token_of =
                         fus_symtable_get_token(symtable, sym_i);
-                    if(strcmp(token_peek, "of")){
+                    if(strcmp(token_of, "of")){
                         fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
-                            __func__, token, token_peek);
+                            __func__, token, token_of);
                         goto err;
                     }
-                    FUS_STATE_NEXT_VALUE()
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
                     sig = &token_value.p->data.a;
