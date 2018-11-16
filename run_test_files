@@ -9,7 +9,7 @@ if [ -z "$1" ]
 then
     FILES="test/*.fus"
 else
-    FILES="$1"
+    FILES="$@"
 fi
 
 echo
