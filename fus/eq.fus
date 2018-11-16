@@ -84,3 +84,4 @@ def test of(->):
     'x ('x (obj 1 =.x 2 =.y 3 =.z) 5 =.$) @eq not assert
     "ok" p
 
+@test

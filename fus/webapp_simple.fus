@@ -16,7 +16,7 @@
 # Find vars we care about and poke their values onto request:
 0 ='i
 'request .wsgi_vars ='vars
-def NOT_FOUND: "<WSGI VAR NOT FOUND>"
+def NOT_FOUND of(-> str): "<WSGI VAR NOT FOUND>"
 ''request
     @NOT_FOUND =.host
     @NOT_FOUND =.path
@@ -64,7 +64,7 @@ def str_split_on_char of(s c -> arr):
 
 
 # Generate response headers:
-def header:
+def header of(name value -> header):
     ='value ='name
     obj 'name =.name 'value =.value
 arr

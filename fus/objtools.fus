@@ -4,7 +4,7 @@ def has of(obj key -> bool):
         # key is an arr of syms
         ='keys ='obj
         T ='has
-        'keys @iter for: ='key
+        'keys arr_for: ='key
             'obj 'key has not if: F ='has break
             ''obj 'key get ='obj
         ''has
@@ -19,7 +19,7 @@ def dget of (obj key default -> value):
     dup is_arr ifelse:
         # key is an arr of syms
         ='keys ='obj
-        'keys @iter for: ='key
+        'keys arr_for: ='key
             'obj 'key has not if: 'default ='obj break
             ''obj 'key get ='obj
         ''obj
@@ -85,7 +85,7 @@ def add_prefix of(obj str -> obj):
     ='prefix ='o0
     obj ='o1
 
-    'o0 keys @iter for: ='key0
+    'o0 keys arr_for: ='key0
         'key0 sym_tostr 'prefix swap str_join str_tosym ='key1
         ''o1 ('o0 'key0 get) 'key1 set ='o1
 
@@ -118,3 +118,4 @@ def test of(->):
     'o2 ?.y not assert
     'o2 ?.__y assert
 
+@test

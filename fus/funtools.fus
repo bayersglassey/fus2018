@@ -45,3 +45,4 @@ def test of(->):
     (arr 1, 2, 3, 4,) @prod 24 == assert
 
 
+@test

@@ -23,7 +23,7 @@ def iter_arr of(x -> gen):
             'i 'a len < while
             'a 'i .$ out loop
 
-sig(->) def test of(x -> gen):
+def test of(->):
     3 @iter
         >> 0 == assert
         >> 1 == assert

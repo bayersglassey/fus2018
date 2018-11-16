@@ -74,3 +74,6 @@ def test of(->):
         dup .sum 90 == assert
         dup .prod 24000 == assert
     drop
+
+@test
+

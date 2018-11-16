@@ -6,12 +6,14 @@ def A: "A" 0 str_getcode
 def Z: "Z" 0 str_getcode
 def TO_UPPER: @A @a -
 
+def and: not if: drop F
+def or: if: drop T
 def isalpha_oldschool:
     # old school ("inefficient")
     ='c
-        'c @a >= 'c @z <= &&
-        'c @A >= 'c @Z <= &&
-    ||
+        'c @a >= 'c @z <= @or
+        'c @A >= 'c @Z <= @or
+    @or
 def isalpha_oldschool_alt:
     # old school (alternate - what Chuck Moore would write)
     F swap @a >= if: swap @z <= if: not
@@ -36,5 +38,12 @@ def lower of(s -> s):
 
 def join: "" swap arr_for: str_join
 
-def say_hello: ='name (arr "Hello, ", 'name, "!",) @join
+def say_hello of(name ->): ='name (arr "Hello, ", 'name, "!",) @join
+
+def test of(->):
+    # TODO: Test the other stuff...
+    "Joe Q" @say_hello
+
+@test
+
 
