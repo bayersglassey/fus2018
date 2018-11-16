@@ -9,8 +9,6 @@ The latter is like "data(...)" but loaded from a file (like "load(...)").
 Nov 14, 2018:
 -------------
 
-Vars need to be pushed/popped on fun calls.
-
 While running the following:
     ./uwsgi/run --fus_execpost
 And then running the following in separate terminal:
@@ -22,8 +20,3 @@ We get this error:
 Also, fus_runner_dump shows 1 sym past where it needs to.
 Because calls increment i *before* pushing new frame.
 You see?..
-
-
-Also, time to add vm error callbacks, so e.g. fus_runner_step can set
-up a longjmp, so we get proper error traces instead of "{Fus err #0: Wrong type}"
-
