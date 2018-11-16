@@ -568,6 +568,15 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value = fus_value_stringparse_sym(vm,
                     quoted_token);
                 FUS_STATE_STACK_PUSH(value)
+            }else if(!strcmp(token, "typeof")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                const char *type_name = fus_value_type_msg(value);
+                fus_value_detach(vm, value);
+                int sym_i = fus_symtable_get_or_add_from_string(
+                    vm->symtable, type_name);
+                fus_value_t value_sym = fus_value_sym(vm, sym_i);
+                FUS_STATE_STACK_PUSH(value_sym)
             }else if(!strcmp(token, "null")){
                 fus_value_t value = fus_value_null(vm);
                 FUS_STATE_STACK_PUSH(value)

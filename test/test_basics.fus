@@ -36,6 +36,13 @@ arr is_arr assert
 obj is_obj assert
 fun() is_fun assert
 
+1 typeof `int sym_eq assert
+`x typeof `sym sym_eq assert
+null typeof `null sym_eq assert
+T typeof `bool sym_eq assert
+arr typeof `arr sym_eq assert
+obj typeof `obj sym_eq assert
+fun() typeof `fun sym_eq assert
 
 "LALALALA" p
 1 2 + p
