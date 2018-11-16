@@ -40,7 +40,13 @@ bool fus_obj_has(fus_vm_t *vm, fus_obj_t *o, int sym_i){
 
 fus_value_t fus_obj_get(fus_vm_t *vm, fus_obj_t *o, int sym_i){
     int i = fus_obj_find(vm, o, sym_i);
-    if(i < 0)return fus_value_err(vm, FUS_ERR_MISSING_KEY);
+    if(i < 0){
+        const char *sym_token = fus_symtable_get_token_safe(
+            vm->symtable, sym_i);
+        fprintf(stderr, "%s: Missing key: %s (sym #%i)\n", __func__,
+            sym_token, sym_i);
+        return fus_value_err(vm, FUS_ERR_MISSING_KEY);
+    }
     fus_value_t *values = FUS_ARR_VALUES(o->values);
     fus_value_t value = values[i];
     return value;

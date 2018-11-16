@@ -210,7 +210,10 @@ fus_value_t fus_value_arr_get_i(fus_vm_t *vm, fus_value_t value_a, int i){
     /* Return element i of value_a. */
     if(!fus_value_is_arr(value_a))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     fus_arr_t *a = &value_a.p->data.a;
-    if(i < 0 || i >= fus_arr_len(vm, a)){
+    fus_array_len_t len = fus_arr_len(vm, a);
+    if(i < 0 || i >= len){
+        fprintf(stderr, "%s: Bounds check failed: 0 <= %i < %i\n",
+            __func__, i, len);
         return fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
     }
     fus_value_t value = fus_arr_get(vm, a, i);
@@ -244,7 +247,10 @@ void fus_value_arr_set_i(fus_vm_t *vm, fus_value_t *value_a_ptr, int i,
     fus_arr_t *original_a = &value_a.p->data.a;
 
     /* Bounds check */
-    if(i < 0 || i >= fus_arr_len(vm, original_a)){
+    fus_array_len_t len = fus_arr_len(vm, original_a);
+    if(i < 0 || i >= len){
+        fprintf(stderr, "%s: Bounds check failed: 0 <= %i < %i\n",
+            __func__, i, len);
         fus_value_detach(vm, value_a);
         fus_value_detach(vm, value);
         *value_a_ptr = fus_value_err(vm, FUS_ERR_OUT_OF_BOUNDS);
