@@ -32,6 +32,7 @@ void fus_boxed_str_mkunique(fus_boxed_t **p_ptr);
 
 fus_value_t fus_value_str(fus_vm_t *vm,
     char *text, int len, size_t size);
+fus_value_t fus_value_str_from_text(fus_vm_t *vm, const char *text);
 fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value);
 fus_value_t fus_value_str_eq(fus_vm_t *vm, fus_value_t value1,
     fus_value_t value2);

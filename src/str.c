@@ -94,6 +94,12 @@ fus_value_t fus_value_str(fus_vm_t *vm,
     return (fus_value_t)p;
 }
 
+fus_value_t fus_value_str_from_text(fus_vm_t *vm, const char *text){
+    size_t text_len = strlen(text);
+    char *new_text = fus_strndup(vm->core, text, text_len);
+    return fus_value_str(vm, new_text, text_len, text_len + 1);
+}
+
 fus_value_t fus_value_str_len(fus_vm_t *vm, fus_value_t value){
     /* Return len of str value as a new int value */
     if(!fus_value_is_str(value))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
