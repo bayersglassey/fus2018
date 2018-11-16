@@ -880,6 +880,8 @@ int fus_runner_step(fus_runner_t *runner){
                     }
                 }
 
+                /* Try to parse signature, e.g. of(x -> y z) */
+                fus_arr_t *sig = NULL;
                 fus_value_t value_peek;
                 FUS_STATE_PEEK_NEXT_VALUE(value_peek)
                 if(fus_value_is_sym(value_peek)){
@@ -894,11 +896,15 @@ int fus_runner_step(fus_runner_t *runner){
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
-                    /* TODO: Check stack effects */
+                    sig = &token_value.p->data.a;
                 }
 
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
+
+                /* Create a function value */
+                fus_value_t value_fun = fus_value_fun(vm, NULL,
+                    &token_value.p->data.a, sig);
 
                 if(got_def){
                     /* def */
@@ -908,14 +914,12 @@ int fus_runner_step(fus_runner_t *runner){
                         fprintf(stderr, "%s: Redefinition of defs not "
                             "allowed: %s\n",
                             __func__, token_def);
+                        fus_value_detach(vm, value_fun);
                         goto err;
                     }
-                    fus_obj_set(vm, &runner->defs, def_sym_i, token_value);
-                    fus_value_attach(vm, token_value);
+                    fus_obj_set(vm, &runner->defs, def_sym_i, value_fun);
                 }else{
                     /* fun */
-                    fus_value_t value_fun = fus_value_fun(vm, NULL,
-                        &token_value.p->data.a);
                     FUS_STATE_STACK_PUSH(value_fun)
                 }
             }else if(!strcmp(token, "&")){
@@ -924,11 +928,9 @@ int fus_runner_step(fus_runner_t *runner){
                 int sym_i = fus_value_sym_decode(vm, token_value);
                 const char *token_def =
                     fus_symtable_get_token(symtable, sym_i);
-                fus_value_t value_def = fus_obj_get(vm, &runner->defs, sym_i);
-                fus_arr_t *def_data = &value_def.p->data.a;
-                fus_value_t value_fun = fus_value_fun(vm,
-                    fus_strdup(vm->core, token_def), def_data);
+                fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
                 FUS_STATE_STACK_PUSH(value_fun)
+                fus_value_attach(vm, value_fun);
             }else if(!strcmp(token, "@")){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
@@ -941,12 +943,12 @@ int fus_runner_step(fus_runner_t *runner){
                 printf("%s\n", token_def);
                 #endif
 
-                fus_value_t value_def = fus_obj_get(vm, &runner->defs, sym_i);
-                fus_arr_t *def_data = &value_def.p->data.a;
+                fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
+                fus_fun_t *f = &value_fun.p->data.f;
 
                 callframe->i = i + 1;
                 fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
-                    def_data);
+                    &f->data);
                 goto dont_update_i;
             }else if(!strcmp(token, "call")){
                 FUS_STATE_NEXT_VALUE()
@@ -961,11 +963,10 @@ int fus_runner_step(fus_runner_t *runner){
                     goto err;
                 }
                 fus_fun_t *f = &value.p->data.f;
-                fus_arr_t *data = &f->data;
 
                 callframe->i = i + 1;
                 fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
-                    data);
+                    &f->data);
 
                 fus_value_detach(vm, value);
                 goto dont_update_i;

@@ -57,19 +57,23 @@ void fus_printer_write_obj(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
 void fus_printer_write_obj_as_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_obj_t *o);
+void fus_printer_write_fun(fus_printer_t *printer,
+    fus_vm_t *vm, fus_fun_t *f);
 void fus_printer_write_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a, int i0, int i1);
 
 
-int fus_printer_print_value(fus_printer_t *printer,
-    fus_vm_t *vm, fus_value_t value);
-int fus_printer_print_arr(fus_printer_t *printer,
-    fus_vm_t *vm, fus_arr_t *a);
-int fus_printer_print_obj(fus_printer_t *printer,
-    fus_vm_t *vm, fus_obj_t *o);
-int fus_printer_print_obj_as_data(fus_printer_t *printer,
-    fus_vm_t *vm, fus_obj_t *o);
+#define DEC_FUS_PRINTER_PRINT_T(FNAME, T, TNAME) \
+    int fus_printer_print_##FNAME(fus_printer_t *printer, \
+        fus_vm_t *vm, fus_##T##_t *TNAME);
+
+DEC_FUS_PRINTER_PRINT_T(arr, arr, a)
+DEC_FUS_PRINTER_PRINT_T(obj, obj, o)
+DEC_FUS_PRINTER_PRINT_T(obj_as_data, obj, o)
+DEC_FUS_PRINTER_PRINT_T(fun, fun, f)
 int fus_printer_print_data(fus_printer_t *printer,
     fus_vm_t *vm, fus_arr_t *a, int i0, int i1);
+int fus_printer_print_value(fus_printer_t *printer,
+    fus_vm_t *vm, fus_value_t value);
 
 #endif
