@@ -5,22 +5,46 @@ echo "Compiling \"run\"..."
 ./compile run
 echo "Compiled OK"
 
-FILES="test/*.fus"
+if [ -z "$1" ]
+then
+    FILES="test/*.fus"
+else
+    FILES="$1"
+fi
 
 echo
 echo "Running files:" $FILES
 
 STARS="* * * * * * * * * * * * * * *"
 
+N_FILES=0
+N_OK=0
+N_FAIL=0
+
 for F in $FILES
 do
+    let "N_FILES++" || true
     echo
     echo "Running file: $F"
     echo "$STARS"
-    ./main "$F"
-    echo "$STARS"
-    echo "Ran $F OK"
+    if ./main "$F"
+    then
+        echo "$STARS"
+        echo "Ran $F [OK]"
+        let "N_OK++" || true
+    else
+        echo "$STARS"
+        echo "Ran $F [FAIL]"
+        let "N_FAIL++" || true
+    fi
 done
 
+if [ "$N_FAIL" = "0" ]
+then
+    MSG="[OK]"
+else
+    MSG="[FAIL]"
+fi
+
 echo
-echo "Ran all test files without crashing!"
+echo "Ran $N_OK/$N_FILES test files without crashing! $MSG"
