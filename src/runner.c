@@ -592,6 +592,15 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_tostr(vm, value);
                 FUS_STATE_STACK_PUSH(new_value)
+            }else if(!strcmp(token, "sym_tostr")){
+                fus_value_t value_sym;
+                FUS_STATE_STACK_POP(&value_sym)
+                int sym_i = fus_value_sym_decode(vm, value_sym);
+                const char *text = fus_symtable_get_token(vm->symtable,
+                    sym_i);
+                fus_value_t value_s = fus_value_str_from_text(vm, text);
+                FUS_STATE_STACK_PUSH(value_s)
+                fus_value_detach(vm, value_sym);
 
             #define FUS_RUNNER_INT_BINOP(TOK, OP) \
             }else if(!strcmp(token, TOK)) { \
@@ -885,6 +894,15 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_i);
                 fus_value_detach(vm, value_code);
+            }else if(!strcmp(token, "str_tosym")){
+                fus_value_t value_s;
+                FUS_STATE_STACK_POP(&value_s)
+                const char *text = fus_value_str_decode(vm, value_s);
+                int sym_i = fus_symtable_get_or_add_from_string(
+                    vm->symtable, text);
+                fus_value_t value_sym = fus_value_sym(vm, sym_i);
+                FUS_STATE_STACK_PUSH(value_sym)
+                fus_value_detach(vm, value_s);
             }else if(!strcmp(token, "swap")){
                 fus_value_t value1;
                 fus_value_t value2;

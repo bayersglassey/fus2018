@@ -39,7 +39,10 @@ fus_value_t fus_value_err(fus_vm_t *vm, fus_err_code_t code){
 
 fus_value_t fus_value_sym(fus_vm_t *vm, int sym_i){
     if(sym_i > FUS_PAYLOAD_MAX)return fus_value_err(vm, FUS_ERR_OVERFLOW);
-    if(sym_i < FUS_PAYLOAD_MIN)return fus_value_err(vm, FUS_ERR_UNDERFLOW);
+    if(sym_i < 0){
+        fprintf(stderr, "%s: Got negative sym_i: %i\n", __func__, sym_i);
+        return fus_value_err(vm, FUS_ERR_IDUNNO);
+    }
     fus_value_t value = (fus_value_t)(fus_unboxed_t)FUS_ADD_TAG(FUS_TAG_SYM, sym_i);
     return value;
 }
