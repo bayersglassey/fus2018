@@ -31,6 +31,8 @@ struct fus_printer {
 void fus_printer_init(fus_printer_t *printer);
 void fus_printer_cleanup(fus_printer_t *printer);
 
+void fus_printer_set_style_inline(fus_printer_t *printer);
+void fus_printer_set_style_full(fus_printer_t *printer);
 void fus_printer_set_flush(fus_printer_t *printer,
     fus_printer_flush_t *flush, void *data);
 void fus_printer_set_file(fus_printer_t *printer, FILE *file);

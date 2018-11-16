@@ -10,13 +10,6 @@
     fprintf(stderr, "\n"); \
 }
 
-#define FUS_PRINTER_LOG_UNEXPECTED_BOXED(BOXED) { \
-    fus_boxed_t *p = (BOXED); \
-    fprintf(stderr, "%s: WARNING: unexpected boxed value: ", __func__); \
-    fus_boxed_dump(p, stderr); \
-    fprintf(stderr, "\n"); \
-}
-
 
 
 void fus_printer_init(fus_printer_t *printer){
@@ -31,8 +24,7 @@ void fus_printer_init(fus_printer_t *printer){
     printer->shallow_data = false;
 
     printer->depth = 0;
-    printer->tab = "  ";
-    printer->newline = "\n";
+    fus_printer_set_style_full(printer);
 }
 
 void fus_printer_cleanup(fus_printer_t *printer){
@@ -42,6 +34,16 @@ void fus_printer_cleanup(fus_printer_t *printer){
 }
 
 
+
+void fus_printer_set_style_inline(fus_printer_t *printer){
+    printer->tab = "";
+    printer->newline = " ";
+}
+
+void fus_printer_set_style_full(fus_printer_t *printer){
+    printer->tab = "  ";
+    printer->newline = "\n";
+}
 
 void fus_printer_set_flush(fus_printer_t *printer,
     fus_printer_flush_t *flush, void *data
@@ -235,7 +237,6 @@ void fus_printer_write_boxed(fus_printer_t *printer, fus_boxed_t *p){
             }
         }
     }else{
-        FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
         fus_printer_write_text(printer, "(\"Got weird boxed value\" error)");
     }
 }
@@ -331,7 +332,6 @@ void fus_printer_write_data(fus_printer_t *printer,
                 fus_str_t *s = &p->data.s;
                 fus_printer_write_str(printer, s);
             }else{
-                FUS_PRINTER_LOG_UNEXPECTED_BOXED(p)
                 fus_printer_write_text(printer, "<UNEXPECTED>");
             }
         }else{
