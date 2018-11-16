@@ -34,7 +34,7 @@ null is_null assert
 T is_bool assert
 arr is_arr assert
 obj is_obj assert
-fun() is_fun assert
+fun of(->)() is_fun assert
 
 1 typeof `int sym_eq assert
 `x typeof `sym sym_eq assert
@@ -42,19 +42,20 @@ null typeof `null sym_eq assert
 T typeof `bool sym_eq assert
 arr typeof `arr sym_eq assert
 obj typeof `obj sym_eq assert
-fun() typeof `fun sym_eq assert
+fun of(->)() typeof `fun sym_eq assert
+
 
 "LALALALA" p
 1 2 + p
 T F p p
 
-def f: "EFFFF!\n" str_p
+def f of(->): "EFFFF!\n" str_p
 
-def g: 2
+def g of(-> i): 2
 
 def add of(x y -> z): +
 
-def mkpoint:
+def mkpoint of(x y -> point):
     ='y ='x
     obj 'x =.x 'y =.y
 

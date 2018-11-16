@@ -41,10 +41,10 @@ def replace of(data vars -> new_data):
             'word push
         ''i 1 + ='i loop
 
-def mkcompiler: obj
+def mkcompiler of(-> compiler): obj
     0 =.n_loops
 
-def sym_join_int:
+def sym_join_int of(sym int -> sym):
     ='int ='sym
     'sym sym_tostr 'int int_tostr str_join str_tosym
 
@@ -76,9 +76,9 @@ def compile of(compiler data -> compiler compiled_data):
                             $BODY
                             '' $I 1 + =' $I loop
                     obj
-                        'N =.N
-                        'I =.I
-                        'BODY =.BODY
+                        arr 'N, =.N
+                        arr 'I, =.I
+                        arr 'BODY, =.BODY
                     @replace
                 ''compiled_data swap join ='compiled_data
 

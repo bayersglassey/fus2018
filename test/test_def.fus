@@ -15,5 +15,5 @@ fun of(-> i)(10 20 +) ='fun
 
 'fun
 &f
-fun()
+fun of(->)()
 
