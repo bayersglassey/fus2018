@@ -22,6 +22,9 @@ void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
     vm->symtable = symtable;
     vm->n_boxed = 0;
 
+    vm->error_callback = &fus_vm_error_callback_default;
+    vm->error_callback_data = NULL;
+
 #ifdef FUS_ENABLE_BOXED_LLIST
     vm->boxed_llist = NULL;
 #endif
@@ -48,6 +51,10 @@ void fus_vm_cleanup(fus_vm_t *vm){
 
 
 void fus_vm_error(fus_vm_t *vm, fus_err_code_t code){
+    if(vm->error_callback)vm->error_callback(vm, code);
+}
+
+void fus_vm_error_callback_default(fus_vm_t *vm, fus_err_code_t code){
 #if FUS_PRINT_ERRS_TO_STDERR
     const char *msg = fus_err_code_msg(code);
     fprintf(stderr, "{Fus err #%i: %s}", code, msg);

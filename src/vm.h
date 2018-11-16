@@ -28,6 +28,9 @@ struct fus_vm {
     fus_symtable_t *symtable;
     int n_boxed;
 
+    void (*error_callback)(fus_vm_t *vm, fus_err_code_t code);
+    void *error_callback_data;
+
 #ifdef FUS_ENABLE_BOXED_LLIST
     /* Linked list of all boxed values, for debugging */
     fus_boxed_t *boxed_llist;
@@ -43,6 +46,7 @@ void fus_vm_cleanup(fus_vm_t *vm);
 
 
 void fus_vm_error(fus_vm_t *vm, fus_err_code_t code);
+void fus_vm_error_callback_default(fus_vm_t *vm, fus_err_code_t code);
 
 
 #endif
