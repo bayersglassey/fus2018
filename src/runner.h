@@ -22,6 +22,7 @@ struct fus_runner_callframe {
 
     fus_runner_callframe_type_t type;
     bool inherits;
+    fus_fun_t *fun;
     fus_arr_t *data;
     int i;
 
@@ -71,6 +72,8 @@ fus_obj_t *fus_runner_get_vars(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
 void fus_runner_push_callframe(fus_runner_t *runner,
     fus_runner_callframe_type_t type, fus_arr_t *data);
+void fus_runner_push_callframe_fun(fus_runner_t *runner,
+    fus_runner_callframe_type_t type, fus_fun_t *f);
 void fus_runner_pop_callframe(fus_runner_t *runner);
 void fus_runner_end_callframe(fus_runner_t *runner);
 int fus_runner_step(fus_runner_t *runner);

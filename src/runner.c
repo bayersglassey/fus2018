@@ -146,6 +146,7 @@ void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
     callframe->runner = runner;
     callframe->type = type;
     callframe->inherits = fus_runner_callframe_type_inherits(type);
+    callframe->fun = NULL;
     callframe->data = data;
     callframe->i = 0;
 
@@ -232,7 +233,24 @@ void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
             FUS_ARRAY_GET_REF(runner->callframes, i);
 
         if(!callframe->inherits){
-            /* Print stack, vars?.. */
+            bool dump_vars = true;
+            if(dump_vars){
+                fus_printer_write_newline(&printer);
+                fus_printer_write_text(&printer, "VARS:");
+                printer.depth++;
+                fus_printer_write_newline(&printer);
+                fus_printer_print_obj(&printer, vm, &callframe->vars);
+                printer.depth--;
+            }
+            bool dump_stack = true;
+            if(dump_stack){
+                fus_printer_write_newline(&printer);
+                fus_printer_write_text(&printer, "STACK:");
+                printer.depth++;
+                fus_printer_write_newline(&printer);
+                fus_printer_print_arr(&printer, vm, &callframe->stack);
+                printer.depth--;
+            }
         }
 
         if(callframe->data != NULL){
@@ -266,11 +284,19 @@ fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner){
     return FUS_ARRAY_GET_REF(runner->callframes, callframes_len - 1);
 }
 
-static fus_runner_callframe_t *fus_runner_get_data_callframe(fus_runner_t *runner){
+static fus_runner_callframe_t *fus_runner_get_data_callframe(
+    fus_runner_t *runner, bool old
+){
     /* The "data callframe" is the one which owns current stack and vars.
-    All callframes after it "inherit" its stack and vars. */
+    All callframes after it "inherit" its stack and vars.
+    If old==true, we assume current callframe is a data callframe, and
+    return the data callframe "behind" it.
+    (Basically we're assuming it's about to be popped, and want to get
+    at the old stack which will be revealed) */
+
     int callframes_len = runner->callframes.len;
-    for(int i = callframes_len - 1; i >= 0; i--){
+    int i0 = callframes_len - (old? 2: 1);
+    for(int i = i0; i >= 0; i--){
         fus_runner_callframe_t *callframe =
             FUS_ARRAY_GET_REF(runner->callframes, i);
         if(!callframe->inherits)return callframe;
@@ -279,13 +305,15 @@ static fus_runner_callframe_t *fus_runner_get_data_callframe(fus_runner_t *runne
 }
 
 fus_arr_t *fus_runner_get_stack(fus_runner_t *runner){
-    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(runner);
+    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(
+        runner, false);
     if(callframe == NULL)return NULL;
     return &callframe->stack;
 }
 
 fus_obj_t *fus_runner_get_vars(fus_runner_t *runner){
-    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(runner);
+    fus_runner_callframe_t *callframe = fus_runner_get_data_callframe(
+        runner, false);
     if(callframe == NULL)return NULL;
     return &callframe->vars;
 }
@@ -312,8 +340,43 @@ void fus_runner_push_callframe(fus_runner_t *runner,
     fus_runner_callframe_init(callframe, runner, type, data);
 }
 
+void fus_runner_push_callframe_fun(fus_runner_t *runner,
+    fus_runner_callframe_type_t type, fus_fun_t *f
+){
+    fus_runner_push_callframe(runner, type, &f->data);
+    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    callframe->fun = f;
+    {
+        /* Move values from old stack to new stack */
+        fus_vm_t *vm = runner->vm;
+        fus_runner_callframe_t *old_data_callframe =
+            fus_runner_get_data_callframe(runner, true);
+        fus_arr_t *old_stack = &old_data_callframe->stack;
+        fus_arr_t *new_stack = &callframe->stack;
+        for(int i = 0; i < f->sig_in; i++){
+            fus_value_t value;
+            if(fus_arr_pop(vm, old_stack, &value) < 0)break;
+            fus_arr_lpush(vm, new_stack, value);
+        }
+    }
+}
+
 void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+    if(callframe->fun != NULL){
+        /* Move values from new stack to old stack */
+        fus_fun_t *f = callframe->fun;
+        fus_vm_t *vm = runner->vm;
+        fus_runner_callframe_t *old_data_callframe =
+            fus_runner_get_data_callframe(runner, true);
+        fus_arr_t *old_stack = &old_data_callframe->stack;
+        fus_arr_t *new_stack = &callframe->stack;
+        for(int i = 0; i < f->sig_out; i++){
+            fus_value_t value;
+            if(fus_arr_lpop(vm, new_stack, &value) < 0)break;
+            fus_arr_push(vm, old_stack, value);
+        }
+    }
     fus_runner_callframe_cleanup(callframe);
     fus_array_pop(&runner->callframes);
 }
@@ -947,8 +1010,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_fun_t *f = &value_fun.p->data.f;
 
                 callframe->i = i + 1;
-                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
-                    &f->data);
+                fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
+                    f);
                 goto dont_update_i;
             }else if(!strcmp(token, "call")){
                 FUS_STATE_NEXT_VALUE()
@@ -965,8 +1028,8 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_fun_t *f = &value.p->data.f;
 
                 callframe->i = i + 1;
-                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DEF,
-                    &f->data);
+                fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
+                    f);
 
                 fus_value_detach(vm, value);
                 goto dont_update_i;

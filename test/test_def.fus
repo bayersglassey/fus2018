@@ -1,16 +1,16 @@
 
-def f: 2
+def f of(-> i): 2
 
-def g: @f
+def g of(-> i): @f
 
 def add of(x y -> z): +
 
 @f 2 == assert
 @g 1 @add 3 == assert
 
-fun(10 20 +) ='fun
+fun of(-> i)(10 20 +) ='fun
 
-'fun call(->) 30 == assert
+'fun call(-> i) 30 == assert
 3 4 &add call(x y -> z) 7 == assert
 
 'fun
