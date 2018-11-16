@@ -7,6 +7,13 @@
 #include <string.h>
 #include <limits.h>
 
+#ifndef FUS_USE_SETJMP
+#define FUS_USE_SETJMP 1
+#endif
+#if FUS_USE_SETJMP
+#include <setjmp.h>
+#endif
+
 #include "backtrace.h"
 #include "core.h"
 #include "class.h"
@@ -25,7 +32,6 @@ typedef struct fus_obj fus_obj_t;
 typedef struct fus_str fus_str_t;
 typedef struct fus_fun fus_fun_t;
 typedef struct fus_printer fus_printer_t;
-typedef struct fus_state fus_state_t;
 typedef struct fus_runner fus_runner_t;
 typedef struct fus_runner_callframe fus_runner_callframe_t;
 typedef struct fus fus_t;

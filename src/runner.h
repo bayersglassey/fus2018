@@ -36,6 +36,10 @@ struct fus_runner {
     fus_obj_t defs;
     fus_array_t callframes;
 
+#if FUS_USE_SETJMP
+    jmp_buf error_jmp_buf;
+#endif
+
     fus_class_t class_callframe;
 };
 
@@ -65,6 +69,8 @@ int fus_runner_unload(fus_runner_t *runner);
 void fus_runner_cleanup(fus_runner_t *runner);
 void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
     bool end_at_here);
+
+void fus_vm_error_callback_runner_setjmp(fus_vm_t *vm, fus_err_code_t code);
 
 fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
 fus_arr_t *fus_runner_get_stack(fus_runner_t *runner);

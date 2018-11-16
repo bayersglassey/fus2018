@@ -22,6 +22,11 @@ static void fus_swap_bools(bool *b1, bool *b2){
     *b2 = temp;
 }
 
+static void fus_runner_dump_error(fus_runner_t *runner){
+    fus_runner_dump_callframes(runner, stderr, true);
+    fus_runner_dump_state(runner, stderr, "Vs");
+}
+
 void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt){
     fus_vm_t *vm = runner->vm;
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
@@ -111,9 +116,38 @@ err:
 
 int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     if(fus_runner_load(runner, data) < 0)return -1;
+
+    fus_vm_t *vm = runner->vm;
+
+#if FUS_USE_SETJMP
+    /* Set up setjmp error handler */
+    fus_vm_error_callback_t *old_error_callback = vm->error_callback;
+    void *old_error_callback_data = vm->error_callback_data;
+    vm->error_callback = &fus_vm_error_callback_runner_setjmp;
+    vm->error_callback_data = runner;
+    if(setjmp(runner->error_jmp_buf)){
+        /* We should only arrive here if the error handler called longjmp */
+
+        /* Restore old error callback handler */
+        vm->error_callback = old_error_callback;
+        vm->error_callback_data = old_error_callback_data;
+
+        /* Dump error info and report failure to caller */
+        fus_runner_dump_error(runner);
+        return -1;
+    }
+#endif
+
     while(!fus_runner_is_done(runner)){
         if(fus_runner_step(runner) < 0)return -1;
     }
+
+#if FUS_USE_SETJMP
+    /* Restore old error callback handler */
+    vm->error_callback = old_error_callback;
+    vm->error_callback_data = old_error_callback_data;
+#endif
+
     if(fus_runner_unload(runner) < 0)return -1;
     return 0;
 }
@@ -274,6 +308,21 @@ void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
     fus_printer_write_text(&printer, "\n");
 
     fus_printer_cleanup(&printer);
+}
+
+
+
+void fus_vm_error_callback_runner_setjmp(fus_vm_t *vm, fus_err_code_t code){
+    const char *msg = fus_err_code_msg(code);
+    fus_runner_t *runner = vm->error_callback_data;
+    fprintf(stderr, "%s: Caught error: %s\n", __func__, msg);
+#if FUS_USE_SETJMP
+    longjmp(runner->error_jmp_buf, 1);
+#else
+    fprintf(stderr, "%s: Should never be called if FUS_USE_SETJMP is off!\n",
+        __func__);
+    exit(EXIT_FAILURE);
+#endif
 }
 
 
@@ -1126,8 +1175,7 @@ dont_update_i:
     return 0;
 
 err:
-    fus_runner_dump_callframes(runner, stderr, true);
-    fus_runner_dump_state(runner, stderr, "Vs");
+    fus_runner_dump_error(runner);
     return -1;
 }
 

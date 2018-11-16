@@ -22,13 +22,15 @@
     fus_class_t class_##NAME;
 
 
+typedef void fus_vm_error_callback_t(fus_vm_t *vm, fus_err_code_t code);
+
 
 struct fus_vm {
     fus_core_t *core;
     fus_symtable_t *symtable;
     int n_boxed;
 
-    void (*error_callback)(fus_vm_t *vm, fus_err_code_t code);
+    fus_vm_error_callback_t *error_callback;
     void *error_callback_data;
 
 #ifdef FUS_ENABLE_BOXED_LLIST
