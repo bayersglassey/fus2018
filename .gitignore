@@ -1,6 +1,8 @@
 *.out
 *.so
 /main
+/js/fus.js
+/js/fus.html
 *.gcda
 *.gcno
 *.gcov
