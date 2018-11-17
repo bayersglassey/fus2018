@@ -1,30 +1,39 @@
 
+def PROG1 of(-> data): data:
+    arr "A", "B", "C", ='a
+    'a len int_for: ='i
+        'i int_tostr str_p ":\n" str_p
+        'i int_for: ='j
+            "  " str_p 'j int_tostr str_p ": " str_p
+            'a 'j .$ p
+    "...done!\n" str_p
+
+def PROG2 of(-> data): data:
+
+    def map of(xs f ->xs):
+        ='f ='xs
+        'xs len int_for: ='i
+            ''xs 'i ..$
+                'f call(x -> y)
+            'i =.$ ='xs
+        ''xs
+
+    def fold of(xs x f -> x):
+        ='f ='x ='xs
+        'xs len int_for: ='i
+            ''x ('xs 'i .$) 'f call(x y -> z) ='x
+        ''x
+
+    def sum of(xs -> int):
+        0 fun(+) @fold
+
+    def prod of(xs -> int):
+        1 fun(*) @fold
+
 def test of(->):
-    @mkcompiler data:
-
-        def map of(xs f ->xs):
-            ='f ='xs
-            'xs len int_for: ='i
-                ''xs 'i ..$
-                    'f call(x -> y)
-                'i =.$ ='xs
-            ''xs
-
-        def fold of(xs x f -> x):
-            ='f ='x ='xs
-            'xs len int_for: ='i
-                ''x ('xs 'i .$) 'f call(x y -> z) ='x
-            ''x
-
-        def sum of(xs -> int):
-            0 fun(+) @fold
-
-        def prod of(xs -> int):
-            1 fun(*) @fold
-
-    @compile ='compiled_data ='compiler
-    'compiler p
-    'compiled_data p
+    @mkcompiler @PROG1 @compile ='compiled_data ='compiler
+    "compiler: " str_p 'compiler p
+    "compiled_data: " str_p 'compiled_data p_data
 
 def replace of(data vars -> new_data):
     ='vars ='data
@@ -37,6 +46,9 @@ def replace of(data vars -> new_data):
                 ''i 1 + ='i
                 'data 'i .$ ='var_name
                 'vars 'var_name get join
+                break
+            'word is_arr if:
+                ''word 'vars @replace push
                 break
             'word push
         ''i 1 + ='i loop
@@ -60,12 +72,14 @@ def compile of(compiler data -> compiler compiled_data):
 
             'word is_sym if: 'word `int_for sym_eq if:
 
-                'compiler .n_loops ='loop_i
+                ''compiler ..n_loops dup ='loop_i 1 + =.n_loops ='compiler
                 `__n 'loop_i @sym_join_int ='N
                 `__i 'loop_i @sym_join_int ='I
 
                 ''i 1 + ='i
                 'data 'i .$ ='BODY
+
+                ''compiler ''BODY @compile ='BODY ='compiler
 
                 :
                     data:
@@ -73,22 +87,20 @@ def compile of(compiler data -> compiler compiled_data):
                         0 =' $I
                         do:
                             ' $I ' $N < while
-                            $BODY
+                            ' $I $BODY
                             '' $I 1 + =' $I loop
                     obj
                         arr 'N, =.N
                         arr 'I, =.I
-                        arr 'BODY, =.BODY
+                        'BODY =.BODY
                     @replace
                 ''compiled_data swap join ='compiled_data
-
-                ''compiler ..n_loops 1 + =.n_loops ='compiler
 
                 break
 
             'word is_arr if:
-                'compiler 'word @compile ='compiled_word
-                ''compiled_data ''compiled_word join ='compiled_data
+                ''compiler 'word @compile ='compiled_word ='compiler
+                ''compiled_data ''compiled_word, ='compiled_data
                 break
 
             ''compiled_data 'word, ='compiled_data
