@@ -979,6 +979,9 @@ int fus_runner_step(fus_runner_t *runner){
                     fprintf(stderr, "%s: Failed assertion\n", __func__);
                     goto err;
                 }
+            }else if(!strcmp(token, "stop")){
+                fprintf(stderr, "%s: Stopping\n", __func__);
+                return -1;
             }else if(!strcmp(token, "p") || !strcmp(token, "p_data")
                 || !strcmp(token, "error")
             ){
