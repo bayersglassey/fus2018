@@ -1,0 +1,9 @@
+
+"localhost:6731" @open
+    "x" 3 @set
+    "x" @get "3" str_eq assert
+    "list" "A" @lpush
+    "list" "B" @lpush
+    "list" "C" @lpush
+    "list" @lpop "C" str_eq assert
+@close

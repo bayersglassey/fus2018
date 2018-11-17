@@ -1,0 +1,70 @@
+
+def mkelem of(tag -> elem): obj
+    `html_elem =.TYPE
+    swap =.tag
+    obj =.attrs
+    arr =.children
+
+def e of(tag -> elem): @mkelem # shorthand
+
+def push of(elem child -> elem):
+    ='child
+    ..children ''child, =.children
+
+def join of(elem children -> elem):
+    ='children
+    ..children ''children join =.children
+
+def add of(elem content -> elem):
+    dup is_arr ifelse: @join
+    : @push
+
+def get of(elem attr -> val):
+    ='val
+    .attrs 'val get
+
+def set of(elem attr val -> elem):
+    ='val ='attr
+    ..attrs ''attr ''val set =.attrs
+
+
+"body" @e arr
+    "h1" @e "Test Page" @push,
+    "hr" @e,
+    "p" @e arr
+        "The body of the page goes here.",
+        "Ipsum lorem?",
+        "Ipsum facto?",
+        "a" @e "href" "?as_pdf=true" @set arr
+            "b" @e "Terms" @push,
+            "and",
+            "i" @e "Conditions" @push,
+        @join
+    @join
+@join
+
+
+def mkelem_wraps_content of(content tag -> elem): @mkelem swap @add
+def body of(content -> elem): "body" @mkelem_wraps_content
+def h1 of(content -> elem): "h1" @mkelem_wraps_content
+def hr of(-> elem): "hr" @mkelem
+def p of(content -> elem): "p" @mkelem_wraps_content
+def a of(content href -> elem): ='href "a" @mkelem_wraps_content "href" ''href @set
+def b of(content -> elem): "b" @mkelem_wraps_content
+def i of(content -> elem): "i" @mkelem_wraps_content
+
+arr
+    "Test Page" @h1
+    @hr
+    arr
+        "The body of the page goes here.",
+        "Ipsum lorem?",
+        "Ipsum facto?",
+        arr
+            "Terms" @b,
+            "and",
+            "Conditions" @i,
+        "?as_pdf=true" @a
+    @p
+@body
+
