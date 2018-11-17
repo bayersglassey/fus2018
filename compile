@@ -19,12 +19,33 @@ fi
 MAIN="$1"
 shift
 
+GCC="gcc"
 MAIN_C="src/main/$MAIN.c"
 CFLAGS="-g -std=c99 -Wall -Werror -Wno-unused"
+CFLAGS2="-rdynamic" # for backtrace_symbols
+CDEFS="-DFUS_ENABLE_BACKTRACE -DFUS_ENABLE_BOXED_LLIST"
 CFILES="src/*.c"
 OUTFILE="main"
 
-if [ "$MAIN" = "lib" ]
+if [ "$MAIN" = "js" ]
+then
+    echo "#####################################################"
+    echo "# Compiling fus with Emscripten... See js/README.md #"
+    echo "#####################################################"
+    echo
+
+    if [ "$1" = "test" ]
+    then
+        shift
+        MAIN_C="src/main/test.c"
+    fi
+
+    GCC="emcc"
+    CFLAGS="-s EXTRA_EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+    CFLAGS2=""
+    CDEFS="-DFUS_ENABLE_BOXED_LLIST"
+    OUTFILE="js/fus.html"
+elif [ "$MAIN" = "lib" ]
 then
     CFLAGS+=" -fPIC --shared"
     OUTFILE="libfus.so"
@@ -54,18 +75,16 @@ then
     CFILES=""
 elif [ "$MAIN" = "uwsgi" ]
 then
-    CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
-    OUTFILE="fus_plugin.so"
-elif [ "$MAIN" = "uwsgi_fuslib" ]
-then
+    echo "#########################################################"
+    echo "# Compiling fus plugin for UWSGI... See uwsgi/README.md #"
+    echo "#########################################################"
+    echo
+
     CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
     OUTFILE="fus_plugin.so"
 fi
 
-CFLAGS+=" -rdynamic -DFUS_ENABLE_BACKTRACE" # for backtrace_symbols
-CFLAGS+=" -DFUS_ENABLE_BOXED_LLIST"
-
-gcc $CFLAGS \
+"$GCC" $CFLAGS $CFLAGS2 $CDEFS \
     -o "$OUTFILE" \
     $CFILES \
     "$MAIN_C" \

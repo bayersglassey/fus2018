@@ -19,6 +19,8 @@ TODO: Fight Haskell and win.
 
 * [UWSGI plugin](#uwsgi-plugin)
 
+* [In the browser](#in-the-browser)
+
 
 ## Example
 
@@ -186,3 +188,13 @@ Possible next steps:
 
 * Hook into more UWSGI features, like shared memory, caching, etc
 
+
+
+## In the Browser
+
+Compiling fus with [Emscripten](https://kripken.github.io/emscripten-site/)
+turned out to be easier than I thought.
+
+See the [instructions](/js) for playing with this.
+
+I guess TODO: Write a wrapper JS library (so you can map values between the two languages, etc).
