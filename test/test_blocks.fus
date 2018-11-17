@@ -55,6 +55,14 @@ do:
     ''i 1 + ='i loop
 ''a dup p len 3 == assert
 
+"Nested do blocks...\n" str_p
+
+F ='ok
+do:
+    do: break
+    T ='ok
+'ok assert
+
 "Do Tests OK!\n" str_p
 
 do:
