@@ -38,10 +38,12 @@ void fus_vm_cleanup(fus_vm_t *vm){
         fprintf(stderr, "%s: WARNING: "
             "Cleanup of vm with nonzero n_boxed: %i\n",
             __func__, vm->n_boxed);
+#ifdef FUS_ENABLE_BOXED_LLIST
         for(fus_boxed_t *p = vm->boxed_llist; p != NULL; p = p->next){
             fprintf(stderr, "  %s addr=%p refcount=%i\n",
                 fus_value_type_msg((fus_value_t)p), p, p->refcount);
         }
+#endif
         fflush(stderr);
     }
 
