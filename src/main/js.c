@@ -27,27 +27,10 @@ fus_runner_t *fus_get_runner(fus_t *fus){
 }
 
 EMSCRIPTEN_KEEPALIVE
-int fus_run(fus_t *fus, const char *text){
-
-    fus_lexer_t *lexer = &fus->lexer;
-    fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
-
-    fus_runner_t *runner = &fus->runner;
-    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
-
-    if(!fus_lexer_is_done(lexer)){
-        fus_lexer_perror(lexer, "Lexer finished with status != done");
-        return -1;
-    }
-
-    return 0;
-}
-
-EMSCRIPTEN_KEEPALIVE
 int exec(const char *text){
     fus_t fus;
     fus_init(&fus);
-    int status = fus_run(&fus, text);
+    int status = fus_run_text(&fus, text);
     fus_cleanup(&fus);
     return status;
 }

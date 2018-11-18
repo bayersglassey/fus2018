@@ -18,3 +18,20 @@ void fus_cleanup(fus_t *fus){
     fus_lexer_cleanup(&fus->lexer);
     fus_core_cleanup(&fus->core);
 }
+
+
+int fus_run_text(fus_t *fus, const char *text){
+
+    fus_lexer_t *lexer = &fus->lexer;
+    fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
+
+    fus_runner_t *runner = &fus->runner;
+    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
+
+    if(!fus_lexer_is_done(lexer)){
+        fus_lexer_perror(lexer, "Lexer finished with status != done");
+        return -1;
+    }
+
+    return 0;
+}
