@@ -51,6 +51,13 @@ then
     OUTFILE="libfus.so"
     >&2 echo "Compiling $OUTFILE..."
     >&2 echo "To install, try: sudo ./compile lib_install"
+elif [ "$MAIN" = "py" ]
+then
+    CFLAGS+=" -fPIC --shared $(python3-config --includes)"
+    OUTFILE="py/fus.so"
+    >&2 echo "Compiling $OUTFILE..."
+    >&2 echo "For testing the resulting Python module, consider adding ./py to PYTHONPATH:"
+    >&2 echo "    export PYTHONPATH=$PWD/py:\$PYTHONPATH"
 elif [ "$MAIN" = "lib_install" ]
 then
     OUTFILE="libfus.so"
