@@ -5,7 +5,7 @@
 */
 
 
-#include "../uwsgi/uwsgi.h"
+#include "../uwsgi.h"
 #include "../includes.h"
 
 

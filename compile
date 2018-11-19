@@ -5,7 +5,6 @@ if [ -z "$1" ]
 then
     echo "Usage (pick one):"
     echo "    $(basename "$0") MAIN [GCC_ARGS...]"
-    echo "    $(basename "$0") uwsgi [GCC_ARGS...]"
     echo "Where:"
     echo "    MAIN is one of:"
     for F in src/main/*.c
@@ -86,6 +85,12 @@ then
     echo "# Compiling fus plugin for UWSGI... See uwsgi/README.md #"
     echo "#########################################################"
     echo
+
+    UWSGI_H=src/uwsgi.h
+    echo "Attempting to generate $UWSGI_H..."
+    uwsgi --dot-h >"$UWSGI_H" || \
+        echo "Couldn't generate $UWSGI_H. Maybe uwsgi isn't installed? Anyway, the $UWSGI_H which comes with the repo will be used."
+    echo "Continuing with fus compilation..."
 
     CFLAGS="-fPIC --shared `uwsgi --cflags` -Werror -Wno-unused -Wno-sign-compare -Wno-type-limits"
     OUTFILE="fus_plugin.so"
