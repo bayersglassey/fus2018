@@ -113,6 +113,7 @@ TODO: Fight Haskell and win.
 
         # Run tests when module is loaded:
         @test
+        @test_cache
 
 
 ## Getting Started
@@ -184,7 +185,7 @@ Step 2: [Write a web app](/fus/webapp_simple.fus)
 
 Possible next steps:
 
-* Generate HTML
+* Generate HTML (See [html.fus](/fus/html.fus))
 
 * Write a [Redis](https://redis.io/) client
 

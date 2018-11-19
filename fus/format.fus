@@ -1,39 +1,36 @@
 
-def test of (->):
-    use: simple format
+def test of(->):
     arr "Thing ", 2, ": ", (obj 1 =.x 2 =.y), "!",
-    @format "Thing 2: {x: 1, y: 2}!" str_eq assert
+    @format_simple "Thing 2: {x: 1, y: 2}!" str_eq assert
 
 
 
-module simple:
-    def DEFAULT_OPTS:
-        obj
-            null =.max_obj_entries
-            null =.max_arr_entries
-    def format: @DEFAULT_OPTS @format
-    def tostr: @DEFAULT_OPTS @tostr
+def DEFAULT_OPTS of(-> opts):
+    obj
+        null =.max_obj_entries
+        null =.max_arr_entries
+def format_simple of(a -> s): @DEFAULT_OPTS @format
+def tostr_simple of(x -> s): @DEFAULT_OPTS @tostr
 
 
 def format of(a opts -> s):
     ='opts
-    "" ='s
-    arr_for:
-        'opts @tostr ''s swap str_join ='s
-    ''s
+    "" swap arr_for:
+        'opts @tostr str_join
 
 def tostr of(x opts -> s):
     ='opts
     obj
-        fun(drop drop "null") =.null
-        fun(drop ifelse("T")("F")) =.bool
-        fun(drop int_tostr) =.int
-        fun(drop) =.str
-        fun(drop sym_tostr) =.sym
-        fun(drop drop "<fun>") =.fun
+        fun of(x opts -> s)(drop drop "null") =.null
+        fun of(x opts -> s)(drop ifelse("T")("F")) =.bool
+        fun of(x opts -> s)(drop int_tostr) =.int
+        fun of(x opts -> s)(drop) =.str
+        fun of(x opts -> s)(drop sym_tostr) =.sym
+        fun of(x opts -> s)(drop drop "<fun>") =.fun
         &obj_tostr =.obj
         &arr_tostr =.arr
-    over typeof get ''opts call(x opts -> s)
+    over typeof get ='tostr
+    ''opts ''tostr call(x opts -> s)
 
 def obj_tostr of(x opts -> s):
     ='opts
@@ -77,3 +74,4 @@ def arr_tostr of(x opts -> s):
 
     ''s "]" str_join
 
+@test

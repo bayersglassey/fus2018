@@ -1,9 +1,12 @@
 
-def mkelem of(tag -> elem): obj
-    `html_elem =.TYPE
-    swap =.tag
-    obj =.attrs
-    arr =.children
+def mkelem of(tag -> elem):
+    ='tag
+    obj
+        `html_elem =.TYPE
+        'tag =.tag
+        obj =.attrs
+        arr =.children
+        'tag "hr" str_eq =.self_closing
 
 def e of(tag -> elem): @mkelem # shorthand
 
@@ -20,28 +23,12 @@ def add of(elem content -> elem):
     : @push
 
 def get of(elem attr -> val):
-    ='val
-    .attrs 'val get
+    str_tosym ='attr
+    .attrs 'attr get
 
-def set of(elem attr val -> elem):
-    ='val ='attr
-    ..attrs ''attr ''val set =.attrs
-
-
-"body" @e arr
-    "h1" @e "Test Page" @push,
-    "hr" @e,
-    "p" @e arr
-        "The body of the page goes here.",
-        "Ipsum lorem?",
-        "Ipsum facto?",
-        "a" @e "href" "?as_pdf=true" @set arr
-            "b" @e "Terms" @push,
-            "and",
-            "i" @e "Conditions" @push,
-        @join
-    @join
-@join
+def set of(elem val attr -> elem):
+    str_tosym ='attr ='val
+    ..attrs ''val ''attr set =.attrs
 
 
 def mkelem_wraps_content of(content tag -> elem): @mkelem swap @add
@@ -49,22 +36,189 @@ def body of(content -> elem): "body" @mkelem_wraps_content
 def h1 of(content -> elem): "h1" @mkelem_wraps_content
 def hr of(-> elem): "hr" @mkelem
 def p of(content -> elem): "p" @mkelem_wraps_content
-def a of(content href -> elem): ='href "a" @mkelem_wraps_content "href" ''href @set
+def a of(content href -> elem): ='href "a" @mkelem_wraps_content ''href "href" @set
 def b of(content -> elem): "b" @mkelem_wraps_content
 def i of(content -> elem): "i" @mkelem_wraps_content
 
-arr
-    "Test Page" @h1
-    @hr
-    arr
-        "The body of the page goes here.",
-        "Ipsum lorem?",
-        "Ipsum facto?",
-        arr
-            "Terms" @b,
-            "and",
-            "Conditions" @i,
-        "?as_pdf=true" @a
-    @p
-@body
 
+def format of(arr -> str):
+    # Join an array of strings into a single string
+    ='a 0 ='i
+    "" do:
+        'i 'a len < while
+        'a 'i .$ str_join
+        ''i 1 + ='i loop
+
+def tabs_str of(depth -> str):
+    # Generate a string containing spaces to given depth
+    ='depth 0 ='i
+    "" do:
+        'i 'depth < while
+        "  " str_join
+        ''i 1 + ='i loop
+
+def newline_str of(depth -> str):
+    @tabs_str "\n" swap str_join
+
+def format_attrs of(attrs -> str):
+    ='attrs
+
+    F ='KEYS_IMPLEMENTED
+    'KEYS_IMPLEMENTED not if:
+        # TODO: Implement "keys" builtin
+        "" break
+
+    'attrs keys ='keys
+    0 ='i
+    "" do:
+        'i 'keys len < while
+        'keys 'i .$ ='key
+        'attrs 'key get ='val
+        " " str_join 'key str_join "=\"" str_join 'val str_join "\"" str_join
+        ''i 1 + ='i loop
+
+def prettyprint of(elem ->): @prettystr str_p
+
+def prettystr of(elem -> str): 0 @_prettystr
+
+def _prettystr of(elem depth -> str):
+    ='depth
+    ='e
+
+    'e is_str if:
+        # TODO: Make sure 'e doesn't contain "<" ">" etc
+        ''e
+        break
+
+    'e is_obj not if:
+        obj
+            "Wrong type! Expected str or obj" =.msg
+            'e =.e
+        error
+
+    'e .tag ='tag
+    'e .attrs ='attrs
+    'e .children ='children
+
+    arr ='parts
+        # At the end, we'll join the parts into a single str
+        # and return it.
+
+    'attrs @format_attrs ='attrs_str
+
+    ''parts arr "<", 'tag, 'attrs_str, ">", @format, ='parts
+
+    'e .self_closing not if:
+
+        'children len 0 > if:
+            'depth @newline_str ='newline
+            'depth 1 + @newline_str ='child_newline
+            0 ='i
+            ''parts do:
+                'i 'children len < while
+                'children 'i .$ ='child
+                'child_newline,
+                'child 'depth 1 + @_prettystr,
+                ''i 1 + ='i loop
+            'newline, ='parts
+
+        ''parts arr "</", 'tag, ">", @format, ='parts
+
+    ''parts @format
+
+
+def elems_from_data of(data -> elems):
+    ='data 0 ='i
+    arr do:
+        'i 'data len < while
+        'data 'i .$ ='d
+        do:
+
+            'd is_sym if:
+                'd `hr sym_eq if:
+                    @hr,
+                    break
+                'd sym_tostr @e ='e
+                ''i 1 + ='i
+                'data 'i .$ ='d2
+                do:
+                    # parse attrs
+                    'd2 is_sym while
+                    ''d2 sym_tostr ='key
+                    ''i 1 + ='i
+                    'data 'i .$ (` =) sym_eq assert
+                    ''i 1 + ='i
+                    'data 'i .$ ='val
+                    ''e ''val ''key @set ='e
+                    ''i 1 + ='i
+                    'data 'i .$ ='d2
+                    loop
+                ''d2 @elems_from_data ='elems
+                ''e ''elems @join,
+                break
+
+            'd is_str if:
+                'd,
+                break
+
+            obj
+                "Wrong type! Expected sym or str" =.msg
+                'd =.d
+            error
+
+        ''i 1 + ='i loop
+
+
+def BODY1 of(-> elem):
+    "body" @e arr
+        "h1" @e "Test Page" @push,
+        "hr" @e,
+        "p" @e arr
+            "The body of the page goes here.",
+            "Ipsum lorem?",
+            "Ipso facto?",
+            "a" @e "?as_pdf=true" "href" @set arr
+                "b" @e "Terms" @push,
+                "and",
+                "i" @e "Conditions" @push,
+            @join,
+        @join,
+    @join
+
+def BODY2 of(-> elem):
+    arr
+        "Test Page" @h1,
+        @hr,
+        arr
+            "The body of the page goes here.",
+            "Ipsum lorem?",
+            "Ipso facto?",
+            arr
+                "Terms" @b,
+                "and",
+                "Conditions" @i,
+            "?as_pdf=true" @a,
+        @p,
+    @body
+
+def BODY3 of(-> elem):
+    data: body:
+        h1: "Test Page"
+        hr
+        p:
+            "The body of the page goes here."
+            "Ipsum lorem?"
+            "Ipso facto?"
+            a href="?as_pdf=true":
+                b("Terms") "and" i("Conditions")
+    @elems_from_data 0 .$
+
+def test of(->):
+    @BODY1 @prettystr ='s1
+    @BODY2 @prettystr ='s2
+    @BODY3 @prettystr ='s3
+    's1 's2 str_eq assert
+    's2 's3 str_eq assert
+    's3 str_p
+
+@test
