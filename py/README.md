@@ -8,6 +8,8 @@ Just use the "py" compilation target of compile script:
     # Should generate py/fus.so
     ./compile py
 
+You could also try ``./setup.py install`` from within the repo's [/pypi](/pypi) subdirectory.
+
 
 ## Running
 

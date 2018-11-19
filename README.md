@@ -21,6 +21,8 @@ TODO: Fight Haskell and win.
 
 * [In the browser](#in-the-browser)
 
+* [Embedded in Python](#embedded-in-python)
+
 
 ## Example
 
@@ -198,3 +200,25 @@ turned out to be easier than I thought.
 See the [instructions](/js) for playing with this.
 
 I guess TODO: Write a wrapper JS library (so you can map values between the two languages, etc).
+
+
+## Embedded in Python
+
+Fus is now a [Python C extension](https://docs.python.org/3/extending/building.html).
+Its Python API is pretty <s>lame</s> minimalist:
+
+    from fus import run
+
+    # Example 1:
+    run(r'   "Hello world!\n" str_p   ')
+
+    # Example 2:
+    run("1 2 + p")
+
+See the [instructions](/py) for playing with this.
+
+Also see the [project on PyPi](https://pypi.org/project/Fus/) (and the project's [source](/pypi))!
+So you can actually do ``pip install fus``, which is sure to be useful in your own projects.
+
+TODO: Improve the Python API, e.g. map values between the two languages.
+Maybe something like: ``from fus import Value; v = Value('obj 1 =.x 2 =.y'); assert v.x == 1``
