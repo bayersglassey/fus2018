@@ -1208,14 +1208,20 @@ int fus_runner_step(fus_runner_t *runner){
                     f_boxed);
 
                 goto dont_update_i;
-            }else if(!strcmp(token, "if") || !strcmp(token, "ifelse")){
-                fus_arr_t *branch1 = NULL;
-                fus_arr_t *branch2 = NULL;
+            }else if(!strcmp(token, "if") || !strcmp(token, "ifelse")
+                || !strcmp(token, "and") || !strcmp(token, "or")
+            ){
+                char c =
+                    token[0] == 'a'? 'a'   /* "and" */
+                    : token[0] == 'o'? 'o' /* "or" */
+                    : token[2] == 'e'? 'e' /* "ifelse" */
+                    : 'i';                 /* "if" */
 
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
-                branch1 = &token_value.p->data.a;
-                if(token[2] == 'e'){
+                fus_arr_t *branch1 = &token_value.p->data.a;
+                fus_arr_t *branch2 = NULL;
+                if(c == 'e'){
                     /* "ifelse" */
                     FUS_STATE_NEXT_VALUE()
                     FUS_STATE_EXPECT_T(arr)
@@ -1228,7 +1234,21 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value)
                 bool cond = fus_value_bool_decode(vm, value);
                 fus_value_detach(vm, value);
-                fus_arr_t *branch_taken = cond? branch1: branch2;
+
+                fus_arr_t *branch_taken = NULL;
+                if(c == 'a'){
+                    /* "and" */
+                    if(cond)branch_taken = branch1;
+                    else FUS_STATE_STACK_PUSH(fus_value_bool(vm, cond))
+                }else if(c == 'o'){
+                    /* "or" */
+                    if(!cond)branch_taken = branch1;
+                    else FUS_STATE_STACK_PUSH(fus_value_bool(vm, cond))
+                }else{
+                    /* "if", "ifelse" */
+                    branch_taken = cond? branch1: branch2;
+                }
+
                 if(branch_taken != NULL){
                     callframe->i = i + 1;
                     fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_IF,

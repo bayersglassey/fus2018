@@ -23,6 +23,16 @@ T F bool_eq not assert
 F T bool_eq not assert
 F F bool_eq assert
 
+T and(T) assert
+T and(F) not assert
+F and(T) not assert
+F and(F) not assert
+
+T or(T) assert
+T or(F) assert
+F or(T) assert
+F or(F) not assert
+
 -999 drop
 
 T F
