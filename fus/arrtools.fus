@@ -17,17 +17,14 @@ def range of(x0 x1 add -> xs):
     ''a
 
 
+def min of(x y -> z):
+    ='y ='x
+    'x 'y < ifelse('x)('y)
 def resize of(xs len -> xs):
-
-    def min:
-        ='y ='x
-        'x 'y < ifelse('x)('y)
-
     ='new_len ='xs
     null 'new_len repeat ='new_xs
     'xs len 'new_len @min int_for: ='i
         ''new_xs ('xs 'i .$) 'i =.$ ='new_xs
-
     ''new_xs
 
 

@@ -11,12 +11,7 @@ def or of(bool bool -> bool): if: drop T
 def and of(bool bool -> bool): not if: drop F
 
 def format of(arr -> str):
-    ='a
-    0 ='i
-    "" do:
-        'i 'a len < while
-        'a 'i .$ str_join
-        ''i 1 + ='i loop
+    "" swap arr_for: str_join
 
 def header of(name value -> header):
     ='value ='name
@@ -60,11 +55,8 @@ def serve_wsgi_request of(request -> response):
         'request .path, " at ", 'request .host, "\n",
         "An echo says: ", 'request .body, "\n",
         "Query params:\n",
-        0 ='i do:
-            'i 'qs_parts len < while
-            'qs_parts 'i .$ ='part
+        'qs_parts arr_for: ='part
             "  ", 'part, "\n",
-            ''i 1 + ='i loop
         "Whoo!\n",
     @format ='body
 
@@ -84,13 +76,9 @@ def augment_request of(request -> request):
     @NOT_FOUND =.qs
 
     # Find vars we care about and poke their values onto request
-    dup .wsgi_vars ='vars
-    0 ='i
-    do:
+    dup .wsgi_vars arr_for: ='var
         # NOTE: This loop has the request at top of stack,
         # and modifies it implicitly.
-        'i 'vars len < while
-        'vars 'i .$ ='var
         'var .name ='name
         'var .value ='value
         do:
@@ -100,7 +88,6 @@ def augment_request of(request -> request):
             'name "PATH_INFO"      str_eq if: 'value =.path break
             'name "REQUEST_METHOD" str_eq if: 'value =.method break
             'name "QUERY_STRING"   str_eq if: 'value =.qs break
-        ''i 1 + ='i loop
 
 
 

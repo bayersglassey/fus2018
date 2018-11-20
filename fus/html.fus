@@ -43,39 +43,20 @@ def i of(content -> elem): "i" @mkelem_wraps_content
 
 def format of(arr -> str):
     # Join an array of strings into a single string
-    ='a 0 ='i
-    "" do:
-        'i 'a len < while
-        'a 'i .$ str_join
-        ''i 1 + ='i loop
+    "" swap arr_for: str_join
 
 def tabs_str of(depth -> str):
     # Generate a string containing spaces to given depth
-    ='depth 0 ='i
-    "" do:
-        'i 'depth < while
-        "  " str_join
-        ''i 1 + ='i loop
+    "" swap int_for: drop "  " str_join
 
 def newline_str of(depth -> str):
     @tabs_str "\n" swap str_join
 
 def format_attrs of(attrs -> str):
     ='attrs
-
-    F ='KEYS_IMPLEMENTED
-    'KEYS_IMPLEMENTED not if:
-        # TODO: Implement "keys" builtin
-        "" break
-
-    'attrs keys ='keys
-    0 ='i
-    "" do:
-        'i 'keys len < while
-        'keys 'i .$ ='key
+    "" 'attrs keys arr_for: ='key
         'attrs 'key get ='val
-        " " str_join 'key str_join "=\"" str_join 'val str_join "\"" str_join
-        ''i 1 + ='i loop
+        " " str_join 'key sym_tostr str_join "=\"" str_join 'val str_join "\"" str_join
 
 def prettyprint of(elem ->): @prettystr str_p
 
@@ -114,12 +95,9 @@ def _prettystr of(elem depth -> str):
             'depth @newline_str ='newline
             'depth 1 + @newline_str ='child_newline
             0 ='i
-            ''parts do:
-                'i 'children len < while
-                'children 'i .$ ='child
+            ''parts 'children arr_for: ='child
                 'child_newline,
                 'child 'depth 1 + @_prettystr,
-                ''i 1 + ='i loop
             'newline, ='parts
 
         ''parts arr "</", 'tag, ">", @format, ='parts
