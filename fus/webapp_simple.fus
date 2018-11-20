@@ -1,48 +1,109 @@
 
 # This file is intended to be run by the fus UWSGI plugin,
 # using its simple protocol.
-# In other words, this entire file can be treated like a
-# def of(request -> response).
+# The protocol looks in the file for a def like this:
+#     def serve_wsgi_request of(request -> response): ...
+# ...and calls it on each HTTP request.
 
 
 
+def or of(bool bool -> bool): if: drop T
+def and of(bool bool -> bool): not if: drop F
+
+def format of(arr -> str):
+    ='a
+    0 ='i
+    "" do:
+        'i 'a len < while
+        'a 'i .$ str_join
+        ''i 1 + ='i loop
+
+def header of(name value -> header):
+    ='value ='name
+    obj 'name =.name 'value =.value
+
+def header_eq of(header name value -> bool):
+    @header ='h2 ='h1
+    'h1 .name 'h2 .name str_eq
+    'h1 .value 'h2 .value str_eq
+    @and
+
+def response of(status headers body -> response):
+    ='body ='headers ='status
+    obj
+        ''status =.status
+        ''headers =.headers
+        ''body =.body
 
 
-='request
-"Handling request: " str_p 'request p
+def serve_wsgi_request of(request -> response):
+    ='request
+    "Handling request: " str_p 'request p
+
+    # Parse some specific WSGI vars, poking parsed values back
+    # onto the request
+    ''request @augment_request ='request
+
+    # Parse querystring
+    'request .qs ='qs
+    'qs @parse_querystring ='qs_parts
+
+    # Generate response headers:
+    arr
+        "Server" "fus lol" @header,
+        "Content-Type" "text/plain" @header,
+    ='headers
+
+    # Generate response body:
+    arr
+        "Fus is ", 'request .method, "ing ",
+        'request .path, " at ", 'request .host, "\n",
+        "An echo says: ", 'request .body, "\n",
+        "Query params:\n",
+        0 ='i do:
+            'i 'qs_parts len < while
+            'qs_parts 'i .$ ='part
+            "  ", 'part, "\n",
+            ''i 1 + ='i loop
+        "Whoo!\n",
+    @format ='body
+
+    # Return response object:
+    200 ''headers ''body @response
 
 
 
-# Find vars we care about and poke their values onto request:
-0 ='i
-'request .wsgi_vars ='vars
 def NOT_FOUND of(-> str): "<WSGI VAR NOT FOUND>"
-''request
+def augment_request of(request -> request):
+
+    # Poke some default values onto request in case we don't find
+    # the corrseponding WSGI vars
     @NOT_FOUND =.host
     @NOT_FOUND =.path
     @NOT_FOUND =.method
     @NOT_FOUND =.qs
-do:
-    # NOTE: This loop has the request at top of stack,
-    # and modifies it implicitly.
-    'i 'vars len < while
-    'vars 'i .$ ='var
-    'var .name ='name
-    'var .value ='value
+
+    # Find vars we care about and poke their values onto request
+    dup .wsgi_vars ='vars
+    0 ='i
     do:
-        # If name matches, poke corresponding value onto top of
-        # stack (the request object)
-        'name "HTTP_HOST"      str_eq if: 'value =.host break
-        'name "PATH_INFO"      str_eq if: 'value =.path break
-        'name "REQUEST_METHOD" str_eq if: 'value =.method break
-        'name "QUERY_STRING"   str_eq if: 'value =.qs break
-    ''i 1 + ='i loop
-='request
+        # NOTE: This loop has the request at top of stack,
+        # and modifies it implicitly.
+        'i 'vars len < while
+        'vars 'i .$ ='var
+        'var .name ='name
+        'var .value ='value
+        do:
+            # If name matches, poke corresponding value onto top of
+            # stack (the request object)
+            'name "HTTP_HOST"      str_eq if: 'value =.host break
+            'name "PATH_INFO"      str_eq if: 'value =.path break
+            'name "REQUEST_METHOD" str_eq if: 'value =.method break
+            'name "QUERY_STRING"   str_eq if: 'value =.qs break
+        ''i 1 + ='i loop
 
 
-# Parse querystring:
-'request .qs ='qs
-def or of(bool bool -> bool): if: drop T
+
 def str_split_on_char of(s c -> arr):
     ='find_c ='s
     's str_len ='s_len
@@ -58,45 +119,41 @@ def str_split_on_char of(s c -> arr):
             ''i 1 + ='i
             'i ='i0 loop
         ''i 1 + ='i loop
-'qs "&" @str_split_on_char ='qs_parts
-# ...ok, I'm exhausted.
-# TODO: split each part into variable name and value
+def parse_querystring of(qs -> qs_parts):
+    "&" @str_split_on_char
+    # ...ok, I'm exhausted.
+    # TODO: split each part into variable name and value
 
 
-# Generate response headers:
-def header of(name value -> header):
-    ='value ='name
-    obj 'name =.name 'value =.value
-arr
-    "Server" "fus lol" @header,
-    "Content-Type" "text/plain" @header,
-='headers
+def TEST_REQUEST of(-> request):
+    obj
+        "BIG OLD TEST BODY" =.body
+        arr
+                "HTTP_HOST"
+                "localhost:9090"
+            @header,
+                "PATH_INFO"
+                "/"
+            @header,
+                "REQUEST_METHOD"
+                "POST"
+            @header,
+                "QUERY_STRING"
+                ""
+            @header,
+              "CONTENT_TYPE"
+              "application/x-www-form-urlencoded"
+            @header,
+        =.wsgi_vars
 
+def test of(->):
+    @TEST_REQUEST @serve_wsgi_request
+    dup .status 200 == assert
+    dup .headers
+        lpop "Server" "fus lol" @header_eq assert
+        lpop "Content-Type" "text/plain" @header_eq assert
+        len 0 == assert
+    dup .body is_str assert # *shrug*
+    drop
 
-# Generate response body:
-def format of(arr -> str):
-    ='a
-    0 ='i
-    "" do:
-        'i 'a len < while
-        'a 'i .$ str_join
-        ''i 1 + ='i loop
-arr
-    "Fus is ", 'request .method, "ing ",
-    'request .path, " at ", 'request .host, "\n",
-    "An echo says: ", 'request .body, "\n",
-    "Query params:\n",
-    0 ='i do:
-        'i 'qs_parts len < while
-        'qs_parts 'i .$ ='part
-        "  ", 'part, "\n",
-        ''i 1 + ='i loop
-    "Whoo!\n",
-@format ='body
-
-
-# Return response object:
-obj
-    200 =.status
-    ''headers =.headers
-    ''body =.body
+@serve_wsgi_request
