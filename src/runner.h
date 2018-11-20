@@ -13,6 +13,8 @@ typedef enum fus_runner_callframe_type {
     FUS_CALLFRAME_TYPE_PAREN,
     FUS_CALLFRAME_TYPE_IF,
     FUS_CALLFRAME_TYPE_DO,
+    FUS_CALLFRAME_TYPE_INT_FOR,
+    FUS_CALLFRAME_TYPE_ARR_FOR,
     FUS_CALLFRAME_TYPES
 } fus_runner_callframe_type_t;
 
@@ -22,9 +24,20 @@ struct fus_runner_callframe {
 
     fus_runner_callframe_type_t type;
     bool inherits;
-    fus_fun_t *fun;
+    fus_boxed_t *fun_boxed;
     fus_arr_t *data;
     int i;
+
+    union {
+        struct {
+            int i;
+            int n;
+        } int_for;
+        struct {
+            int i;
+            fus_boxed_t *boxed;
+        } arr_for;
+    } loop_data;
 
     fus_arr_t stack;
     fus_obj_t vars;
@@ -76,12 +89,11 @@ fus_runner_callframe_t *fus_runner_get_callframe(fus_runner_t *runner);
 fus_arr_t *fus_runner_get_stack(fus_runner_t *runner);
 fus_obj_t *fus_runner_get_vars(fus_runner_t *runner);
 bool fus_runner_is_done(fus_runner_t *runner);
-void fus_runner_push_callframe(fus_runner_t *runner,
+fus_runner_callframe_t *fus_runner_push_callframe(fus_runner_t *runner,
     fus_runner_callframe_type_t type, fus_arr_t *data);
-void fus_runner_push_callframe_fun(fus_runner_t *runner,
-    fus_runner_callframe_type_t type, fus_fun_t *f);
+fus_runner_callframe_t *fus_runner_push_callframe_fun(fus_runner_t *runner,
+    fus_runner_callframe_type_t type, fus_boxed_t *f_boxed);
 void fus_runner_pop_callframe(fus_runner_t *runner);
-void fus_runner_end_callframe(fus_runner_t *runner);
 int fus_runner_step(fus_runner_t *runner);
 
 

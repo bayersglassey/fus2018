@@ -168,7 +168,9 @@ static bool fus_runner_callframe_type_inherits(
         false, /* DEF */
         true,  /* PAREN */
         true,  /* IF */
-        true   /* DO */
+        true,  /* DO */
+        true,  /* INT_FOR */
+        true   /* ARR_FOR */
     };
     return inherits_by_type[type];
 }
@@ -180,7 +182,7 @@ void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
     callframe->runner = runner;
     callframe->type = type;
     callframe->inherits = fus_runner_callframe_type_inherits(type);
-    callframe->fun = NULL;
+    callframe->fun_boxed = NULL;
     callframe->data = data;
     callframe->i = 0;
 
@@ -189,8 +191,14 @@ void fus_runner_callframe_init(fus_runner_callframe_t *callframe,
 }
 
 void fus_runner_callframe_cleanup(fus_runner_callframe_t *callframe){
-    fus_arr_cleanup(callframe->runner->vm, &callframe->stack);
-    fus_obj_cleanup(callframe->runner->vm, &callframe->vars);
+    fus_vm_t *vm = callframe->runner->vm;
+    if(callframe->fun_boxed != NULL)fus_boxed_detach(callframe->fun_boxed);
+    fus_runner_callframe_type_t type = callframe->type;
+    if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
+        fus_boxed_detach(callframe->loop_data.arr_for.boxed);
+    }
+    fus_arr_cleanup(vm, &callframe->stack);
+    fus_obj_cleanup(vm, &callframe->vars);
 }
 
 void fus_runner_init(fus_runner_t *runner, fus_vm_t *vm){
@@ -383,20 +391,24 @@ bool fus_runner_is_done(fus_runner_t *runner){
     return false;
 }
 
-void fus_runner_push_callframe(fus_runner_t *runner,
+fus_runner_callframe_t *fus_runner_push_callframe(fus_runner_t *runner,
     fus_runner_callframe_type_t type, fus_arr_t *data
 ){
     fus_array_push(&runner->callframes);
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
     fus_runner_callframe_init(callframe, runner, type, data);
+    return callframe;
 }
 
-void fus_runner_push_callframe_fun(fus_runner_t *runner,
-    fus_runner_callframe_type_t type, fus_fun_t *f
+fus_runner_callframe_t *fus_runner_push_callframe_fun(fus_runner_t *runner,
+    fus_runner_callframe_type_t type, fus_boxed_t *f_boxed
 ){
-    fus_runner_push_callframe(runner, type, &f->data);
-    fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    callframe->fun = f;
+    /* Passes ownership of f_boxed to new callframe */
+
+    fus_fun_t *f = &f_boxed->data.f;
+    fus_runner_callframe_t *callframe =
+        fus_runner_push_callframe(runner, type, &f->data);
+    callframe->fun_boxed = f_boxed;
     {
         /* Move values from old stack to new stack */
         fus_vm_t *vm = runner->vm;
@@ -410,13 +422,14 @@ void fus_runner_push_callframe_fun(fus_runner_t *runner,
             fus_arr_lpush(vm, new_stack, value);
         }
     }
+    return callframe;
 }
 
 void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    if(callframe->fun != NULL){
+    if(callframe->fun_boxed != NULL){
         /* Move values from new stack to old stack */
-        fus_fun_t *f = callframe->fun;
+        fus_fun_t *f = &callframe->fun_boxed->data.f;
         fus_vm_t *vm = runner->vm;
         fus_runner_callframe_t *old_data_callframe =
             fus_runner_get_data_callframe(runner, true);
@@ -432,23 +445,79 @@ void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_array_pop(&runner->callframes);
 }
 
-void fus_runner_end_callframe(fus_runner_t *runner){
+static void fus_runner_start_callframe(fus_runner_t *runner,
+    fus_runner_callframe_t *callframe
+){
+    fus_vm_t *vm = runner->vm;
+    fus_runner_callframe_type_t type = callframe->type;
+    if(type == FUS_CALLFRAME_TYPE_INT_FOR){
+        int i = callframe->loop_data.int_for.i;
+        int n = callframe->loop_data.int_for.n;
+
+        fus_value_t value = fus_value_int(vm, i);
+        fus_arr_t *stack = fus_runner_get_stack(runner);
+        fus_arr_push(vm, stack, value);
+    }else if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
+        int i = callframe->loop_data.arr_for.i;
+        fus_arr_t *a = &callframe->loop_data.arr_for.boxed->data.a;
+
+        fus_value_t value = fus_arr_get(vm, a, i);
+        fus_arr_t *stack = fus_runner_get_stack(runner);
+        fus_arr_push(vm, stack, value);
+        fus_value_attach(vm, value);
+    }
+}
+
+static void fus_runner_end_callframe(fus_runner_t *runner){
     if(runner->callframes.len > 1){
+        fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
+        fus_runner_callframe_type_t type = callframe->type;
+        if(type == FUS_CALLFRAME_TYPE_INT_FOR){
+            int i = ++callframe->loop_data.int_for.i;
+            int n = callframe->loop_data.int_for.n;
+            if(i < n){
+                callframe-> i = 0; /* Callframe loops */
+                fus_runner_start_callframe(runner, callframe);
+                return; /* Don't pop the callframe, it's looping! */
+            }
+        }else if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
+            int i = ++callframe->loop_data.arr_for.i;
+            fus_arr_t *a = &callframe->loop_data.arr_for.boxed->data.a;
+            fus_array_len_t len = a->values.len;
+            if(i < len){
+                callframe-> i = 0; /* Callframe loops */
+                fus_runner_start_callframe(runner, callframe);
+                return; /* Don't pop the callframe, it's looping! */
+            }
+        }
+        fus_runner_pop_callframe(runner);
+    }else{
         /* Don't pop the root callframe!
         That's how caller can inspect stack/vars/etc. */
-        fus_runner_pop_callframe(runner);
     }
+}
+
+static bool fus_runner_callframe_type_is_do_like(
+    fus_runner_callframe_type_t type
+){
+    /* Which types of callframe you can break out of and/or loop */
+    return
+        type == FUS_CALLFRAME_TYPE_MODULE ||
+        type == FUS_CALLFRAME_TYPE_DEF ||
+        type == FUS_CALLFRAME_TYPE_DO ||
+        type == FUS_CALLFRAME_TYPE_INT_FOR ||
+        type == FUS_CALLFRAME_TYPE_ARR_FOR;
 }
 
 static int fus_runner_break_or_loop(fus_runner_t *runner, const char *token,
     char c
 ){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-    while(callframe->type != FUS_CALLFRAME_TYPE_DO){
+    while(!fus_runner_callframe_type_is_do_like(callframe->type)){
         fus_runner_pop_callframe(runner);
         callframe = fus_runner_get_callframe(runner);
         if(callframe == NULL){
-            fprintf(stderr, "%s: %s not in do(...)\n",
+            fprintf(stderr, "%s: \"%s\" at toplevel\n",
                 token, __func__);
             return -1;
         }
@@ -1118,11 +1187,11 @@ int fus_runner_step(fus_runner_t *runner){
                 #endif
 
                 fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
-                fus_fun_t *f = &value_fun.p->data.f;
 
                 callframe->i = i + 1;
                 fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
-                    f);
+                    value_fun.p);
+                fus_value_attach(vm, value_fun);
                 goto dont_update_i;
             }else if(!strcmp(token, "call")){
                 FUS_STATE_NEXT_VALUE()
@@ -1132,13 +1201,12 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_ASSERT_T(value, fun)
-                fus_fun_t *f = &value.p->data.f;
+                fus_boxed_t *f_boxed = value.p;
 
                 callframe->i = i + 1;
                 fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
-                    f);
+                    f_boxed);
 
-                fus_value_detach(vm, value);
                 goto dont_update_i;
             }else if(!strcmp(token, "if") || !strcmp(token, "ifelse")){
                 fus_arr_t *branch1 = NULL;
@@ -1167,15 +1235,57 @@ int fus_runner_step(fus_runner_t *runner){
                         branch_taken);
                     goto dont_update_i;
                 }
-            }else if(!strcmp(token, "do")){
+            }else if(!strcmp(token, "do") || !strcmp(token, "int_for")
+                || !strcmp(token, "arr_for")
+            ){
+                char c = token[0]; /* 'd' or 'i' or 'a' */
+                fus_runner_callframe_type_t type =
+                    c == 'd'? FUS_CALLFRAME_TYPE_DO
+                    : c == 'i'? FUS_CALLFRAME_TYPE_INT_FOR
+                    : FUS_CALLFRAME_TYPE_ARR_FOR;
+
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 fus_arr_t *data = &token_value.p->data.a;
 
-                callframe->i = i + 1;
-                fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_DO,
-                    data);
-                goto dont_update_i;
+                #define FUS_STATE_PUSH_CALLFRAME(DATA) \
+                    callframe->i = i + 1; \
+                    fus_runner_callframe_t *callframe = \
+                        fus_runner_push_callframe(runner, type, (DATA));
+
+                if(type == FUS_CALLFRAME_TYPE_INT_FOR){
+                    /* int_for */
+                    fus_value_t value;
+                    FUS_STATE_STACK_POP(&value)
+                    int n = fus_value_int_decode(vm, value);
+                    fus_value_detach(vm, value);
+                    if(n > 0){
+                        FUS_STATE_PUSH_CALLFRAME(data)
+                        callframe->loop_data.int_for.i = 0;
+                        callframe->loop_data.int_for.n = n;
+                        fus_runner_start_callframe(runner, callframe);
+                        goto dont_update_i;
+                    }
+                    fus_value_detach(vm, value);
+                }else if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
+                    /* arr_for */
+                    fus_value_t value;
+                    FUS_STATE_STACK_POP(&value)
+                    FUS_STATE_ASSERT_T(value, arr)
+                    fus_arr_t *a = &value.p->data.a;
+                    if(fus_arr_len(vm, a) > 0){
+                        FUS_STATE_PUSH_CALLFRAME(data)
+                        callframe->loop_data.arr_for.i = 0;
+                        callframe->loop_data.arr_for.boxed = value.p;
+                        fus_runner_start_callframe(runner, callframe);
+                        goto dont_update_i;
+                    }
+                    fus_value_detach(vm, value);
+                }else{
+                    /* do */
+                    FUS_STATE_PUSH_CALLFRAME(data)
+                    goto dont_update_i;
+                }
             }else if(!strcmp(token, "break") || !strcmp(token, "loop")){
                 char c = token[0] == 'b'? 'b': 'l';
                     /* 'b' for break or 'l' for loop */
