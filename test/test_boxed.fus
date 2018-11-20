@@ -18,6 +18,11 @@ obj 10 =.x
 drop
 
 obj 10 =.x 20 =.y 30 =.x obj =.nested
+dup keys
+    lpop `x sym_eq assert
+    lpop `y sym_eq assert
+    lpop `nested sym_eq assert
+    len 0 == assert
 dup .nested
     "I was .nested" =.msg
     dup .msg "I was .nested" str_eq assert

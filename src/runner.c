@@ -855,6 +855,24 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_has = fus_value_obj_has(vm, value_o, sym_i);
                 FUS_STATE_STACK_PUSH(value_has)
                 fus_value_detach(vm, value_o);
+            }else if(!strcmp(token, "keys")){
+                fus_value_t value;
+                FUS_STATE_STACK_POP(&value)
+                FUS_STATE_ASSERT_T(value, obj)
+                fus_obj_t *o = &value.p->data.o;
+                int keys_len = o->keys.len;
+                int *keys = FUS_ARRAY_GET_REF(o->keys, 0);
+
+                fus_value_t value_keys = fus_value_arr(vm);
+                fus_arr_t *a_keys = &value_keys.p->data.a;
+                for(int i = 0; i < keys_len; i++){
+                    int key = keys[i];
+                    fus_value_t value_key = fus_value_sym(vm, key);
+                    fus_arr_push(vm, a_keys, value_key);
+                }
+
+                FUS_STATE_STACK_PUSH(value_keys)
+                fus_value_detach(vm, value);
             }else if(!strcmp(token, "len")){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
