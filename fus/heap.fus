@@ -39,14 +39,10 @@ def add of(heap value -> heap key):
 def find of(heap key -> index):
     ='key ='heap
     'heap .entries ='entries
-    null ='i
-    0 'entries len do:
-        over over >= if: null ='i break
-        swap dup ='i 1 + swap
-        'entries 'i .$ .key 'key == if: break
-        loop
-    drop drop
-    'i
+    null ='index
+    'entries len int_for: ='i
+        'entries 'i .$ .key 'key == if: 'i ='index break
+    ''index
 
 def has of(heap key -> bool):
     @find is_null not

@@ -1,15 +1,21 @@
 
 def eq of(x y -> bool):
     ='y ='x
-    'x typeof 'y typeof sym_eq not if: F return
+    'x typeof 'y typeof sym_eq not if: F break
 
     obj
-        fun(drop drop T) =.null
-        fun(bool_eq) =.bool
-        fun(==) =.int
-        fun(str_eq) =.str
-        fun(sym_eq) =.sym
-        fun("Can't compare functions!" error) =.fun
+        fun of(x y -> bool)(drop drop T) =.null
+        fun of(x y -> bool)(bool_eq) =.bool
+        fun of(x y -> bool)(==) =.int
+        fun of(x y -> bool)(str_eq) =.str
+        fun of(x y -> bool)(sym_eq) =.sym
+        fun of(x y -> bool):
+            obj
+                "Can't compare functions!" =.msg
+                'x =.x
+                'y =.y
+            error
+        =.fun
         &obj_eq =.obj
         &arr_eq =.arr
     'x typeof get ='f
@@ -19,7 +25,7 @@ def eq of(x y -> bool):
 
 def obj_eq of(x y -> bool):
     ='y ='x
-    ('x keys) ('y keys) @arr_eq not if: F return
+    ('x keys) ('y keys) @arr_eq not if: F break
 
     T ='result
     'x keys arr_for: ='key
@@ -30,7 +36,7 @@ def obj_eq of(x y -> bool):
 
 def arr_eq of(x y -> bool):
     ='ys ='xs
-    ('xs len) ('ys len) != if: F return
+    ('xs len) ('ys len) != if: F break
 
     T ='result
     'xs len int_for: ='i

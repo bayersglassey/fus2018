@@ -13,27 +13,33 @@ def fold of(xs x f -> x):
         ''x ('xs 'i .$) 'f call(x y -> z) ='x
     ''x
 
+def and of(b b -> b): not if: drop F
+def or of(b b -> b): if: drop T
+
 def all of(xs -> bool):
-    T fun(and) @fold
+    T &and @fold
 
 def any of(xs -> bool):
-    F fun(or) @fold
+    F &or @fold
 
 def sum of(xs -> int):
-    0 fun(+) @fold
+    0 fun of(x y -> z)(+) @fold
 
 def prod of(xs -> int):
-    1 fun(*) @fold
+    1 fun of(x y -> z)(*) @fold
 
 
 
 def test of(->):
 
-    (arr 1, 2, 3,) fun(10 *) @map
+    (arr 1, 2, 3,) fun of(x -> y)(10 *) @map
         lpop 10 == assert
         lpop 20 == assert
         lpop 30 == assert
     len 0 == assert
+
+    arr @all assert
+    arr @any not assert
 
     (arr T, T, T,) @all assert
     (arr T, F, T,) @all not assert

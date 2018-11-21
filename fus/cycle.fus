@@ -2,15 +2,15 @@
 def unbox of(boxed -> unboxed): call(-> x)
 
 
-def A:
+def A of(-> boxed):
     obj
         100 =.label
         &B =.link
-def B:
+def B of(-> boxed):
     obj
         200 =.label
         &C =.link
-def C:
+def C of(-> boxed):
     obj
         300 =.label
         &A =.link

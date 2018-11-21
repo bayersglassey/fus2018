@@ -1,49 +1,34 @@
 
+def tochar of(s -> c): 0 str_getcode
+def a of(-> i): "a" @tochar
+def z of(-> i): "z" @tochar
+def A of(-> i): "A" @tochar
+def Z of(-> i): "Z" @tochar
+def TO_UPPER of(-> i): @A @a -
 
-def a: "a" 0 str_getcode
-def z: "z" 0 str_getcode
-def A: "A" 0 str_getcode
-def Z: "Z" 0 str_getcode
-def TO_UPPER: @A @a -
-
-def and: not if: drop F
-def or: if: drop T
-def isalpha_oldschool:
-    # old school ("inefficient")
-    ='c
-        'c @a >= 'c @z <= @or
-        'c @A >= 'c @Z <= @or
-    @or
-def isalpha_oldschool_alt:
-    # old school (alternate - what Chuck Moore would write)
-    F swap @a >= if: swap @z <= if: not
-    dup not if:
-        swap @A >= if: swap @Z <= if: not
-def isalpha_newschool:
-    # new school sexiness
-    ((@a >=) and(@z <=)) or((@A >=) and(@Z <=))
-def is_alpha: @is_alpha_oldschool
-
-def isupper: ='c
-    'c @isalpha and('c @A >=)
-def islower: ='c
-    'c @isalpha and('c @z <=)
+def isupper of(c -> b): ='c
+    'c @A >= and: 'c @Z <=
+def islower of(c -> b): ='c
+    'c @a >= and: 'c @z <=
+def isalpha of(c -> b): ='c
+    'c @isupper or: 'c @islower
 def upper of(s -> s):
-    dup len int_for: ='i
+    dup str_len int_for: ='i
         dup 'i str_getcode dup @islower if(@TO_UPPER +) 'i str_setcode
 def lower of(s -> s):
-    dup len int_for: ='i
+    dup str_len int_for: ='i
         dup 'i str_getcode dup @isupper if(@TO_UPPER -) 'i str_setcode
 
 
-def join: "" swap arr_for: str_join
+def join of(arr -> str): "" swap arr_for: str_join
 
-def say_hello of(name ->): ='name (arr "Hello, ", 'name, "!",) @join
+def get_hello_msg of(name -> str): ='name (arr "Hello, ", 'name, "!",) @join
+def say_hello of(name ->): @get_hello_msg str_p "\n" str_p
 
 def test of(->):
-    # TODO: Test the other stuff...
+    "Joe Q" @lower "joe q" str_eq assert
+    "Joe Q" @upper "JOE Q" str_eq assert
+    "Joe Q" @get_hello_msg "Hello, Joe Q!" str_eq assert
     "Joe Q" @say_hello
 
 @test
-
-
