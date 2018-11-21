@@ -1,6 +1,8 @@
 
 #include "includes.h"
 
+#define FUS_VM_DUMP_NONZERO_N_BOXED 0
+
 
 
 #define FUS_VM_SIMPLE_CLASS_INIT(NAME, T) \
@@ -42,6 +44,15 @@ void fus_vm_cleanup(fus_vm_t *vm){
         for(fus_boxed_t *p = vm->boxed_llist; p != NULL; p = p->next){
             fprintf(stderr, "  %s addr=%p refcount=%i\n",
                 fus_value_type_msg((fus_value_t)p), p, p->refcount);
+#if FUS_VM_DUMP_NONZERO_N_BOXED
+            fus_printer_t printer;
+            fus_printer_init(&printer);
+            fus_printer_set_file(&printer, stderr);
+            fprintf(stderr, "BOXED: ");
+            fus_printer_write_boxed(&printer, p);
+            fprintf(stderr, "\n");
+            fus_printer_cleanup(&printer);
+#endif
         }
 #endif
         fflush(stderr);

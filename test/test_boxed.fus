@@ -44,6 +44,10 @@ obj arr 10, =.x arr 20, =.y
         len 0 == assert
     drop
 
+obj arr 10, =.x
+    dup ..x drop drop
+drop
+
 arr "A", "B", "C",
 dup 1 .$ "B" str_eq assert
 1 ..$
