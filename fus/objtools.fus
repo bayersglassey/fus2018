@@ -29,52 +29,56 @@ def dget of (obj key default -> value):
         'obj 'key has ifelse: 'obj 'key get
         : 'default
 
+
+
 def rip of(obj key -> obj value): null @drip
 
 def drip of(obj key default -> obj value):
     over is_arr ifelse:
         # key is an arr of syms
-        @drip_keys
-
-        def drip_keys of(obj keys default -> obj value):
-            ='default ='keys ='obj
-            'keys len 0 > ifelse:
-                ''keys lpop ='key ='keys
-                'obj 'key has not ifelse: ''obj 'default
-                :
-                    ''obj 'key rip
-                        'keys 'default @drip_keys ='value
-                    'key set
-                    ''value
-            :
-                # This is kind of weird, but makes the recursion work out.
-                # Does it make any sense, conceptually?
-                # "Ripping with an empty array of keys rips the object
-                # out of null" ...or something
-                null 'obj
+        @_drip_keys
     :
         # key is a sym
         ='default ='key ='obj
         ''obj dup 'key has ifelse: 'key rip
         : 'default
 
+def _drip_keys of(obj keys default -> obj value):
+    ='default ='keys ='obj
+    'keys len 0 > ifelse:
+        ''keys lpop ='key ='keys
+        'obj 'key has not ifelse: ''obj 'default
+        :
+            ''obj 'key rip
+                'keys 'default @_drip_keys ='value
+            'key set
+            ''value
+    :
+        # This is kind of weird, but makes the recursion work out.
+        # Does it make any sense, conceptually?
+        # "Ripping with an empty array of keys rips the object
+        # out of null" ...or something
+        null 'obj
+
+
+
 def set of(obj value key -> obj):
     dup is_arr ifelse:
         # key is an arr of syms
-        @set_keys
-
-        def set_keys of(obj value keys -> obj):
-            ='keys ='value ='obj
-            'keys len 0 > ifelse:
-                ''keys lpop ='key ='keys
-                ''obj 'key rip
-                    ''value ''keys @set_keys
-                'key set
-            :
-                ''value
+        @_set_keys
     :
         # key is a sym
         set
+
+def _set_keys of(obj value keys -> obj):
+    ='keys ='value ='obj
+    'keys len 0 > ifelse:
+        ''keys lpop ='key ='keys
+        ''obj 'key rip
+            ''value ''keys @_set_keys
+        'key set
+    :
+        ''value
 
 
 
