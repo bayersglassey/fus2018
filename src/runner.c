@@ -10,6 +10,8 @@
     for(int i = 0; i < callframes_len; i++)printf("  "); \
 }
 
+#define FUS_STATE_COMPILE_DEFS 0
+
 
 
 /*********
@@ -116,14 +118,61 @@ err:
 
 int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     if(fus_runner_load(runner, data) < 0)return -1;
+#if FUS_STATE_COMPILE_DEFS
     if(fus_runner_exec_defs(runner) < 0)return -1;
+#endif
     if(fus_runner_exec(runner) < 0)return -1;
     if(fus_runner_unload(runner) < 0)return -1;
     return 0;
 }
 
+static fus_runner_callframe_t *fus_runner_get_root_callframe(
+    fus_runner_t *runner);
+
 int fus_runner_exec_defs(fus_runner_t *runner){
-    /* TODO: Scan runner's code and run all def, module, use, etc ops */
+    fus_runner_callframe_t *callframe =
+        fus_runner_get_root_callframe(runner);
+    if(callframe == NULL)return -1;
+    fus_arr_t *data = callframe->data;
+    return _fus_runner_exec_defs(runner, data);
+}
+
+int _fus_runner_exec_defs(fus_runner_t *runner, fus_arr_t *data){
+
+    /*************************
+     * U N F I N I S H E D ! *
+     *************************/
+
+    fprintf(stderr, "%s: TODO: FINISH IMPLEMENTING THIS!\n", __func__);
+
+    fus_vm_t *vm = runner->vm;
+    fus_array_len_t len = data->values.len;
+    fus_value_t *values = FUS_ARR_VALUES(*data);
+    int sym_i_def = fus_symtable_get_or_add_from_string(vm->symtable, "def");
+    for(int i = 0; i < len; i++){
+        fus_value_t value = values[i];
+        if(fus_value_is_arr(value)){
+            /* TODO: This is not correct! E.g. we will look for defs inside
+            ignore(...) blocks.
+            So I think it's time to add a table of keywords and their
+            properties to fus. */
+            if(_fus_runner_exec_defs(runner, &value.p->data.a) < 0)return -1;
+        }else if(fus_value_is_sym(value)){
+            int sym_i = fus_value_sym_decode(vm, value);
+            if(sym_i == sym_i_def){
+                i++;
+                if(i >= len){
+                    fprintf(stderr, "%s: Missing token after \"def\"\n",
+                        __func__);
+                    return -1;
+                }
+                value = values[++i];
+                int sym_i = fus_value_sym_decode(vm, value);
+                /* TODO: Finish this... see implementation of "def" in
+                fus_runner_step */
+            }
+        }
+    }
     return 0;
 }
 
@@ -579,7 +628,7 @@ int fus_runner_step(fus_runner_t *runner){
         #define FUS_STATE_NEXT_VALUE() \
             i++; \
             if(i >= token_values_len){ \
-                fprintf(stderr, "%s: Missing arg after %s\n", \
+                fprintf(stderr, "%s: Missing token after %s\n", \
                     __func__, token); \
                 goto err; \
             } \
@@ -1119,6 +1168,13 @@ int fus_runner_step(fus_runner_t *runner){
             }else if(!strcmp(token, "def") || !strcmp(token, "fun")){
                 bool got_def = token[0] == 'd';
 
+#if FUS_STATE_COMPILE_DEFS
+                /* Defs are now handled at "compile"-time.
+                See: fus_runner_exec_defs
+                So "def" is now a no-op. */
+                if(got_def)goto ok;
+#endif
+
                 int def_sym_i = -1;
                 if(got_def){
                     FUS_STATE_NEXT_VALUE()
@@ -1365,6 +1421,7 @@ int fus_runner_step(fus_runner_t *runner){
         }
     }
 
+ok:
     callframe->i = i + 1;
 
 dont_update_i:
