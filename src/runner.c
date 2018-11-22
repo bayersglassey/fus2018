@@ -116,7 +116,18 @@ err:
 
 int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     if(fus_runner_load(runner, data) < 0)return -1;
+    if(fus_runner_exec_defs(runner) < 0)return -1;
+    if(fus_runner_exec(runner) < 0)return -1;
+    if(fus_runner_unload(runner) < 0)return -1;
+    return 0;
+}
 
+int fus_runner_exec_defs(fus_runner_t *runner){
+    /* TODO: Scan runner's code and run all def, module, use, etc ops */
+    return 0;
+}
+
+int fus_runner_exec(fus_runner_t *runner){
     fus_vm_t *vm = runner->vm;
 
 #if FUS_USE_SETJMP
@@ -148,7 +159,6 @@ int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     vm->error_callback_data = old_error_callback_data;
 #endif
 
-    if(fus_runner_unload(runner) < 0)return -1;
     return 0;
 }
 

@@ -66,6 +66,8 @@ void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt);
 int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
     bool dump_parser);
 int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data);
+int fus_runner_exec_defs(fus_runner_t *runner);
+int fus_runner_exec(fus_runner_t *runner);
 
 
 /**********
