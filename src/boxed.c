@@ -90,11 +90,12 @@ void fus_boxed_detach(fus_boxed_t *p){
     p->refcount--;
     if(p->refcount <= 0){
         if(p->refcount < 0){
-            fprintf(stderr, "%s: WARNING: "
+            fprintf(stderr, "%s: ERROR: "
                 "Boxed value's refcount has gone negative: ",
                 __func__);
             fus_boxed_dump(p, stderr);
             fflush(stderr);
+            fus_vm_error(p->vm, FUS_ERR_IDUNNO);
         }
         fus_boxed_cleanup(p);
     }
