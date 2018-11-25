@@ -54,9 +54,10 @@ def newline_str of(depth -> str):
 
 def format_attrs of(attrs -> str):
     ='attrs
-    "" 'attrs keys arr_for: ='key
+    arr 'attrs keys arr_for: ='key
         'attrs 'key get ='val
-        " " str_join 'key sym_tostr str_join "=\"" str_join 'val str_join "\"" str_join
+        " ", 'key sym_tostr, "=\"", 'val, "\"",
+    @format
 
 def prettyprint of(elem ->): @prettystr str_p
 
@@ -82,29 +83,39 @@ def _prettystr of(elem depth -> str):
     'e .children ='children
 
     arr ='parts
+        # arr of str.
         # At the end, we'll join the parts into a single str
         # and return it.
 
     'attrs @format_attrs ='attrs_str
 
-    ''parts arr "<", 'tag, 'attrs_str, ">", @format, ='parts
+    ''parts
+        arr "<", 'tag, 'attrs_str, ">", @format,
+    ='parts
 
     'e .self_closing not if:
 
         'children len 0 > if:
             'depth @newline_str ='newline
             'depth 1 + @newline_str ='child_newline
-            0 ='i
+
             ''parts 'children arr_for: ='child
                 'child_newline,
                 'child 'depth 1 + @_prettystr,
             'newline, ='parts
 
-        ''parts arr "</", 'tag, ">", @format, ='parts
+        ''parts
+            arr "</", 'tag, ">", @format,
+        ='parts
 
+    # Return the str obtained by joining all the parts together
     ''parts @format
 
 
+def next_data of(data i0 -> datum i1):
+    1 + ='i
+    'i .$ ='datum
+    'datum 'i
 def elems_from_data of(data -> elems):
     ='data 0 ='i
     arr do:
@@ -117,19 +128,15 @@ def elems_from_data of(data -> elems):
                     @hr,
                     break
                 'd sym_tostr @e ='e
-                ''i 1 + ='i
-                'data 'i .$ ='d2
+                ('data ''i @next_data ='i) ='d2
                 do:
                     # parse attrs
                     'd2 is_sym while
                     ''d2 sym_tostr ='key
-                    ''i 1 + ='i
-                    'data 'i .$ (` =) sym_eq assert
-                    ''i 1 + ='i
-                    'data 'i .$ ='val
+                    ('data ''i @next_data ='i) (` =) sym_eq assert
+                    ('data ''i @next_data ='i) ='val
                     ''e ''val ''key @set ='e
-                    ''i 1 + ='i
-                    'data 'i .$ ='d2
+                    ('data ''i @next_data ='i) ='d2
                     loop
                 ''d2 @elems_from_data ='elems
                 ''e ''elems @join,
