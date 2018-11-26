@@ -32,10 +32,12 @@ typedef struct fus_obj fus_obj_t;
 typedef struct fus_str fus_str_t;
 typedef struct fus_fun fus_fun_t;
 typedef struct fus_printer fus_printer_t;
+typedef struct fus_keyword fus_keyword_t;
 typedef struct fus_runner fus_runner_t;
 typedef struct fus_runner_callframe fus_runner_callframe_t;
 typedef struct fus fus_t;
 #include "value.h"
+#include "keyword.h"
 #include "vm.h"
 #include "arr.h"
 #include "str.h"
