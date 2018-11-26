@@ -445,7 +445,7 @@ void run_symtable_tests_basic(fus_core_t *core, int *n_tests_ptr, int *n_fails_p
     FUS_TESTS_BEGIN("Symtable tests (no vm)")
 
     fus_symtable_t table;
-    fus_symtable_init(&table, core);
+    fus_symtable_init(&table, core, false);
 
     FUS_TEST_EQ_INT(fus_symtable_len(&table), 0);
 

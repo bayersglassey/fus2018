@@ -30,13 +30,25 @@ void fus_symtable_entry_cleanup(fus_symtable_entry_t *entry){
 
 
 
-void fus_symtable_init(fus_symtable_t *table, fus_core_t *core){
+void fus_symtable_init(fus_symtable_t *table, fus_core_t *core,
+    bool include_keywords
+){
     table->core = core;
     fus_class_init(&table->class_entry, core, "symtable_entry",
         sizeof(fus_symtable_entry_t), table,
         &fus_class_init_symtable_entry,
         &fus_class_cleanup_symtable_entry);
     fus_array_init(&table->entries, &table->class_entry);
+
+    if(include_keywords){
+        /* Adds keywords' tokens to the table in same order in which they
+        have been enumerated, so that e.g.
+        fus_symtable_get_from_string(table, "drop") == FUS_KEYWORD_drop */
+        #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
+            fus_symtable_add_from_string(table, #TOKEN);
+        #include "keywords.inc"
+        #undef FUS_KEYWORD
+    }
 }
 
 void fus_symtable_cleanup(fus_symtable_t *table){

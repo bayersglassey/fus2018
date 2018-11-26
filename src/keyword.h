@@ -5,6 +5,13 @@
  * This file expects to be included by "includes.h"  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+enum {
+    #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
+        FUS_KEYWORD_##NAME,
+    #include "keywords.inc"
+    #undef FUS_KEYWORD
+    FUS_KEYWORDS
+};
 
 typedef int fus_keyword_parse_args_t(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,

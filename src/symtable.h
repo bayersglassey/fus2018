@@ -33,7 +33,8 @@ void fus_symtable_entry_cleanup(fus_symtable_entry_t *entry);
 
 
 
-void fus_symtable_init(fus_symtable_t *table, fus_core_t *core);
+void fus_symtable_init(fus_symtable_t *table, fus_core_t *core,
+    bool include_keywords);
 void fus_symtable_cleanup(fus_symtable_t *table);
 
 int fus_symtable_len(fus_symtable_t *table);
