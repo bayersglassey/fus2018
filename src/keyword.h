@@ -22,6 +22,8 @@ struct fus_keyword {
     const char *s_args_out;
     const char *s_args_inline;
 
+    int sym_i;
+
     fus_keyword_parse_args_t *parse_args;
 };
 

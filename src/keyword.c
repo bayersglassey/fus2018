@@ -10,11 +10,15 @@ void fus_keyword_init(fus_keyword_t *keyword, fus_vm_t *vm,
 ){
     keyword->vm = vm;
 
+    token = token? token: name;
     keyword->name = name;
-    keyword->token = token? token: name;
+    keyword->token = token;
     keyword->s_args_in = s_args_in;
     keyword->s_args_out = s_args_out;
     keyword->s_args_inline = s_args_inline;
+
+    keyword->sym_i = fus_symtable_get_or_add_from_string(
+        vm->symtable, token);
 
     keyword->parse_args = parse_args;
 }
