@@ -44,8 +44,12 @@ void fus_symtable_init(fus_symtable_t *table, fus_core_t *core,
         /* Adds keywords' tokens to the table in same order in which they
         have been enumerated, so that e.g.
         fus_symtable_get_from_string(table, "drop") == FUS_KEYWORD_drop */
-        #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
-            fus_symtable_add_from_string(table, #TOKEN);
+        #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) { \
+            const char *name = #NAME; \
+            const char *token = TOKEN; \
+            if(token == NULL)token = name; \
+            fus_symtable_add_from_string(table, token); \
+        }
         #include "keywords.inc"
         #undef FUS_KEYWORD
     }
@@ -54,6 +58,16 @@ void fus_symtable_init(fus_symtable_t *table, fus_core_t *core,
 void fus_symtable_cleanup(fus_symtable_t *table){
     fus_array_cleanup(&table->entries);
     fus_class_cleanup(&table->class_entry);
+}
+
+void fus_symtable_dump(fus_symtable_t *table, FILE *file){
+    fprintf(file, "SYMTABLE:\n");
+    fus_symtable_entry_t *entries = FUS_SYMTABLE_ENTRIES(*table);
+    int len = table->entries.len;
+    for(int i = 0; i < len; i++){
+        fus_symtable_entry_t *entry = &entries[i];
+        fprintf(file, "  %2i: %s\n", i, entry->token);
+    }
 }
 
 
