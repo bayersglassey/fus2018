@@ -12,9 +12,6 @@ neg dup -21 == assert
 `x `x eq assert
 null null eq assert
 
-1 1 int_eq assert
-1 2 int_eq not assert
-
 `x `x sym_eq assert
 `x `y sym_eq not assert
 

@@ -101,7 +101,10 @@ int fus_runner_step(fus_runner_t *runner){
             printf("%s\n", token);
             #endif
 
-            if(!strcmp(token, "`")){
+            #define FUS_STATE_IS_KEYWORD(SYM_I, NAME) \
+                ((SYM_I) == vm->keyword_##NAME.sym_i)
+
+            if(FUS_STATE_IS_KEYWORD(sym_i, sym)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
@@ -110,7 +113,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value = fus_value_stringparse_sym(vm,
                     quoted_token);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "typeof")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, typeof)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 const char *type_name = fus_value_type_msg(value);
@@ -119,31 +122,31 @@ int fus_runner_step(fus_runner_t *runner){
                     vm->symtable, type_name);
                 fus_value_t value_sym = fus_value_sym(vm, sym_i);
                 FUS_STATE_STACK_PUSH(value_sym)
-            }else if(!strcmp(token, "null")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, null)){
                 fus_value_t value = fus_value_null(vm);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "T")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, T)){
                 fus_value_t value = fus_value_bool(vm, true);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "F")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, F)){
                 fus_value_t value = fus_value_bool(vm, false);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "not")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, not)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_bool_not(vm, value);
                 FUS_STATE_STACK_PUSH(new_value)
-            }else if(!strcmp(token, "neg")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, neg)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_neg(vm, value);
                 FUS_STATE_STACK_PUSH(new_value)
-            }else if(!strcmp(token, "int_tostr")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, int_tostr)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t new_value = fus_value_int_tostr(vm, value);
                 FUS_STATE_STACK_PUSH(new_value)
-            }else if(!strcmp(token, "sym_tostr")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, sym_tostr)){
                 fus_value_t value_sym;
                 FUS_STATE_STACK_POP(&value_sym)
                 int sym_i = fus_value_sym_decode(vm, value_sym);
@@ -153,8 +156,8 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_sym);
 
-            #define FUS_RUNNER_INT_BINOP(TOK, OP) \
-            }else if(!strcmp(token, TOK)) { \
+            #define FUS_RUNNER_INT_BINOP(OP) \
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, int_##OP)) { \
                 fus_value_t value1; \
                 fus_value_t value2; \
                 FUS_STATE_STACK_POP(&value2) \
@@ -163,19 +166,19 @@ int fus_runner_step(fus_runner_t *runner){
                     value1, value2); \
                 FUS_STATE_STACK_PUSH(value3)
 
-            FUS_RUNNER_INT_BINOP("+", add)
-            FUS_RUNNER_INT_BINOP("-", sub)
-            FUS_RUNNER_INT_BINOP("*", mul)
-            //FUS_RUNNER_INT_BINOP("/", div)
-            FUS_RUNNER_INT_BINOP("==", eq)
-            FUS_RUNNER_INT_BINOP("!=", ne)
-            FUS_RUNNER_INT_BINOP("<", lt)
-            FUS_RUNNER_INT_BINOP(">", gt)
-            FUS_RUNNER_INT_BINOP("<=", le)
-            FUS_RUNNER_INT_BINOP(">=", ge)
+            FUS_RUNNER_INT_BINOP(add)
+            FUS_RUNNER_INT_BINOP(sub)
+            FUS_RUNNER_INT_BINOP(mul)
+            //FUS_RUNNER_INT_BINOP(div)
+            FUS_RUNNER_INT_BINOP(eq)
+            FUS_RUNNER_INT_BINOP(ne)
+            FUS_RUNNER_INT_BINOP(lt)
+            FUS_RUNNER_INT_BINOP(gt)
+            FUS_RUNNER_INT_BINOP(le)
+            FUS_RUNNER_INT_BINOP(ge)
 
             #define FUS_RUNNER_IS(T) \
-            }else if(!strcmp(token, "is_" #T)) { \
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, is_##T)) { \
                 fus_value_t value; \
                 FUS_STATE_STACK_POP(&value) \
                 fus_value_t value_is = fus_value_bool(vm, \
@@ -193,7 +196,7 @@ int fus_runner_step(fus_runner_t *runner){
             FUS_RUNNER_IS(fun)
 
             #define FUS_RUNNER_EQ(T) \
-            }else if(!strcmp(token, #T "eq")){ \
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, T##eq)) { \
                 fus_value_t value1; \
                 fus_value_t value2; \
                 FUS_STATE_STACK_POP(&value2) \
@@ -213,13 +216,13 @@ int fus_runner_step(fus_runner_t *runner){
             //FUS_RUNNER_EQ(obj_)
             //FUS_RUNNER_EQ(fun_)
 
-            }else if(!strcmp(token, "arr")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, arr)){
                 fus_value_t value = fus_value_arr(vm);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "obj")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, obj)){
                 fus_value_t value = fus_value_obj(vm);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "tuple")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, tuple)){
                 FUS_STATE_NEXT_VALUE()
                 fus_value_t value_n = token_value;
                 int n = fus_value_int_decode(vm, value_n);
@@ -232,35 +235,37 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_arr_lpush(vm, a, value);
                 }
                 FUS_STATE_STACK_PUSH(value_a)
-            }else if(!strcmp(token, ",") || !strcmp(token, "push")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, push)
+                || FUS_STATE_IS_KEYWORD(sym_i, push_alt)
+            ){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_push(vm, &value_a, value);
                 FUS_STATE_STACK_PUSH(value_a)
-            }else if(!strcmp(token, "lpush")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, lpush)){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_lpush(vm, &value_a, value);
                 FUS_STATE_STACK_PUSH(value_a)
-            }else if(!strcmp(token, "pop")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, pop)){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_pop(vm, &value_a, &value);
                 FUS_STATE_STACK_PUSH(value_a)
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "lpop")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, lpop)){
                 fus_value_t value_a;
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value_a)
                 fus_value_arr_lpop(vm, &value_a, &value);
                 FUS_STATE_STACK_PUSH(value_a)
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "join")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, join)){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
@@ -268,7 +273,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_arr_join(vm, &value1, value2);
                 FUS_STATE_STACK_PUSH(value1)
                 fus_value_detach(vm, value2);
-            }else if(!strcmp(token, "slice")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, slice)){
                 fus_value_t value_a;
                 fus_value_t value_i;
                 fus_value_t value_len;
@@ -279,7 +284,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_a)
                 fus_value_detach(vm, value_len);
                 fus_value_detach(vm, value_i);
-            }else if(!strcmp(token, "=.$")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, arr_set)){
                 fus_value_t value_a;
                 fus_value_t value;
                 fus_value_t value_i;
@@ -289,7 +294,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_arr_set(vm, &value_a, value_i, value);
                 FUS_STATE_STACK_PUSH(value_a)
                 fus_value_detach(vm, value_i);
-            }else if(!strcmp(token, ".$")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, arr_get)){
                 fus_value_t value_a;
                 fus_value_t value_i;
                 FUS_STATE_STACK_POP(&value_i)
@@ -299,7 +304,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_a);
                 fus_value_detach(vm, value_i);
-            }else if(!strcmp(token, "..$")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, arr_rip)){
                 fus_value_t value_a;
                 fus_value_t value_i;
                 FUS_STATE_STACK_POP(&value_i)
@@ -313,7 +318,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_a)
                 FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_i);
-            }else if(!strcmp(token, "=.") || !strcmp(token, "set")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, set_inline) || FUS_STATE_IS_KEYWORD(sym_i, set)){
                 int sym_i = -1;
                 if(token[0] == 's'){
                     /* "set" */
@@ -333,7 +338,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_POP(&value_o)
                 fus_value_obj_set(vm, &value_o, sym_i, value);
                 FUS_STATE_STACK_PUSH(value_o)
-            }else if(!strcmp(token, ".") || !strcmp(token, "get")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, get_inline) || FUS_STATE_IS_KEYWORD(sym_i, get)){
                 int sym_i = -1;
                 if(token[0] == 'g'){
                     /* "get" */
@@ -353,7 +358,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_attach(vm, value);
                 FUS_STATE_STACK_PUSH(value)
                 fus_value_detach(vm, value_o);
-            }else if(!strcmp(token, "..") || !strcmp(token, "rip")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, rip_inline) || FUS_STATE_IS_KEYWORD(sym_i, rip)){
                 int sym_i = -1;
                 if(token[0] == 'r'){
                     /* "rip" */
@@ -374,7 +379,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_obj_set(vm, &value_o, sym_i, fus_value_null(vm));
                 FUS_STATE_STACK_PUSH(value_o)
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "?.") || !strcmp(token, "has")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, has_inline) || FUS_STATE_IS_KEYWORD(sym_i, has)){
                 int sym_i = -1;
                 if(token[0] == 'h'){
                     /* "has" */
@@ -393,7 +398,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_has = fus_value_obj_has(vm, value_o, sym_i);
                 FUS_STATE_STACK_PUSH(value_has)
                 fus_value_detach(vm, value_o);
-            }else if(!strcmp(token, "keys")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, keys)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_ASSERT_T(value, obj)
@@ -411,19 +416,19 @@ int fus_runner_step(fus_runner_t *runner){
 
                 FUS_STATE_STACK_PUSH(value_keys)
                 fus_value_detach(vm, value);
-            }else if(!strcmp(token, "len")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, len)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t value_len = fus_value_arr_len(vm, value);
                 FUS_STATE_STACK_PUSH(value_len)
                 fus_value_detach(vm, value);
-            }else if(!strcmp(token, "str_len")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_len)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_t value_len = fus_value_str_len(vm, value);
                 FUS_STATE_STACK_PUSH(value_len)
                 fus_value_detach(vm, value);
-            }else if(!strcmp(token, "str_join")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_join)){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
@@ -431,7 +436,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_str_join(vm, &value1, value2);
                 FUS_STATE_STACK_PUSH(value1)
                 fus_value_detach(vm, value2);
-            }else if(!strcmp(token, "str_slice")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_slice)){
                 fus_value_t value_s;
                 fus_value_t value_i;
                 fus_value_t value_len;
@@ -442,7 +447,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_len);
                 fus_value_detach(vm, value_i);
-            }else if(!strcmp(token, "str_getcode")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_getcode)){
                 fus_value_t value_s;
                 fus_value_t value_i;
                 FUS_STATE_STACK_POP(&value_i)
@@ -452,7 +457,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_code)
                 fus_value_detach(vm, value_i);
                 fus_value_detach(vm, value_s);
-            }else if(!strcmp(token, "str_setcode")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_setcode)){
                 fus_value_t value_s;
                 fus_value_t value_code;
                 fus_value_t value_i;
@@ -463,7 +468,7 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value_s)
                 fus_value_detach(vm, value_i);
                 fus_value_detach(vm, value_code);
-            }else if(!strcmp(token, "str_tosym")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_tosym)){
                 fus_value_t value_s;
                 FUS_STATE_STACK_POP(&value_s)
                 const char *text = fus_value_str_decode(vm, value_s);
@@ -472,31 +477,31 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_sym = fus_value_sym(vm, sym_i);
                 FUS_STATE_STACK_PUSH(value_sym)
                 fus_value_detach(vm, value_s);
-            }else if(!strcmp(token, "swap")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, swap)){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 FUS_STATE_STACK_PUSH(value2)
                 FUS_STATE_STACK_PUSH(value1)
-            }else if(!strcmp(token, "dup")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, dup)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_STACK_PUSH(value)
                 FUS_STATE_STACK_PUSH(value)
                 fus_value_attach(vm, value);
-            }else if(!strcmp(token, "drop")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, drop)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_value_detach(vm, value);
-            }else if(!strcmp(token, "nip")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, nip)){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
                 FUS_STATE_STACK_POP(&value1)
                 fus_value_detach(vm, value1);
                 FUS_STATE_STACK_PUSH(value2)
-            }else if(!strcmp(token, "over")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, over)){
                 fus_value_t value1;
                 fus_value_t value2;
                 FUS_STATE_STACK_POP(&value2)
@@ -505,21 +510,21 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value2)
                 FUS_STATE_STACK_PUSH(value1)
                 fus_value_attach(vm, value1);
-            }else if(!strcmp(token, "='")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, var_set)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_obj_set(vm, vars, sym_i, value);
-            }else if(!strcmp(token, "'")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, var_get)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
                 fus_value_t value = fus_obj_get(vm, vars, sym_i);
                 fus_value_attach(vm, value);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "''")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, var_rip)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
@@ -527,7 +532,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_attach(vm, value);
                 fus_obj_set(vm, vars, sym_i, fus_value_null(vm));
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "assert")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, assert)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 bool b = fus_value_bool_decode(vm, value);
@@ -535,11 +540,11 @@ int fus_runner_step(fus_runner_t *runner){
                     fprintf(stderr, "%s: Failed assertion\n", __func__);
                     goto err;
                 }
-            }else if(!strcmp(token, "stop")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, stop)){
                 fprintf(stderr, "%s: Stopping\n", __func__);
                 return -1;
-            }else if(!strcmp(token, "p") || !strcmp(token, "p_data")
-                || !strcmp(token, "error")
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, p) || FUS_STATE_IS_KEYWORD(sym_i, p_data)
+                || FUS_STATE_IS_KEYWORD(sym_i, error)
             ){
                 bool is_error = token[0] == 'e';
                 bool is_data = token[1] == '_';
@@ -563,7 +568,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
                 if(is_error)goto err;
-            }else if(!strcmp(token, "str_p")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, str_p)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 FUS_STATE_ASSERT_T(value, str)
@@ -575,7 +580,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
-            }else if(!strcmp(token, "def") || !strcmp(token, "fun")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, def) || FUS_STATE_IS_KEYWORD(sym_i, fun)){
                 bool got_def = token[0] == 'd';
 
 #if FUS_STATE_COMPILE_DEFS
@@ -641,7 +646,7 @@ int fus_runner_step(fus_runner_t *runner){
                     /* fun */
                     FUS_STATE_STACK_PUSH(value_fun)
                 }
-            }else if(!strcmp(token, "&")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, fun_quote)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
@@ -650,7 +655,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
                 FUS_STATE_STACK_PUSH(value_fun)
                 fus_value_attach(vm, value_fun);
-            }else if(!strcmp(token, "@")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, call_inline)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
                 int sym_i = fus_value_sym_decode(vm, token_value);
@@ -669,7 +674,7 @@ int fus_runner_step(fus_runner_t *runner){
                     value_fun.p);
                 fus_value_attach(vm, value_fun);
                 goto dont_update_i;
-            }else if(!strcmp(token, "call")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, call)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 /* TODO: Check stack effects */
@@ -684,8 +689,8 @@ int fus_runner_step(fus_runner_t *runner){
                     f_boxed);
 
                 goto dont_update_i;
-            }else if(!strcmp(token, "if") || !strcmp(token, "ifelse")
-                || !strcmp(token, "and") || !strcmp(token, "or")
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, if) || FUS_STATE_IS_KEYWORD(sym_i, ifelse)
+                || FUS_STATE_IS_KEYWORD(sym_i, and) || FUS_STATE_IS_KEYWORD(sym_i, or)
             ){
                 char c =
                     token[0] == 'a'? 'a'   /* "and" */
@@ -731,8 +736,8 @@ int fus_runner_step(fus_runner_t *runner){
                         branch_taken);
                     goto dont_update_i;
                 }
-            }else if(!strcmp(token, "do") || !strcmp(token, "int_for")
-                || !strcmp(token, "arr_for")
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, do) || FUS_STATE_IS_KEYWORD(sym_i, int_for)
+                || FUS_STATE_IS_KEYWORD(sym_i, arr_for)
             ){
                 char c = token[0]; /* 'd' or 'i' or 'a' */
                 fus_runner_callframe_type_t type =
@@ -782,12 +787,12 @@ int fus_runner_step(fus_runner_t *runner){
                     FUS_STATE_PUSH_CALLFRAME(data)
                     goto dont_update_i;
                 }
-            }else if(!strcmp(token, "break") || !strcmp(token, "loop")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, break) || FUS_STATE_IS_KEYWORD(sym_i, loop)){
                 char c = token[0] == 'b'? 'b': 'l';
                     /* 'b' for break or 'l' for loop */
                 if(fus_runner_break_or_loop(runner, token, c) < 0)goto err;
                 goto dont_update_i;
-            }else if(!strcmp(token, "while") || !strcmp(token, "until")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, while) || FUS_STATE_IS_KEYWORD(sym_i, until)){
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 bool cond = fus_value_bool_decode(vm, value);
@@ -798,19 +803,19 @@ int fus_runner_step(fus_runner_t *runner){
                     if(fus_runner_break_or_loop(runner, token, 'b') < 0)goto err;
                     goto dont_update_i;
                 }
-            }else if(!strcmp(token, "data")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, data)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 fus_value_t value = (fus_value_t)token_value.p;
                 fus_value_attach(vm, value);
                 FUS_STATE_STACK_PUSH(value)
-            }else if(!strcmp(token, "ignore")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, ignore)){
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(arr)
                 fus_value_t value = (fus_value_t)token_value.p;
-            }else if(!strcmp(token, "dump_callframes")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, dump_callframes)){
                 fus_runner_dump_callframes(runner, stderr, true);
-            }else if(!strcmp(token, "dump_state")){
+            }else if(FUS_STATE_IS_KEYWORD(sym_i, dump_state)){
                 FUS_STATE_NEXT_VALUE()
                 const char *dump_state = fus_value_str_decode(vm, token_value);
                 fus_runner_dump_state(runner, stderr, dump_state);
