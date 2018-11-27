@@ -17,8 +17,7 @@ typedef int fus_keyword_parse_args_t(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline);
+    int *n_args_inline_ptr);
 
 struct fus_keyword {
     fus_vm_t *vm;

@@ -82,6 +82,12 @@ int fus_runner_step(fus_runner_t *runner){
         #define FUS_STATE_STACK_PUSH(VALUE) \
             fus_arr_push(vm, stack, (VALUE));
 
+        #define FUS_RUNNER_SUPER_HACKY_TABS() { \
+            printf(":D"); \
+            int callframes_len = runner->callframes.len; \
+            for(int i = 0; i < callframes_len; i++)printf("  "); \
+        }
+
         #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
         if(!fus_value_is_sym(token_value)){
             FUS_RUNNER_SUPER_HACKY_TABS()
@@ -107,22 +113,15 @@ int fus_runner_step(fus_runner_t *runner){
                 goto err;
             }
 
-            fus_value_t vin[3];
-            fus_value_t vout[3];
-            fus_value_t vinline[3];
-
             int n_args_in;
             int n_args_out;
             int n_args_inline;
-
             fus_keyword_t *keyword = &vm->keywords[sym_i];
-            if(keyword->parse_args(keyword, data, i,
-                &n_args_in, &n_args_out, &n_args_inline,
-                vinline))return -1;
+            if(keyword->parse_args(keyword, data, i + 1,
+                &n_args_in, &n_args_out, &n_args_inline) < 0)return -1;
 
-            //for(int j = 0; j < n_args_in; j++){
-            //    FUS_STATE_STACK_POP(&vin[n_args_in - j - 1])
-            //}
+            fus_value_t *values_inline = &token_values[i + 1];
+            i += n_args_inline;
 
             switch(sym_i){
             default: {
@@ -130,10 +129,9 @@ int fus_runner_step(fus_runner_t *runner){
                     __func__, token);
                 goto err;
             break;} case FUS_KEYWORD_sym: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                FUS_STATE_STACK_PUSH(token_value)
-                fus_value_attach(vm, token_value);
+                fus_value_t value = values_inline[0];
+                FUS_STATE_STACK_PUSH(value)
+                fus_value_attach(vm, value);
             break;} case FUS_KEYWORD_typeof: {
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
@@ -244,13 +242,9 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_t value = fus_value_obj(vm);
                 FUS_STATE_STACK_PUSH(value)
             break;} case FUS_KEYWORD_tuple: {
-                FUS_STATE_NEXT_VALUE()
-                fus_value_t value_n = token_value;
-                int n = fus_value_int_decode(vm, value_n);
-
                 fus_value_t value_a = fus_value_arr(vm);
                 fus_arr_t *a = &value_a.p->data.a;
-                for(int i = 0; i < n; i++){
+                for(int i = 0; i < n_args_in; i++){
                     fus_value_t value;
                     FUS_STATE_STACK_POP(&value)
                     fus_arr_lpush(vm, a, value);
@@ -347,9 +341,7 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_value_detach(vm, value_sym);
                 }else{
                     /* "=." */
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    sym_i = fus_value_sym_decode(vm, token_value);
+                    sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 }
                 fus_value_t value_o;
                 fus_value_t value;
@@ -367,9 +359,7 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_value_detach(vm, value_sym);
                 }else{
                     /* "." */
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    sym_i = fus_value_sym_decode(vm, token_value);
+                    sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 }
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
@@ -387,9 +377,7 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_value_detach(vm, value_sym);
                 }else{
                     /* ".." */
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    sym_i = fus_value_sym_decode(vm, token_value);
+                    sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 }
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
@@ -408,9 +396,7 @@ int fus_runner_step(fus_runner_t *runner){
                     fus_value_detach(vm, value_sym);
                 }else{
                     /* "?." */
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    sym_i = fus_value_sym_decode(vm, token_value);
+                    sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 }
                 fus_value_t value_o;
                 FUS_STATE_STACK_POP(&value_o)
@@ -530,23 +516,17 @@ int fus_runner_step(fus_runner_t *runner){
                 FUS_STATE_STACK_PUSH(value1)
                 fus_value_attach(vm, value1);
             break;} case FUS_KEYWORD_var_set: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
                 fus_obj_set(vm, vars, sym_i, value);
             break;} case FUS_KEYWORD_var_get: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 fus_value_t value = fus_obj_get(vm, vars, sym_i);
                 fus_value_attach(vm, value);
                 FUS_STATE_STACK_PUSH(value)
             break;} case FUS_KEYWORD_var_rip: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 fus_value_t value = fus_obj_get(vm, vars, sym_i);
                 fus_value_attach(vm, value);
                 fus_obj_set(vm, vars, sym_i, fus_value_null(vm));
@@ -604,7 +584,7 @@ int fus_runner_step(fus_runner_t *runner){
                 /* Defs are now handled at "compile"-time.
                 See: fus_runner_exec_defs
                 So "def" is now a no-op. */
-                if(got_def)goto ok;
+                if(got_def)break;
 #endif
 
                 int def_sym_i = -1;
@@ -664,18 +644,14 @@ int fus_runner_step(fus_runner_t *runner){
                     FUS_STATE_STACK_PUSH(value_fun)
                 }
             break;} case FUS_KEYWORD_fun_quote: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 const char *token_def =
                     fus_symtable_get_token(symtable, sym_i);
                 fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
                 FUS_STATE_STACK_PUSH(value_fun)
                 fus_value_attach(vm, value_fun);
             break;} case FUS_KEYWORD_call_inline: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
 
                 #if FUS_RUNNER_SUPER_HACKY_DEBUG_INFO
                 const char *token_def =
@@ -692,8 +668,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_attach(vm, value_fun);
                 goto dont_update_i;
             break;} case FUS_KEYWORD_call: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
+                fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[0]);
                 /* TODO: Check stack effects */
 
                 fus_value_t value;
@@ -714,15 +689,12 @@ int fus_runner_step(fus_runner_t *runner){
                     : token[2] == 'e'? 'e' /* "ifelse" */
                     : 'i';                 /* "if" */
 
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
-                fus_arr_t *branch1 = &token_value.p->data.a;
+                fus_arr_t *branch1 = fus_value_arr_decode(vm,
+                    values_inline[0]);
                 fus_arr_t *branch2 = NULL;
                 if(c == 'e'){
                     /* "ifelse" */
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(arr)
-                    branch2 = &token_value.p->data.a;
+                    branch2 = fus_value_arr_decode(vm, values_inline[1]);
                 }
 
                 /* TODO: Check stack effects of the branches */
@@ -760,9 +732,7 @@ int fus_runner_step(fus_runner_t *runner){
                     : c == 'i'? FUS_CALLFRAME_TYPE_INT_FOR
                     : FUS_CALLFRAME_TYPE_ARR_FOR;
 
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
-                fus_arr_t *data = &token_value.p->data.a;
+                fus_arr_t *data = fus_value_arr_decode(vm, values_inline[0]);
 
                 #define FUS_STATE_PUSH_CALLFRAME(DATA) \
                     callframe->i = i + 1; \
@@ -819,20 +789,16 @@ int fus_runner_step(fus_runner_t *runner){
                     goto dont_update_i;
                 }
             break;} case FUS_KEYWORD_data: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
-                fus_value_t value = (fus_value_t)token_value.p;
+                fus_value_t value = values_inline[0];
                 fus_value_attach(vm, value);
                 FUS_STATE_STACK_PUSH(value)
             break;} case FUS_KEYWORD_ignore: {
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
-                fus_value_t value = (fus_value_t)token_value.p;
+                /* Just ignore values_inline[0]. */
             break;} case FUS_KEYWORD_dump_callframes: {
                 fus_runner_dump_callframes(runner, stderr, true);
             break;} case FUS_KEYWORD_dump_state: {
-                FUS_STATE_NEXT_VALUE()
-                const char *dump_state = fus_value_str_decode(vm, token_value);
+                const char *dump_state = fus_value_str_decode(vm,
+                    values_inline[0]);
                 fus_runner_dump_state(runner, stderr, dump_state);
             }
             }
@@ -848,7 +814,6 @@ int fus_runner_step(fus_runner_t *runner){
         }
     }
 
-ok:
     callframe->i = i + 1;
 
 dont_update_i:

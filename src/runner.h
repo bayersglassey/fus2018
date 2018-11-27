@@ -8,12 +8,6 @@
 
 
 #define FUS_RUNNER_SUPER_HACKY_DEBUG_INFO 0
-#define FUS_RUNNER_SUPER_HACKY_TABS() { \
-    printf(":D"); \
-    int callframes_len = runner->callframes.len; \
-    for(int i = 0; i < callframes_len; i++)printf("  "); \
-}
-
 #define FUS_STATE_COMPILE_DEFS 0
 
 

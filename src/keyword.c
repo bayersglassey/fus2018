@@ -28,20 +28,28 @@ void fus_keyword_cleanup(fus_keyword_t *keyword){
 }
 
 
+static int argslen(const char *args_text){
+    /* Parses the strings representing keywords' args and their types.
+    Returns the number of args represented by the string, or 0 if a special
+    parse_args is expected (e.g. fus_keyword_parse_args_tuple).
+    E.g. "ii" -> 2, "*" -> 1, "?" -> 0 */
+    if(args_text[0] == '?')return 0;
+    return strlen(args_text);
+}
+
 int fus_keyword_parse_args(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
-    *n_args_in_ptr = strlen(keyword->s_args_in);
-    *n_args_out_ptr = strlen(keyword->s_args_out);
-    int n_args_inline = strlen(keyword->s_args_inline);
+    *n_args_in_ptr = argslen(keyword->s_args_in);
+    *n_args_out_ptr = argslen(keyword->s_args_out);
+    int n_args_inline = argslen(keyword->s_args_inline);
     *n_args_inline_ptr = n_args_inline;
 
     int data_len = fus_arr_len(keyword->vm, data);
-    if(i0 >= data_len + n_args_inline){
+    if(i0 > data_len + n_args_inline){
         fprintf(stderr, "%s: %s: Not enough tokens "
             "(need %i, only %i remaining)\n",
             __func__, keyword->name, n_args_inline,
@@ -55,15 +63,15 @@ int fus_keyword_parse_args_tuple(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr, args_inline))return -1;
+        n_args_out_ptr, n_args_inline_ptr))return -1;
 
-    /* We expect 1 inline arg: a fus_value_int. E.g. in "tuple 4" the 4 is
-    args_inline[0], and becomes our n_args_in. */
-    int n_args_in = fus_value_int_decode(keyword->vm, args_inline[0]);
+    /* We expect 1 inline arg: a fus_value_int. E.g. in "tuple 4" the 4
+    becomes our n_args_in. */
+    fus_value_t *values = FUS_ARR_VALUES(*data);
+    int n_args_in = fus_value_int_decode(keyword->vm, values[i0]);
     *n_args_in_ptr = n_args_in;
     return 0;
 }
@@ -72,11 +80,10 @@ int fus_keyword_parse_args_def(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr, args_inline))return -1;
+        n_args_out_ptr, n_args_inline_ptr))return -1;
     /* TODO: implement me!.. */
     return 0;
 }
@@ -85,11 +92,10 @@ int fus_keyword_parse_args_call(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr, args_inline))return -1;
+        n_args_out_ptr, n_args_inline_ptr))return -1;
     /* TODO: implement me!.. */
     return 0;
 }
@@ -98,11 +104,10 @@ int fus_keyword_parse_args_if(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr, args_inline))return -1;
+        n_args_out_ptr, n_args_inline_ptr))return -1;
     /* TODO: implement me!.. */
     return 0;
 }
@@ -111,11 +116,10 @@ int fus_keyword_parse_args_do(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
-    int *n_args_inline_ptr,
-    fus_value_t *args_inline
+    int *n_args_inline_ptr
 ){
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr, args_inline))return -1;
+        n_args_out_ptr, n_args_inline_ptr))return -1;
     /* TODO: implement me!.. */
     return 0;
 }

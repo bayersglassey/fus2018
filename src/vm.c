@@ -38,7 +38,7 @@ void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
     int i = 0;
     #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
         fus_keyword_init(&vm->keywords[i], vm, #NAME, TOKEN, \
-            ARGS_INLINE, ARGS_IN, ARGS_OUT, \
+            ARGS_IN, ARGS_OUT, ARGS_INLINE, \
             &fus_keyword_parse_args##PARSE_ARGS_SUFFIX); \
         i++;
     #include "keywords.inc"
