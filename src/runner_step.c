@@ -132,12 +132,8 @@ int fus_runner_step(fus_runner_t *runner){
             break;} case FUS_KEYWORD_sym: {
                 FUS_STATE_NEXT_VALUE()
                 FUS_STATE_EXPECT_T(sym)
-                int sym_i = fus_value_sym_decode(vm, token_value);
-                const char *quoted_token = fus_symtable_get_token(
-                    symtable, sym_i);
-                fus_value_t value = fus_value_stringparse_sym(vm,
-                    quoted_token);
-                FUS_STATE_STACK_PUSH(value)
+                FUS_STATE_STACK_PUSH(token_value)
+                fus_value_attach(vm, token_value);
             break;} case FUS_KEYWORD_typeof: {
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
