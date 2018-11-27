@@ -34,12 +34,16 @@ void fus_vm_init(fus_vm_t *vm, fus_core_t *core,
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_SIMPLE_CLASS_INIT)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_INIT)
 
+    {
+    int i = 0;
     #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
-        fus_keyword_init(&vm->keyword_##NAME, vm, #NAME, TOKEN, \
+        fus_keyword_init(&vm->keywords[i], vm, #NAME, TOKEN, \
             ARGS_INLINE, ARGS_IN, ARGS_OUT, \
-            &fus_keyword_parse_args##PARSE_ARGS_SUFFIX);
+            &fus_keyword_parse_args##PARSE_ARGS_SUFFIX); \
+        i++;
     #include "keywords.inc"
     #undef FUS_KEYWORD
+    }
 }
 
 void fus_vm_cleanup(fus_vm_t *vm){
@@ -68,10 +72,9 @@ void fus_vm_cleanup(fus_vm_t *vm){
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_CLEANUP)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_CLEANUP)
 
-    #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
-        fus_keyword_cleanup(&vm->keyword_##NAME);
-    #include "keywords.inc"
-    #undef FUS_KEYWORD
+    for(int i = 0; i < FUS_KEYWORDS; i++){
+        fus_keyword_cleanup(&vm->keywords[i]);
+    }
 }
 
 

@@ -41,10 +41,7 @@ struct fus_vm {
     FUS_VM_SIMPLE_CLASSES_DO(FUS_VM_CLASS_DECL)
     FUS_VM_CLASSES_DO(FUS_VM_CLASS_DECL)
 
-    #define FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX) \
-        fus_keyword_t keyword_##NAME;
-    #include "keywords.inc"
-    #undef FUS_KEYWORD
+    fus_keyword_t keywords[FUS_KEYWORDS];
 };
 
 void fus_vm_init(fus_vm_t *vm, fus_core_t *core,

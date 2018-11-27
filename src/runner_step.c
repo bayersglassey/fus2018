@@ -101,9 +101,32 @@ int fus_runner_step(fus_runner_t *runner){
             printf("%s\n", token);
             #endif
 
+            if(sym_i < 0 || sym_i >= FUS_KEYWORDS){
+                fprintf(stderr, "%s: Builtin not found: %s\n",
+                    __func__, token);
+                goto err;
+            }
+
+            fus_value_t vin[3];
+            fus_value_t vout[3];
+            fus_value_t vinline[3];
+
+            int n_args_in;
+            int n_args_out;
+            int n_args_inline;
+
+            fus_keyword_t *keyword = &vm->keywords[sym_i];
+            if(keyword->parse_args(keyword, data, i,
+                &n_args_in, &n_args_out, &n_args_inline,
+                vinline))return -1;
+
+            //for(int j = 0; j < n_args_in; j++){
+            //    FUS_STATE_STACK_POP(&vin[n_args_in - j - 1])
+            //}
+
             switch(sym_i){
             default: {
-                fprintf(stderr, "%s: Builtin not found: %s\n",
+                fprintf(stderr, "%s: Builtin not implemented: %s\n",
                     __func__, token);
                 goto err;
             break;} case FUS_KEYWORD_sym: {
