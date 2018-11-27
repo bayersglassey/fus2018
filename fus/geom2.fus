@@ -170,7 +170,7 @@ module Geom:
             obj fun of(Shape Trf -> Shape)(drop) =.transform
 
         def transform of(Shape Trf -> Shape):
-            over .transform call(Shape Trf -> Shape)
+            over .transform call of(Shape Trf -> Shape)
 
         def curvy_sq_eighth:
 

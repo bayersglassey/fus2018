@@ -35,7 +35,7 @@ module Check:
                 'T =.T
             error
         'T `handle has if:
-            'x 'T ('T .handle) call(x T ->)
+            'x 'T ('T .handle) call of(x T ->)
 
     module handle:
 

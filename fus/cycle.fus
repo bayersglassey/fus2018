@@ -1,5 +1,5 @@
 
-def unbox of(boxed -> unboxed): call(-> x)
+def unbox of(boxed -> unboxed): call of(-> x)
 
 
 def A of(-> boxed):

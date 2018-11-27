@@ -177,8 +177,8 @@ module ModuleTest:
         fun(1) ='f
 
         @f 2 == assert
-        'f call(-> i) 1 == assert
-        &f call(-> i) 2 == assert
+        'f call of(-> i) 1 == assert
+        &f call of(-> i) 2 == assert
 
         T
 @(ModuleTest test) assert

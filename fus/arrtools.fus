@@ -34,7 +34,7 @@ def for of(arr state step -> arr state):
     0 ='i
     over len int_for: ='i
         over 'i .$ 'i
-        'step call(arr state val i -> arr state)
+        'step call of(arr state val i -> arr state)
 
 
 def test of(->):

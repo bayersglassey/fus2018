@@ -30,7 +30,7 @@ def tostr of(x opts -> s):
         &obj_tostr =.obj
         &arr_tostr =.arr
     over typeof get ='tostr
-    ''opts ''tostr call(x opts -> s)
+    ''opts ''tostr call of(x opts -> s)
 
 def obj_tostr of(x opts -> s):
     ='opts

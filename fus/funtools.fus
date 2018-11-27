@@ -3,14 +3,14 @@ def map of(xs f ->xs):
     ='f ='xs
     'xs len int_for: ='i
         ''xs 'i ..$
-            'f call(x -> y)
+            'f call of(x -> y)
         'i =.$ ='xs
     ''xs
 
 def fold of(xs x f -> x):
     ='f ='x ='xs
     'xs len int_for: ='i
-        ''x ('xs 'i .$) 'f call(x y -> z) ='x
+        ''x ('xs 'i .$) 'f call of(x y -> z) ='x
     ''x
 
 def and of(b b -> b): not if: drop F

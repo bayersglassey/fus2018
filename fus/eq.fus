@@ -20,7 +20,7 @@ def eq of(x y -> bool):
         &arr_eq =.arr
     'x typeof get ='f
 
-    'x 'y 'f call(x y -> bool)
+    'x 'y 'f call of(x y -> bool)
 
 
 def obj_eq of(x y -> bool):

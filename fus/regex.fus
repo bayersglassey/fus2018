@@ -40,7 +40,7 @@ module Regex:
 
     def node_apply of(node final_regex -> regex):
         # Ummm sigs don't match?
-        over .run call(node stream -> regex)
+        over .run call of(node stream -> regex)
 
     def exact of(c next_regex -> node):
         ='next_regex

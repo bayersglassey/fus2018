@@ -6,7 +6,7 @@ def iter of(x -> gen):
         &iter_arr =.arr
         fun(keys &iter_arr) =.obj
         fun() =.gen
-    over typeof get call(x -> gen)
+    over typeof get call of(x -> gen)
 
 def iter_int of(x -> gen):
     gen takes(n):

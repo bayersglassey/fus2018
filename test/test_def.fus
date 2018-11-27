@@ -10,8 +10,8 @@ def add of(x y -> z): +
 
 fun of(-> i)(10 20 +) ='fun
 
-'fun call(-> i) 30 == assert
-3 4 &add call(x y -> z) 7 == assert
+'fun call of(-> i) 30 == assert
+3 4 &add call of(x y -> z) 7 == assert
 
 'fun
 &f

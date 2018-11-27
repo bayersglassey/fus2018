@@ -20,7 +20,7 @@ module LList:
 
         # equivalent to:
         'xs @iter ='f ='xs do:
-            ''xs 'f call(xs -> xs x)
+            ''xs 'f call of(xs -> xs x)
             over is_null if: drop drop break
             swap ='xs
             # ...
