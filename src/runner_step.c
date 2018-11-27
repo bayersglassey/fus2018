@@ -577,72 +577,31 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
-            break;} case FUS_KEYWORD_def: case FUS_KEYWORD_fun: {
-                bool got_def = token[0] == 'd';
-
-#if FUS_STATE_COMPILE_DEFS
+            break;} case FUS_KEYWORD_def: {
                 /* Defs are now handled at "compile"-time.
                 See: fus_runner_exec_defs
                 So "def" is now a no-op. */
-                if(got_def)break;
-#endif
+            break;} case FUS_KEYWORD_fun: {
 
-                int def_sym_i = -1;
-                if(got_def){
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    def_sym_i = fus_value_sym_decode(vm, token_value);
-
-                    if(callframe->type != FUS_CALLFRAME_TYPE_MODULE){
-                        const char *token_def =
-                            fus_symtable_get_token(symtable, def_sym_i);
-                        fprintf(stderr, "%s: Nested defs not allowed: %s\n",
-                            __func__, token_def);
-                        goto err;
-                    }
-                }
-
-                /* Try to parse signature, e.g. of(x -> y z) */
-                fus_arr_t *sig = NULL;
-                {
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(sym)
-                    int sym_i = fus_value_sym_decode(vm, token_value);
+                /* Check for "of" */
+                int sym_i = fus_value_sym_decode(vm, values_inline[0]);
+                int sym_i_of = fus_symtable_get_or_add_from_string(
+                    symtable, "of");
+                if(sym_i != sym_i_of){
                     const char *token_of =
                         fus_symtable_get_token(symtable, sym_i);
-                    if(strcmp(token_of, "of")){
-                        fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
-                            __func__, token, token_of);
-                        goto err;
-                    }
-                    FUS_STATE_NEXT_VALUE()
-                    FUS_STATE_EXPECT_T(arr)
-                    sig = &token_value.p->data.a;
+                    fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
+                        __func__, token, token_of);
+                    return -1;
                 }
 
-                FUS_STATE_NEXT_VALUE()
-                FUS_STATE_EXPECT_T(arr)
+                /* Get function signature & data */
+                fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[1]);
+                fus_arr_t *data = fus_value_arr_decode(vm, values_inline[2]);
 
-                /* Create a function value */
-                fus_value_t value_fun = fus_value_fun(vm, NULL,
-                    &token_value.p->data.a, sig);
-
-                if(got_def){
-                    /* def */
-                    if(fus_obj_has(vm, &runner->defs, def_sym_i)){
-                        const char *token_def =
-                            fus_symtable_get_token(symtable, def_sym_i);
-                        fprintf(stderr, "%s: Redefinition of defs not "
-                            "allowed: %s\n",
-                            __func__, token_def);
-                        fus_value_detach(vm, value_fun);
-                        goto err;
-                    }
-                    fus_obj_set(vm, &runner->defs, def_sym_i, value_fun);
-                }else{
-                    /* fun */
-                    FUS_STATE_STACK_PUSH(value_fun)
-                }
+                /* Create a function value & push to stack */
+                fus_value_t value_fun = fus_value_fun(vm, NULL, data, sig);
+                FUS_STATE_STACK_PUSH(value_fun)
             break;} case FUS_KEYWORD_fun_quote: {
                 int sym_i = fus_value_sym_decode(vm, values_inline[0]);
                 const char *token_def =

@@ -108,9 +108,7 @@ err:
 
 int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     if(fus_runner_load(runner, data) < 0)return -1;
-#if FUS_STATE_COMPILE_DEFS
     if(fus_runner_exec_defs(runner) < 0)return -1;
-#endif
     if(fus_runner_exec(runner) < 0)return -1;
     if(fus_runner_unload(runner) < 0)return -1;
     return 0;
@@ -126,38 +124,67 @@ int fus_runner_exec_defs(fus_runner_t *runner){
 
 int _fus_runner_exec_defs(fus_runner_t *runner, fus_arr_t *data){
 
-    /*************************
-     * U N F I N I S H E D ! *
-     *************************/
-
-    fprintf(stderr, "%s: TODO: FINISH IMPLEMENTING THIS!\n", __func__);
-
     fus_vm_t *vm = runner->vm;
+    fus_symtable_t *symtable = vm->symtable;
+    int sym_i_of = fus_symtable_get_or_add_from_string(symtable, "of");
+
     fus_array_len_t len = data->values.len;
     fus_value_t *values = FUS_ARR_VALUES(*data);
-    int sym_i_def = fus_symtable_get_or_add_from_string(vm->symtable, "def");
+
     for(int i = 0; i < len; i++){
         fus_value_t value = values[i];
         if(fus_value_is_arr(value)){
-            /* TODO: This is not correct! E.g. we will look for defs inside
-            ignore(...) blocks.
-            So I think it's time to add a table of keywords and their
-            properties to fus. */
             if(_fus_runner_exec_defs(runner, &value.p->data.a) < 0)return -1;
         }else if(fus_value_is_sym(value)){
             int sym_i = fus_value_sym_decode(vm, value);
-            if(sym_i == sym_i_def){
-                i++;
-                if(i >= len){
-                    fprintf(stderr, "%s: Missing token after \"def\"\n",
-                        __func__);
+            const char *token = fus_symtable_get_token(symtable, sym_i);
+            fprintf(stderr, "%s: SYM TOKEN: %s\n", __func__, token);
+
+            int n_args_in;
+            int n_args_out;
+            int n_args_inline;
+            fus_keyword_t *keyword = &vm->keywords[sym_i];
+            if(keyword->parse_args(keyword, data, i + 1,
+                &n_args_in, &n_args_out, &n_args_inline) < 0)return -1;
+
+            fus_value_t *values_inline = &values[i + 1];
+            i += n_args_inline;
+
+            if(sym_i == FUS_KEYWORD_def){
+                int def_sym_i = fus_value_sym_decode(vm, values_inline[0]);
+
+                /* Check for redefinition */
+                if(fus_obj_has(vm, &runner->defs, def_sym_i)){
+                    const char *token_def =
+                        fus_symtable_get_token(symtable, def_sym_i);
+                    fprintf(stderr, "%s: Redefinition of defs not "
+                        "allowed: %s\n",
+                        __func__, token_def);
                     return -1;
                 }
-                value = values[++i];
-                int sym_i = fus_value_sym_decode(vm, value);
-                /* TODO: Finish this... see implementation of "def" in
-                fus_runner_step */
+
+                /* Check for "of" */
+                int sym_i = fus_value_sym_decode(vm, values_inline[1]);
+                if(sym_i != sym_i_of){
+                    const char *token_of =
+                        fus_symtable_get_token(symtable, sym_i);
+                    fprintf(stderr, "%s: Unexpected sym after %s: %s\n",
+                        __func__, token, token_of);
+                    return -1;
+                }
+
+                /* Get function signature & data */
+                fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[2]);
+                fus_arr_t *data = fus_value_arr_decode(vm, values_inline[3]);
+
+                /* Create a function value */
+                fus_value_t value_fun = fus_value_fun(vm, NULL, data, sig);
+
+                /* Poke new function into runner->defs */
+                fus_obj_set(vm, &runner->defs, def_sym_i, value_fun);
             }
+        }else{
+            /* Some kind of literal, nothing to do */
         }
     }
     return 0;
