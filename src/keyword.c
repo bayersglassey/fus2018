@@ -37,6 +37,25 @@ static int argslen(const char *args_text){
     return strlen(args_text);
 }
 
+static bool arg_check(char c, fus_value_t value){
+    switch(c){
+        case '*': return true;
+        case 'i': return fus_value_is_int(value);
+        case 'y': return fus_value_is_sym(value);
+        case 'n': return fus_value_is_null(value);
+        case 'b': return fus_value_is_bool(value);
+        case 'a': return fus_value_is_arr(value);
+        case 's': return fus_value_is_str(value);
+        case 'o': return fus_value_is_obj(value);
+        case 'f': return fus_value_is_fun(value);
+        default:
+            fprintf(stderr, "%s: Unrecognized type char: %c\n",
+                __func__, c);
+            break;
+    }
+    return false;
+}
+
 int fus_keyword_parse_args(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
@@ -56,6 +75,23 @@ int fus_keyword_parse_args(fus_keyword_t *keyword,
             data_len - i0);
         return -1;
     }
+
+    fus_value_t *values = FUS_ARR_VALUES(*data);
+    const char *s_args = keyword->s_args_inline;
+    for(int i = 0; i < n_args_inline; i++){
+        char c = s_args[i];
+        fus_value_t value = values[i0 + i];
+        bool check = arg_check(c, value);
+        if(!check){
+            fprintf(stderr, "%s: Typecheck failed! "
+                "s_args=\"%s\" i=%i c='%c' value: ",
+                __func__, s_args, i, c);
+            fus_value_fprint(keyword->vm, value, stderr);
+            fprintf(stderr, "\n");
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -82,9 +118,16 @@ int fus_keyword_parse_args_def(fus_keyword_t *keyword,
     int *n_args_out_ptr,
     int *n_args_inline_ptr
 ){
+    /* MAYBE TODO: Make "of(...)" optional */
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
         n_args_out_ptr, n_args_inline_ptr))return -1;
-    /* TODO: implement me!.. */
+
+    /* NOTE: This parse_args is used by two keywords: def and fun.
+    The former takes an extra inline arg (the name of the def). */
+    bool is_def = keyword->name[0] == 'd'; /* lol ganksville */
+    int n_args_inline = is_def? 4: 3;
+
+    *n_args_inline_ptr = n_args_inline;
     return 0;
 }
 
