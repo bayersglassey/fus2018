@@ -8,6 +8,7 @@
 struct fus {
     fus_core_t core;
     fus_lexer_t lexer;
+    fus_parser_t parser;
     fus_symtable_t symtable;
     fus_vm_t vm;
     fus_runner_t runner;

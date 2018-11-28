@@ -6,6 +6,7 @@ void fus_init(fus_t *fus){
     fus_lexer_init(&fus->lexer, NULL);
     fus_symtable_init(&fus->symtable, &fus->core, true);
     fus_vm_init(&fus->vm, &fus->core, &fus->symtable);
+    fus_parser_init(&fus->parser, &fus->vm);
     fus_runner_init(&fus->runner, &fus->vm);
     fus_printer_init(&fus->printer);
 }
@@ -13,6 +14,7 @@ void fus_init(fus_t *fus){
 void fus_cleanup(fus_t *fus){
     fus_printer_cleanup(&fus->printer);
     fus_runner_cleanup(&fus->runner);
+    fus_parser_cleanup(&fus->parser);
     fus_vm_cleanup(&fus->vm);
     fus_symtable_cleanup(&fus->symtable);
     fus_lexer_cleanup(&fus->lexer);
