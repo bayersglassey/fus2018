@@ -138,7 +138,12 @@ int _fus_runner_exec_defs(fus_runner_t *runner, fus_arr_t *data){
         }else if(fus_value_is_sym(value)){
             int sym_i = fus_value_sym_decode(vm, value);
             const char *token = fus_symtable_get_token(symtable, sym_i);
-            fprintf(stderr, "%s: SYM TOKEN: %s\n", __func__, token);
+
+            if(sym_i < 0 || sym_i >= FUS_KEYWORDS){
+                fprintf(stderr, "%s: Builtin not found: %s\n",
+                    __func__, token);
+                return -1;
+            }
 
             int n_args_in;
             int n_args_out;

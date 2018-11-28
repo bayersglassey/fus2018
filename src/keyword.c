@@ -37,7 +37,21 @@ static int argslen(const char *args_text){
     return strlen(args_text);
 }
 
-static bool arg_check(char c, fus_value_t value){
+static bool check_n_args(fus_keyword_t *keyword, fus_arr_t *data,
+    int i0, int n_args_inline
+){
+    int data_len = fus_arr_len(keyword->vm, data);
+    if(i0 > data_len + n_args_inline){
+        fprintf(stderr, "%s: %s: Not enough tokens "
+            "(need %i, only %i remaining)\n",
+            __func__, keyword->name, n_args_inline,
+            data_len - i0);
+        return false;
+    }
+    return true;
+}
+
+static bool check_arg(char c, fus_value_t value){
     switch(c){
         case '*': return true;
         case 'i': return fus_value_is_int(value);
@@ -64,28 +78,22 @@ int fus_keyword_parse_args(fus_keyword_t *keyword,
 ){
     *n_args_in_ptr = argslen(keyword->s_args_in);
     *n_args_out_ptr = argslen(keyword->s_args_out);
-    int n_args_inline = argslen(keyword->s_args_inline);
+
+    const char *s_args_inline = keyword->s_args_inline;
+    int n_args_inline = argslen(s_args_inline);
     *n_args_inline_ptr = n_args_inline;
 
-    int data_len = fus_arr_len(keyword->vm, data);
-    if(i0 > data_len + n_args_inline){
-        fprintf(stderr, "%s: %s: Not enough tokens "
-            "(need %i, only %i remaining)\n",
-            __func__, keyword->name, n_args_inline,
-            data_len - i0);
-        return -1;
-    }
+    if(!check_n_args(keyword, data, i0, n_args_inline))return -1;
 
     fus_value_t *values = FUS_ARR_VALUES(*data);
-    const char *s_args = keyword->s_args_inline;
     for(int i = 0; i < n_args_inline; i++){
-        char c = s_args[i];
+        char c = s_args_inline[i];
         fus_value_t value = values[i0 + i];
-        bool check = arg_check(c, value);
+        bool check = check_arg(c, value);
         if(!check){
             fprintf(stderr, "%s: Typecheck failed! "
-                "s_args=\"%s\" i=%i c='%c' value: ",
-                __func__, s_args, i, c);
+                "s_args_inline=\"%s\" i=%i c='%c' value: ",
+                __func__, s_args_inline, i, c);
             fus_value_fprint(keyword->vm, value, stderr);
             fprintf(stderr, "\n");
             return -1;
@@ -112,34 +120,18 @@ int fus_keyword_parse_args_tuple(fus_keyword_t *keyword,
     return 0;
 }
 
-int fus_keyword_parse_args_def(fus_keyword_t *keyword,
-    fus_arr_t *data, int i0,
-    int *n_args_in_ptr,
-    int *n_args_out_ptr,
-    int *n_args_inline_ptr
-){
-    /* MAYBE TODO: Make "of(...)" optional */
-    if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
-        n_args_out_ptr, n_args_inline_ptr))return -1;
-
-    /* NOTE: This parse_args is used by two keywords: def and fun.
-    The former takes an extra inline arg (the name of the def). */
-    bool is_def = keyword->name[0] == 'd'; /* lol ganksville */
-    int n_args_inline = is_def? 4: 3;
-
-    *n_args_inline_ptr = n_args_inline;
-    return 0;
-}
-
 int fus_keyword_parse_args_call(fus_keyword_t *keyword,
     fus_arr_t *data, int i0,
     int *n_args_in_ptr,
     int *n_args_out_ptr,
     int *n_args_inline_ptr
 ){
+    /* Used by: fun_quote, call_inline, call */
+
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
         n_args_out_ptr, n_args_inline_ptr))return -1;
-    /* TODO: implement me!.. */
+
+    /* TODO: Figure out args_in, args_out based on sig */
     return 0;
 }
 
@@ -149,9 +141,12 @@ int fus_keyword_parse_args_if(fus_keyword_t *keyword,
     int *n_args_out_ptr,
     int *n_args_inline_ptr
 ){
+    /* Used by: if, ifelse, and, or */
+
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
         n_args_out_ptr, n_args_inline_ptr))return -1;
-    /* TODO: implement me!.. */
+
+    /* TODO: Figure out args_in, args_out based on branches */
     return 0;
 }
 
@@ -161,9 +156,12 @@ int fus_keyword_parse_args_do(fus_keyword_t *keyword,
     int *n_args_out_ptr,
     int *n_args_inline_ptr
 ){
+    /* Used by: do, int_for, arr_for */
+
     if(fus_keyword_parse_args(keyword, data, i0, n_args_in_ptr,
         n_args_out_ptr, n_args_inline_ptr))return -1;
-    /* TODO: implement me!.. */
+
+    /* TODO: Figure out args_in, args_out based on body */
     return 0;
 }
 

@@ -627,7 +627,7 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_attach(vm, value_fun);
                 goto dont_update_i;
             break;} case FUS_KEYWORD_call: {
-                fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[0]);
+                fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[1]);
                 /* TODO: Check stack effects */
 
                 fus_value_t value;
@@ -642,19 +642,10 @@ int fus_runner_step(fus_runner_t *runner){
                 goto dont_update_i;
             break;} case FUS_KEYWORD_if: case FUS_KEYWORD_ifelse:
             case FUS_KEYWORD_and: case FUS_KEYWORD_or: {
-                char c =
-                    token[0] == 'a'? 'a'   /* "and" */
-                    : token[0] == 'o'? 'o' /* "or" */
-                    : token[2] == 'e'? 'e' /* "ifelse" */
-                    : 'i';                 /* "if" */
-
                 fus_arr_t *branch1 = fus_value_arr_decode(vm,
                     values_inline[0]);
-                fus_arr_t *branch2 = NULL;
-                if(c == 'e'){
-                    /* "ifelse" */
-                    branch2 = fus_value_arr_decode(vm, values_inline[1]);
-                }
+                fus_arr_t *branch2 = (sym_i == FUS_KEYWORD_ifelse)?
+                    fus_value_arr_decode(vm, values_inline[1]): NULL;
 
                 /* TODO: Check stack effects of the branches */
 
@@ -664,16 +655,14 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_value_detach(vm, value);
 
                 fus_arr_t *branch_taken = NULL;
-                if(c == 'a'){
-                    /* "and" */
+                if(sym_i == FUS_KEYWORD_and){
                     if(cond)branch_taken = branch1;
                     else FUS_STATE_STACK_PUSH(fus_value_bool(vm, cond))
-                }else if(c == 'o'){
-                    /* "or" */
+                }else if(sym_i == FUS_KEYWORD_or){
                     if(!cond)branch_taken = branch1;
                     else FUS_STATE_STACK_PUSH(fus_value_bool(vm, cond))
                 }else{
-                    /* "if", "ifelse" */
+                    /* if, ifelse */
                     branch_taken = cond? branch1: branch2;
                 }
 
