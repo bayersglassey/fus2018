@@ -223,6 +223,8 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     if(body == NULL)return -1;
 
     /* Get fus symbol indices */
+    int sym_i_serve = fus_symtable_get_or_add_from_string(
+        symtable, "serve_wsgi_request");
     int sym_i_status = fus_symtable_get_or_add_from_string(
         symtable, "status");
     int sym_i_headers = fus_symtable_get_or_add_from_string(
@@ -249,6 +251,7 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     fus_arr_push(vm, stack, value_request);
 
     /* Run fus webapp code */
+    if(fus_runner_call(runner, sym_i_serve) < 0)return -1;
     if(fus_runner_exec(runner) < 0)return -1;
     if(fus_runner_rewind(runner) < 0)return -1;
 

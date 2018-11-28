@@ -143,4 +143,9 @@ def test of(->):
     dup .body is_str assert # *shrug*
     drop
 
-@serve_wsgi_request
+#@test
+    # If you leave testing on, it gets run at the end of every UWSGI request
+    # when you use the fus uswgi plugin.
+    # So, TODO: test runner should attempt to run @test for each file in
+    # fus/*.fus, instead of just running the files and expecting them to call
+    # @test.
