@@ -591,6 +591,16 @@ void fus_runner_end_callframe(fus_runner_t *runner){
     }
 }
 
+int fus_runner_call(fus_runner_t *runner, int sym_i){
+    fus_vm_t *vm = runner->vm;
+    /* MAYBE TODO: Return -1 if def not found */
+    fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
+    fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
+        value_fun.p);
+    fus_value_attach(vm, value_fun);
+    return 0;
+}
+
 int fus_runner_break_or_loop(fus_runner_t *runner, const char *token, char c){
     fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
     while(!fus_runner_callframe_type_is_do_like(callframe->type)){

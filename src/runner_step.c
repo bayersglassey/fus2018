@@ -619,12 +619,8 @@ int fus_runner_step(fus_runner_t *runner){
                 printf("%s\n", token_def);
                 #endif
 
-                fus_value_t value_fun = fus_obj_get(vm, &runner->defs, sym_i);
-
                 callframe->i = i + 1;
-                fus_runner_push_callframe_fun(runner, FUS_CALLFRAME_TYPE_DEF,
-                    value_fun.p);
-                fus_value_attach(vm, value_fun);
+                if(fus_runner_call(runner, sym_i) < 0)return -1;
                 goto dont_update_i;
             break;} case FUS_KEYWORD_call: {
                 fus_arr_t *sig = fus_value_arr_decode(vm, values_inline[1]);

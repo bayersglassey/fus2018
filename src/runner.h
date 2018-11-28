@@ -118,6 +118,7 @@ void fus_runner_pop_callframe(fus_runner_t *runner);
 void fus_runner_start_callframe(fus_runner_t *runner,
     fus_runner_callframe_t *callframe);
 void fus_runner_end_callframe(fus_runner_t *runner);
+int fus_runner_call(fus_runner_t *runner, int sym_i);
 int fus_runner_break_or_loop(fus_runner_t *runner, const char *token, char c);
 
 
