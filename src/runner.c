@@ -110,7 +110,6 @@ int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
     if(fus_runner_load(runner, data) < 0)return -1;
     if(fus_runner_exec_defs(runner) < 0)return -1;
     if(fus_runner_exec(runner) < 0)return -1;
-    if(fus_runner_unload(runner) < 0)return -1;
     return 0;
 }
 
@@ -309,6 +308,17 @@ void fus_runner_init(fus_runner_t *runner, fus_vm_t *vm){
     fus_runner_push_callframe(runner, FUS_CALLFRAME_TYPE_MODULE, NULL);
 }
 
+void fus_runner_cleanup(fus_runner_t *runner){
+    fus_obj_cleanup(runner->vm, &runner->defs);
+    fus_array_cleanup(&runner->callframes);
+}
+
+void fus_runner_reset(fus_runner_t *runner){
+    fus_vm_t *vm = runner->vm;
+    fus_runner_cleanup(runner);
+    fus_runner_init(runner, vm);
+}
+
 int fus_runner_load(fus_runner_t *runner, fus_arr_t *data){
     fus_runner_callframe_t *callframe =
         fus_runner_get_root_callframe(runner);
@@ -318,18 +328,12 @@ int fus_runner_load(fus_runner_t *runner, fus_arr_t *data){
     return 0;
 }
 
-int fus_runner_unload(fus_runner_t *runner){
+int fus_runner_rewind(fus_runner_t *runner){
     fus_runner_callframe_t *callframe =
         fus_runner_get_root_callframe(runner);
     if(callframe == NULL)return -1;
-    callframe->data = NULL;
     callframe->i = 0;
     return 0;
-}
-
-void fus_runner_cleanup(fus_runner_t *runner){
-    fus_obj_cleanup(runner->vm, &runner->defs);
-    fus_array_cleanup(&runner->callframes);
 }
 
 void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,

@@ -94,9 +94,10 @@ bool fus_runner_callframe_type_is_do_like(fus_runner_callframe_type_t type);
  **********/
 
 void fus_runner_init(fus_runner_t *runner, fus_vm_t *vm);
-int fus_runner_load(fus_runner_t *runner, fus_arr_t *data);
-int fus_runner_unload(fus_runner_t *runner);
 void fus_runner_cleanup(fus_runner_t *runner);
+void fus_runner_reset(fus_runner_t *runner);
+int fus_runner_load(fus_runner_t *runner, fus_arr_t *data);
+int fus_runner_rewind(fus_runner_t *runner);
 void fus_runner_dump_callframes(fus_runner_t *runner, FILE *file,
     bool end_at_here);
 
