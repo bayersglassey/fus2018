@@ -17,18 +17,24 @@
 typedef struct fus_app {
     bool execpost;
     const char *filename;
+    bool loaded;
+
     char *code;
     int code_len;
-    bool loaded;
+
     fus_t fus;
+    /* NOTE: fus.parser.arr owns the parsed code,
+    fus.runner just has a pointer to it */
 } fus_app_t;
 
 static int fus_app_init(fus_app_t *app){
     app->execpost = false;
     app->filename = "<no file>";
+    app->loaded = false;
+
     app->code = NULL;
     app->code_len = 0;
-    app->loaded = false;
+
     fus_init(&app->fus);
     return 0;
 }
@@ -57,11 +63,30 @@ static int fus_app_load(fus_app_t *app, const char *filename){
     char *code = load_file(filename);
     if(code == NULL)return -1;
 
+    fus_lexer_t *lexer = &app->fus.lexer;
+    fus_lexer_load_chunk(lexer, code, strlen(code));
+    fus_lexer_mark_final(lexer);
+
+    fus_parser_t *parser = &app->fus.parser;
+    if(fus_parser_parse_lexer(parser, lexer) < 0)goto err;
+    if(!fus_lexer_is_done(lexer)){
+        fus_lexer_perror(lexer, "Lexer finished with status != done");
+        goto err;
+    }
+
+    fus_runner_t *runner = &app->fus.runner;
+    fus_arr_t *data = &parser->arr;
+    if(fus_runner_load(runner, data) < 0)goto err;
+    if(fus_runner_exec_defs(runner) < 0)goto err;
+
     app->filename = filename;
     app->loaded = true;
     app->code = code;
     app->code_len = strlen(code);
     return 0;
+err:
+    free(code);
+    return -1;
 }
 
 
@@ -77,12 +102,20 @@ static int flush_to_request_body(fus_printer_t *printer){
 }
 
 
-static int run(fus_t *fus, const char *code, int code_len){
+static int run(fus_t *fus, const char *code, int code_len,
+    const char *filename
+){
+    /* Runs given code once.
+    Should be able to call this function multiple times with different
+    code, with none of the calls affecting each other. */
+
     fus_lexer_t *lexer = &fus->lexer;
+    fus_lexer_reset(lexer, fus_strdup(&fus->core, filename));
     fus_lexer_load_chunk(lexer, code, code_len);
     fus_lexer_mark_final(lexer);
 
     fus_runner_t *runner = &fus->runner;
+    fus_runner_reset(runner);
     if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
 
     if(!fus_lexer_is_done(lexer)){
@@ -109,7 +142,7 @@ static int serve_execpost(fus_t *fus, struct wsgi_request *request){
     if(uwsgi_response_add_content_type(request, "text/plain", 10))return -1;
 
     /* Run body as fus code */
-    if(run(fus, body, body_len) < 0)return -1;
+    if(run(fus, body, body_len, "<execpost>") < 0)return -1;
 
     /* Write stack to request body */
     fus_runner_t *runner = &fus->runner;
@@ -216,7 +249,8 @@ static int serve_app(fus_app_t *app, struct wsgi_request *request){
     fus_arr_push(vm, stack, value_request);
 
     /* Run fus webapp code */
-    if(run(fus, app->code, app->code_len) < 0)return -1;
+    if(fus_runner_exec(runner) < 0)return -1;
+    if(fus_runner_rewind(runner) < 0)return -1;
 
     /* Pop response from stack */
     stack = fus_runner_get_stack(runner);
