@@ -1,7 +1,8 @@
 
 def f of(-> i): 2
 
-def g of(-> i): @f
+def module of(->):
+    def g of(-> i): @f
 
 def add of(x y -> z): +
 

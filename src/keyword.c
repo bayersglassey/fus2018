@@ -58,7 +58,7 @@ static bool check_arg(char c, fus_value_t value){
         case 'y': return fus_value_is_sym(value);
         case 'n': return fus_value_is_null(value);
         case 'b': return fus_value_is_bool(value);
-        case 'a': return fus_value_is_arr(value);
+        case 'a': case 'c': return fus_value_is_arr(value);
         case 's': return fus_value_is_str(value);
         case 'o': return fus_value_is_obj(value);
         case 'f': return fus_value_is_fun(value);

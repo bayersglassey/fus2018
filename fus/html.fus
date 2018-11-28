@@ -112,11 +112,13 @@ def _prettystr of(elem depth -> str):
     ''parts @format
 
 
-def next_data of(data i0 -> datum i1):
-    1 + ='i
-    'i .$ ='datum
-    'datum 'i
 def elems_from_data of(data -> elems):
+
+    def next_data of(data i0 -> datum i1):
+        1 + ='i
+        'i .$ ='datum
+        'datum 'i
+
     ='data 0 ='i
     arr do:
         'i 'data len < while

@@ -154,6 +154,16 @@ int _fus_runner_exec_defs(fus_runner_t *runner, fus_arr_t *data){
             fus_value_t *values_inline = &values[i + 1];
             i += n_args_inline;
 
+            const char *s_args_inline = keyword->s_args_inline;
+            for(int j = 0; j < n_args_inline; j++){
+                char c = s_args_inline[j];
+                if(c == 'c'){
+                    /* 'c' is for "code" */
+                    fus_value_t value = values_inline[j];
+                    if(_fus_runner_exec_defs(runner, &value.p->data.a) < 0)return -1;
+                }
+            }
+
             if(sym_i == FUS_KEYWORD_def){
                 int def_sym_i = fus_value_sym_decode(vm, values_inline[0]);
 
