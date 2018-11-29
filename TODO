@@ -20,3 +20,60 @@ We get this error:
 Also, fus_runner_dump shows 1 sym past where it needs to.
 Because calls increment i *before* pushing new frame.
 You see?..
+
+
+Nov 28, 2018:
+-------------
+
+Similar to "tuple", how about "tovars" and "tokeys":
+
+    1 2 3 tovars: x y z
+    1 2 3 obj tokeys: x y z
+
+
+Files, modules, imports, etc:
+
+    # load fus/format.fus as module Format:
+    load Format: fus format
+
+    # or like this?.. (I prefer the former because it doesn't have to know about file systems)
+    load Format "fus/format.fus"
+
+    # Use defs tostr and format from module Format:
+    from Format: tostr format
+
+    # Use and rename defs:
+    from Format: tostr =f format =g
+
+By the way,
+
+    module M: ...
+
+...is just shorthand for:
+
+    def M of(->): ...
+
+Also, I think the following is valid:
+
+    module M:
+        fun of(->):
+            def f of(-> i): 1
+    from M: f
+    @f 1 == assert
+
+...that is, you can't hide "def f" inside a fun.
+It's always possible to get at any def via a suitable chain of "from".
+
+So how do def lookups work?
+    Get rid of runner->data, runner->defs.
+    We will be using fun->data, fun->defs.
+    Callframes already have a pointer to fun, which is good.
+    We want to store loaded files as an array of funs. (On runner?..)
+    Or I guess we want a fus_file_t:
+
+        typedef struct fus_file {
+            char *filepath;
+            bool loaded;
+            fus_fun_t fun;
+        } fus_file_t;
+
