@@ -12,6 +12,7 @@ then
         F=$(basename "$F")
         echo "        ${F%%.c}"
     done
+    echo "        lib_install"
     exit 1
 fi
 
@@ -62,7 +63,7 @@ then
     OUTFILE="libfus.so"
     LIBDIR="/usr/lib/"
     INCDIR="/usr/include/fus/"
-    SRCFILES="src/*.h"
+    SRCFILES="src/*.h src/*.inc"
 
     >&2 echo "Installing libfus..."
 
@@ -74,6 +75,7 @@ then
     cp $SRCFILES "$INCDIR"
 
     >&2 echo "Installation complete!"
+    >&2 echo "To test, try: ./compile libtest && ./main"
     exit 0
 elif [ "$MAIN" = "libtest" ]
 then

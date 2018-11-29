@@ -89,7 +89,7 @@ void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt){
 
 
 int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
-    bool dump_parser
+    const char *def_name, bool dump_parser
 ){
     int status = -1;
 
@@ -98,7 +98,7 @@ int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
 
     if(fus_parser_parse_lexer(&parser, lexer) < 0)goto err;
     if(dump_parser)fus_parser_dump(&parser, stderr);
-    if(fus_runner_exec_data(runner, &parser.arr) < 0)goto err;
+    if(fus_runner_exec_data(runner, &parser.arr, def_name) < 0)goto err;
 
     status = 0; /* OK! */
 err:
@@ -106,9 +106,16 @@ err:
     return status;
 }
 
-int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data){
+int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data,
+    const char *def_name
+){
     if(fus_runner_load(runner, data) < 0)return -1;
     if(fus_runner_exec_defs(runner) < 0)return -1;
+    if(def_name != NULL){
+        int sym_i = fus_symtable_get_or_add_from_string(
+            runner->vm->symtable, def_name);
+        if(fus_runner_call(runner, sym_i) < 0)return -1;
+    }
     if(fus_runner_exec(runner) < 0)return -1;
     return 0;
 }

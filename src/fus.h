@@ -18,6 +18,6 @@ struct fus {
 void fus_init(fus_t *fus);
 void fus_cleanup(fus_t *fus);
 
-int fus_run_text(fus_t *fus, const char *text);
+int fus_run_text(fus_t *fus, const char *text, const char *def_name);
 
 #endif

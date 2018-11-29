@@ -109,4 +109,3 @@ def compile of(compiler data -> compiler compiled_data):
 
     ''compiler ''compiled_data
 
-@test

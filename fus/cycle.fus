@@ -38,4 +38,3 @@ def test of(->):
         dup .label 100 == assert
     drop
 
-@test

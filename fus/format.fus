@@ -74,4 +74,3 @@ def arr_tostr of(x opts -> s):
 
     ''s "]" str_join
 
-@test

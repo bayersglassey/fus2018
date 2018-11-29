@@ -5,6 +5,9 @@
 # language, making it easy to parse using C, and thereby bootstrap
 # up to the full language.
 
+def test of(->):
+    @parser_test
+
 
 ##########
 # PARSER #
@@ -67,10 +70,3 @@ def def_new of(title -> def): obj
     swap =.title
     obj =.refs
 
-
-
-#############
-# RUN TESTS #
-#############
-
-@parser_test

@@ -208,4 +208,3 @@ def test of(->):
     's2 's3 str_eq assert
     's3 str_p
 
-@test

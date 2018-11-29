@@ -66,4 +66,3 @@ def test of(->):
         loop
     drop
 
-@test

@@ -72,4 +72,3 @@ def del of(heap key -> heap):
     ''heap
         ..entries 'i @arr_del =.entries
 
-@test

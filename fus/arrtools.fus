@@ -72,5 +72,4 @@ def test of(->):
         dup .prod 24000 == assert
     drop
 
-@test
 

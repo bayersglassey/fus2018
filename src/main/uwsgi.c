@@ -103,7 +103,7 @@ static int flush_to_request_body(fus_printer_t *printer){
 
 
 static int run(fus_t *fus, const char *code, int code_len,
-    const char *filename
+    const char *filename, const char *def_name
 ){
     /* Runs given code once.
     Should be able to call this function multiple times with different
@@ -116,7 +116,7 @@ static int run(fus_t *fus, const char *code, int code_len,
 
     fus_runner_t *runner = &fus->runner;
     fus_runner_reset(runner);
-    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
+    if(fus_runner_exec_lexer(runner, lexer, def_name, false) < 0)return -1;
 
     if(!fus_lexer_is_done(lexer)){
         fus_lexer_perror(lexer, "Lexer finished with status != done");
@@ -142,7 +142,7 @@ static int serve_execpost(fus_t *fus, struct wsgi_request *request){
     if(uwsgi_response_add_content_type(request, "text/plain", 10))return -1;
 
     /* Run body as fus code */
-    if(run(fus, body, body_len, "<execpost>") < 0)return -1;
+    if(run(fus, body, body_len, "<execpost>", NULL) < 0)return -1;
 
     /* Write stack to request body */
     fus_runner_t *runner = &fus->runner;

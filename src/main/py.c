@@ -35,7 +35,7 @@ static PyObject *module_method_run(PyObject *self, PyObject *args){
 
     module_state_t *state = PyModule_GetState(self);
     fus_t *fus = &state->fus;
-    if(fus_run_text(fus, text) < 0){
+    if(fus_run_text(fus, text, NULL) < 0){
         PyErr_SetString(PyExc_RuntimeError, "Fus runtime");
         return NULL;
     }

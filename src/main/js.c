@@ -30,7 +30,7 @@ EMSCRIPTEN_KEEPALIVE
 int exec(const char *text){
     fus_t fus;
     fus_init(&fus);
-    int status = fus_run_text(&fus, text);
+    int status = fus_run_text(&fus, text, NULL);
     fus_cleanup(&fus);
     return status;
 }

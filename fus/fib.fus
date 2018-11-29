@@ -1,5 +1,9 @@
 
 def test of(->):
+    @test_basic
+    @test_cache
+
+def test_basic of(->):
     # Test basic generator behaviour
 
     @new
@@ -80,5 +84,3 @@ def get of(gen i -> gen val):
     # Return:
     ''gen ''val
 
-@test
-@test_cache

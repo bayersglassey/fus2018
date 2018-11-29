@@ -5,6 +5,14 @@ echo "Compiling \"run\"..."
 ./compile run
 echo "Compiled OK"
 
+DEF_NAME=""
+if [ "$1" = "-T" ]
+then
+    shift
+    DEF_NAME="-T"
+fi
+
+
 if [ -z "$1" ]
 then
     FILES="test/*.fus"
@@ -27,7 +35,7 @@ do
     echo
     echo "Running file: $F"
     echo "$STARS"
-    if ./main "$F"
+    if ./main $DEF_NAME "$F"
     then
         echo "$STARS"
         echo "Ran $F [OK]"

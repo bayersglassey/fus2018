@@ -122,4 +122,3 @@ def test of(->):
     'o2 ?.y not assert
     'o2 ?.__y assert
 
-@test

@@ -70,8 +70,9 @@ void fus_runner_dump_error(fus_runner_t *runner);
 void fus_runner_dump_state(fus_runner_t *runner, FILE *file, const char *fmt);
 
 int fus_runner_exec_lexer(fus_runner_t *runner, fus_lexer_t *lexer,
-    bool dump_parser);
-int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data);
+    const char *def_name, bool dump_parser);
+int fus_runner_exec_data(fus_runner_t *runner, fus_arr_t *data,
+    const char *def_name);
 int fus_runner_exec_defs(fus_runner_t *runner);
 int _fus_runner_exec_defs(fus_runner_t *runner, fus_arr_t *data);
 int fus_runner_exec(fus_runner_t *runner);

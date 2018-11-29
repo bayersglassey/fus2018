@@ -31,4 +31,3 @@ def test of(->):
     "Joe Q" @get_hello_msg "Hello, Joe Q!" str_eq assert
     "Joe Q" @say_hello
 
-@test

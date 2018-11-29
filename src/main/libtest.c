@@ -15,7 +15,7 @@ static int test(fus_t *fus){
     fus_runner_t *runner = &fus->runner;
 
     fus_lexer_load_chunk(lexer, text, strlen(text) + 1);
-    if(fus_runner_exec_lexer(runner, lexer, false) < 0)return -1;
+    if(fus_runner_exec_lexer(runner, lexer, NULL, false) < 0)return -1;
     fus_runner_dump_state(runner, stdout, "dvs");
 
     if(!fus_lexer_is_done(lexer)){
