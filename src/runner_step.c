@@ -577,10 +577,10 @@ int fus_runner_step(fus_runner_t *runner){
                 fus_printer_flush(&printer);
                 fus_printer_cleanup(&printer);
                 fus_value_detach(vm, value);
-            break;} case FUS_KEYWORD_def: {
-                /* Defs are now handled at "compile"-time.
-                See: fus_runner_exec_defs
-                So "def" is now a no-op. */
+            break;} case FUS_KEYWORD_def: case FUS_KEYWORD_module:
+            case FUS_KEYWORD_load: case FUS_KEYWORD_from: {
+                /* These are all handled at "compile"-time.
+                See: fus_runner_exec_defs */
             break;} case FUS_KEYWORD_fun: {
 
                 /* Check for "of" */
