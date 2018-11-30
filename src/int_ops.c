@@ -73,6 +73,36 @@ FUS_VALUE_INT_BINOP(mul){
     return fus_value_int(vm, z);
 }
 
+FUS_VALUE_INT_BINOP(div){
+    if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
+    fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
+
+    fprintf(stderr, "%s: TODO: Check over/under flow, etc\n", __func__);
+
+    if(y == 0)return fus_value_err(vm, x>0?
+        FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
+
+    fus_unboxed_t z = x / y;
+    return fus_value_int(vm, z);
+}
+
+FUS_VALUE_INT_BINOP(mod){
+    if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    if(!FUS_IS_INT(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
+    fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
+    fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
+
+    fprintf(stderr, "%s: TODO: Check over/under flow, use arithmetic modulus, etc\n", __func__);
+
+    if(y == 0)return fus_value_err(vm, x>0?
+        FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
+
+    fus_unboxed_t z = x % y;
+    return fus_value_int(vm, z);
+}
+
 
 
 #define FUS_VALUE_INT_COMPARISON(OP) \
