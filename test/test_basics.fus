@@ -81,3 +81,15 @@ def mkpoint of(x y -> point):
 1 2 <=  assert
 1 2 >=  not assert
 "INT OPS OK!\n" str_p
+
+"EUCLIDIAN DIVISION:\n" str_p
+# https://en.wikipedia.org/wiki/Euclidean_division
+ 7  3   /  2 == assert
+ 7  3 mod  1 == assert
+ 7 -3   / -2 == assert
+ 7 -3 mod  1 == assert
+-7  3   / -3 == assert
+-7  3 mod  2 == assert
+-7 -3   /  dup p 3 == assert
+-7 -3 mod  2 == assert
+"EUCLIDIAN DIVISION OK!\n" str_p

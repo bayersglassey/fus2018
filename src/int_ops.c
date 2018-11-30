@@ -73,6 +73,19 @@ FUS_VALUE_INT_BINOP(mul){
     return fus_value_int(vm, z);
 }
 
+
+static int _div(int x, int y){
+    /* y is assumed to be non-negative */
+    if(x < 0)return (x - (y-1)) / y;
+    return x / y;
+}
+
+static int _rem(int x, int y){
+    /* y is assumed to be non-negative */
+    if(x < 0)return (y - 1) + (x - (y-1)) % y;
+    return x % y;
+}
+
 FUS_VALUE_INT_BINOP(div){
     if(!FUS_IS_INT(value_x))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
     if(!FUS_IS_INT(value_y))return fus_value_err(vm, FUS_ERR_WRONG_TYPE);
@@ -80,11 +93,14 @@ FUS_VALUE_INT_BINOP(div){
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
     fprintf(stderr, "%s: TODO: Check over/under flow, etc\n", __func__);
+    /* See: https://en.wikipedia.org/wiki/Euclidean_division */
 
     if(y == 0)return fus_value_err(vm, x>0?
         FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
 
-    fus_unboxed_t z = x / y;
+    fus_unboxed_t abs_y = y < 0? -y: y;
+    fus_unboxed_t z = _div(x, abs_y);
+    if(y < 0)z = -z;
     return fus_value_int(vm, z);
 }
 
@@ -94,12 +110,14 @@ FUS_VALUE_INT_BINOP(mod){
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
-    fprintf(stderr, "%s: TODO: Check over/under flow, use arithmetic modulus, etc\n", __func__);
+    fprintf(stderr, "%s: TODO: Check over/under flow, etc\n", __func__);
+    /* See: https://en.wikipedia.org/wiki/Euclidean_division */
 
     if(y == 0)return fus_value_err(vm, x>0?
         FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
 
-    fus_unboxed_t z = x % y;
+    fus_unboxed_t abs_y = y < 0? -y: y;
+    fus_unboxed_t z = _rem(x, abs_y);
     return fus_value_int(vm, z);
 }
 
