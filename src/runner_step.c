@@ -20,7 +20,7 @@ int fus_runner_step(fus_runner_t *runner){
     if(i >= token_values_len){
         /* End callframe if we've reached end of data.
         Doing so counts as a complete step. */
-        fus_runner_end_callframe(runner);
+        fus_runner_end_callframe(runner, false);
         return 0;
     }
     fus_value_t token_value = token_values[i];
@@ -694,7 +694,7 @@ int fus_runner_step(fus_runner_t *runner){
                         FUS_STATE_PUSH_CALLFRAME(data)
                         callframe->loop_data.int_for.i = 0;
                         callframe->loop_data.int_for.n = n;
-                        fus_runner_start_callframe(runner, callframe);
+                        fus_runner_callframe_start(callframe);
                         goto dont_update_i;
                     }
                     fus_value_detach(vm, value);
@@ -708,7 +708,7 @@ int fus_runner_step(fus_runner_t *runner){
                         FUS_STATE_PUSH_CALLFRAME(data)
                         callframe->loop_data.arr_for.i = 0;
                         callframe->loop_data.arr_for.boxed = value.p;
-                        fus_runner_start_callframe(runner, callframe);
+                        fus_runner_callframe_start(callframe);
                         goto dont_update_i;
                     }
                     fus_value_detach(vm, value);

@@ -12,19 +12,19 @@ do:
 
 0 int_for: ='i
     ''output 'i, ='output
-    "INT_FOR (empty): "str_p 'i p
+    "INT_FOR (empty): " str_p 'i p
 
 3 int_for: ='i
     ''output 'i, ='output
-    "INT_FOR: "str_p 'i p
+    "INT_FOR: " str_p 'i p
 
 arr arr_for: ='x
     ''output 'x, ='output
-    "ARR_FOR (empty): "str_p 'x p
+    "ARR_FOR (empty): " str_p 'x p
 
 arr "A", "B", "C", arr_for: ='x
     ''output 'x, ='output
-    "ARR_FOR: "str_p 'x p
+    "ARR_FOR: " str_p 'x p
 
 
 'output
@@ -37,4 +37,22 @@ arr "A", "B", "C", arr_for: ='x
     lpop "A" str_eq assert
     lpop "B" str_eq assert
     lpop "C" str_eq assert
+len 0 == assert
+
+
+"---BREAK---\n" str_p
+arr 3 int_for: ='i
+    "INT_FOR: " str_p 'i p
+    'i 1 == if: break
+    'i,
+lpop 0 == assert
+len 0 == assert
+
+"---LOOP---\n" str_p
+arr 3 int_for: ='i
+    "INT_FOR: " str_p 'i p
+    'i 1 == if: loop
+    'i,
+lpop 0 == assert
+lpop 2 == assert
 len 0 == assert

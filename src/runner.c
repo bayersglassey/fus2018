@@ -556,9 +556,8 @@ void fus_runner_pop_callframe(fus_runner_t *runner){
     fus_array_pop(&runner->callframes);
 }
 
-void fus_runner_start_callframe(fus_runner_t *runner,
-    fus_runner_callframe_t *callframe
-){
+void fus_runner_callframe_start(fus_runner_callframe_t *callframe){
+    fus_runner_t *runner = callframe->runner;
     fus_vm_t *vm = runner->vm;
     fus_runner_callframe_type_t type = callframe->type;
     if(type == FUS_CALLFRAME_TYPE_INT_FOR){
@@ -579,29 +578,48 @@ void fus_runner_start_callframe(fus_runner_t *runner,
     }
 }
 
-void fus_runner_end_callframe(fus_runner_t *runner){
+void fus_runner_callframe_end(fus_runner_callframe_t *callframe,
+    bool *looping_ptr
+){
+    /* What happens when we reach the end of the callframe.
+    If looping is true, caller is trying to loop back to beginning
+    of callframe; int_for and arr_for can decide to disallow this if
+    they're out of data. */
+
+    bool looping = *looping_ptr;
+
+    fus_runner_callframe_type_t type = callframe->type;
+    if(type == FUS_CALLFRAME_TYPE_INT_FOR){
+        int i = ++callframe->loop_data.int_for.i;
+        int n = callframe->loop_data.int_for.n;
+        if(i < n){
+            callframe-> i = 0; /* Callframe loops */
+            fus_runner_callframe_start(callframe);
+            looping = true;
+        }else looping = false;
+    }else if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
+        int i = ++callframe->loop_data.arr_for.i;
+        fus_arr_t *a = &callframe->loop_data.arr_for.boxed->data.a;
+        fus_array_len_t len = a->values.len;
+        if(i < len){
+            callframe-> i = 0; /* Callframe loops */
+            fus_runner_callframe_start(callframe);
+            looping = true;
+        }else looping = false;
+    }else{
+        /* E.g. FUS_CALLFRAME_TYPE_DO, DEF, etc.
+        Nothing to do here -- caller gets to decide whether we're
+        looping or not. */
+    }
+
+    *looping_ptr = looping;
+}
+
+void fus_runner_end_callframe(fus_runner_t *runner, bool looping){
     if(runner->callframes.len > 1){
         fus_runner_callframe_t *callframe = fus_runner_get_callframe(runner);
-        fus_runner_callframe_type_t type = callframe->type;
-        if(type == FUS_CALLFRAME_TYPE_INT_FOR){
-            int i = ++callframe->loop_data.int_for.i;
-            int n = callframe->loop_data.int_for.n;
-            if(i < n){
-                callframe-> i = 0; /* Callframe loops */
-                fus_runner_start_callframe(runner, callframe);
-                return; /* Don't pop the callframe, it's looping! */
-            }
-        }else if(type == FUS_CALLFRAME_TYPE_ARR_FOR){
-            int i = ++callframe->loop_data.arr_for.i;
-            fus_arr_t *a = &callframe->loop_data.arr_for.boxed->data.a;
-            fus_array_len_t len = a->values.len;
-            if(i < len){
-                callframe-> i = 0; /* Callframe loops */
-                fus_runner_start_callframe(runner, callframe);
-                return; /* Don't pop the callframe, it's looping! */
-            }
-        }
-        fus_runner_pop_callframe(runner);
+        fus_runner_callframe_end(callframe, &looping);
+        if(!looping)fus_runner_pop_callframe(runner);
     }else{
         /* Don't pop the root callframe!
         That's how caller can inspect stack/vars/etc. */
@@ -634,6 +652,7 @@ int fus_runner_break_or_loop(fus_runner_t *runner, const char *token, char c){
         fus_runner_pop_callframe(runner);
     }else if(c == 'l'){
         /* 'l' for "loop" */
+        fus_runner_end_callframe(runner, true);
         callframe->i = 0;
     }else{
         fprintf(stderr, "%s: '%c' not one of 'b', 'l'\n", __func__, c);
