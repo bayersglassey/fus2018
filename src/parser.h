@@ -37,5 +37,6 @@ int fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr);
 FUS_PARSER_DECLS(int)
 FUS_PARSER_DECLS(sym)
 FUS_PARSER_DECLS(str)
+FUS_PARSER_DECLS(blockstr)
 
 #endif

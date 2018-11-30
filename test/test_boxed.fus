@@ -130,4 +130,9 @@ len 0 == assert
 `xyzzy sym_tostr "xyzzy" str_eq assert
 "qwerty" str_tosym `qwerty sym_eq assert
 
+# Blockstr:
+    ;;Here's a "block string". \n! \"!
+    "Here's a \"block string\". \\n! \\\"!"
+str_eq assert
+
 "Tests OK!\n" str_p

@@ -60,8 +60,13 @@ int fus_parser_parse_lexer(fus_parser_t *parser, fus_lexer_t *lexer){
             if(fus_parser_tokenparse_sym(parser,
                 lexer->token, lexer->token_len) < 0)return -1;
         }else if(type == FUS_TOKEN_STR){
-            if(fus_parser_tokenparse_str(parser,
-                lexer->token, lexer->token_len) < 0)return -1;
+            if(lexer->token[0] == ';'){
+                if(fus_parser_tokenparse_blockstr(parser,
+                    lexer->token, lexer->token_len) < 0)return -1;
+            }else{
+                if(fus_parser_tokenparse_str(parser,
+                    lexer->token, lexer->token_len) < 0)return -1;
+            }
         }else if(type == FUS_TOKEN_ARR_OPEN){
             arr_depth++;
             if(fus_parser_push_arr(parser) < 0)return -1;
@@ -154,6 +159,7 @@ int fus_parser_pop_value(fus_parser_t *parser, fus_value_t *value_ptr){
 FUS_PARSER_DEFS(int)
 FUS_PARSER_DEFS(sym)
 FUS_PARSER_DEFS(str)
+FUS_PARSER_DEFS(blockstr)
 
 fus_value_t fus_value_tokenparse_int(fus_vm_t *vm,
     const char *token, int token_len
@@ -254,3 +260,29 @@ err:
     return fus_value_err(vm, FUS_ERR_CANT_PARSE);
 }
 
+fus_value_t fus_value_tokenparse_blockstr(fus_vm_t *vm,
+    const char *token, int token_len
+){
+    if(token_len < 2){
+        FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+            "Token too short (must be at least 2 chars)")
+        goto err;
+    }
+
+    if(token[0] != ';' || token[1] != ';'){
+        FUS_PARSER_LOG_PARSE_ERROR(token, token_len,
+            "Token must start with \";;\"")
+        goto err;
+    }
+
+    /* NOTE: The -2 is because leading ";;" is removed. */
+    int text_len = token_len - 2;
+    char *text = fus_malloc(vm->core, text_len + 1);
+
+    /* Copy over everything except leading ";;" */
+    strncpy(text, token + 2, token_len - 2);
+    return fus_value_str(vm, text, text_len, text_len + 1);
+
+err:
+    return fus_value_err(vm, FUS_ERR_CANT_PARSE);
+}
