@@ -63,8 +63,10 @@ FUS_VALUE_INT_BINOP(mul){
 
     /* overflow/underflow checks */
     /* Taken from https://stackoverflow.com/a/1514309 */
-    if(y > FUS_PAYLOAD_MAX / x)return fus_value_err(vm, FUS_ERR_OVERFLOW);
-    if(y < FUS_PAYLOAD_MIN / x)return fus_value_err(vm, FUS_ERR_UNDERFLOW);
+    if(x != 0){
+        if(y > FUS_PAYLOAD_MAX / x)return fus_value_err(vm, FUS_ERR_OVERFLOW);
+        if(y < FUS_PAYLOAD_MIN / x)return fus_value_err(vm, FUS_ERR_UNDERFLOW);
+    }
     /* The following checks are apparently only necessary on two's compliment machines */
     if((x == -1) && (y == FUS_PAYLOAD_MIN))return fus_value_err(vm, FUS_ERR_OVERFLOW);
     if((y == -1) && (x == FUS_PAYLOAD_MIN))return fus_value_err(vm, FUS_ERR_OVERFLOW);

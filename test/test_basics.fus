@@ -71,6 +71,8 @@ def mkpoint of(x y -> point):
 1 2 +   3 == assert
 1 2 -  -1 == assert
 1 2 *   2 == assert
+0 2 *   0 == assert
+1 0 *   0 == assert
 10 2 /  5 == assert
 10 2 mod  0 == assert
 12 5 mod  2 == assert
