@@ -94,8 +94,7 @@ FUS_VALUE_INT_BINOP(div){
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
-    fprintf(stderr, "%s: TODO: Check over/under flow, etc\n", __func__);
-    /* See: https://en.wikipedia.org/wiki/Euclidean_division */
+    /* TODO: Check over/under flow, etc */
 
     if(y == 0)return fus_value_err(vm, x>0?
         FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
@@ -112,8 +111,7 @@ FUS_VALUE_INT_BINOP(mod){
     fus_unboxed_t x = FUS_GET_PAYLOAD(value_x.i);
     fus_unboxed_t y = FUS_GET_PAYLOAD(value_y.i);
 
-    fprintf(stderr, "%s: TODO: Check over/under flow, etc\n", __func__);
-    /* See: https://en.wikipedia.org/wiki/Euclidean_division */
+    /* TODO: Check over/under flow, etc */
 
     if(y == 0)return fus_value_err(vm, x>0?
         FUS_ERR_OVERFLOW: FUS_ERR_UNDERFLOW);
