@@ -77,3 +77,16 @@ So how do def lookups work?
             fus_fun_t fun;
         } fus_file_t;
 
+
+Nov 30, 2018:
+-------------
+
+do vs int_for, arr_for:
+The behaviour of "loop" is markedly different when you're in a do-block
+vs a for-block.
+It makes it difficult to refactor ('n int_for: ='i ...) into
+(0 ='i do: ... ''i 1 - ='i loop) because there's no way for code in the
+(...) of the do-block to say "please do whatever you do each step of the
+loop", e.g. (''i 1 - ='i).
+
+
