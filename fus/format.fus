@@ -19,6 +19,20 @@ def format of(a opts -> s):
         'opts @tostr str_join
 
 def tostr of(x opts -> s):
+    ='opts ='x
+    'x typeof ='T
+    do:
+        'T `null sym_eq if: "null" break
+        'T `bool sym_eq if: 'x ifelse("T")("F") break
+        'T `int sym_eq if: 'x int_tostr break
+        'T `str sym_eq if: 'x break
+        'T `sym sym_eq if: 'x sym_tostr break
+        'T `fun sym_eq if: "<fun>" break
+        'T `obj sym_eq if: 'x 'opts @obj_tostr break
+        'T `arr sym_eq if: 'x 'opts @arr_tostr break
+        obj "Unknown type" =.msg 'T =.T error
+
+def tostr_alt of(x opts -> s):
     ='opts
     obj
         fun of(x opts -> s)(drop drop "null") =.null

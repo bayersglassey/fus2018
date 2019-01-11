@@ -1,35 +1,35 @@
 
 # Port of hexcollmap_parse_lines and friends from src/hexmap.c
-# in geom2018 repo, with contents of data/maps/test/map2x.fus
+# in geom2018 repo, with contents of data/maps/test/map3x.fus
 # from that repo as the test data
 
 data:
-    ;;                           + - + - +   .   + - + - +
-    ;;                          /       /       /         \
-    ;;                         +   + - +       +           +
-    ;;                        /   /     \       \           \
-    ;;                       +   +   + - +       + - +   + - +                   +       + - +
-    ;;                        \     /                 \ /                       / \           \
-    ;;                     .   + - +                   +       .               + - +           +
-    ;;                                                                                          \
-    ;;                   +           +               .       + - +   .   + - + - +               +
-    ;;                  / \                  S              /   / \       \       \             / \
-    ;;                 +   + - +   .   + -(+)- +   .       +     - +       +       + - +   + - +   +
-    ;;                /   /   /         \       \           \     / \       \     /     \   \ /
-    ;;               +   +   +           +       +           +     - +       + - +       +   +
-    ;;                \   \   \           \     /           /*    \ /                     \
-    ;;                 +       +           + - +           + - +   +                       + - + - + - +
-    ;;                  \     /                                 \*/                                     \
-    ;;                   + - +               .                   +                                       +
     ;;
-    ;;                     .       +           .       + - +   .
-    ;;                            / \                 /     \
-    ;;                       + - +   + - +       + - +   +   +
-    ;;                        \      *\*/*\       \   \     /
-    ;;                         +     - + - +       +   + - +
-    ;;                          \    */*\*/       /       /
-    ;;                           + - + - +   .   + - + - +
-    ;;
+    ;;              + - + - +   .   + - + - +
+    ;;             /         \     /         \
+    ;;            +           +   +           +
+    ;;           /           /     \         /
+    ;;          +       + - +       + - + - +   +
+    ;;           \     /   /*\
+    ;;        .   + - +   + - +  %+       +       +                         [1]
+    ;;                     \*/*\  %\                                        [1]
+    ;;      +               + - +  %+       + - + - +                       [1]
+    ;;     / \             /*\*/  %/*\     /         \                      [111]
+    ;;    +   + - +   +   + - +  %+ - +   +   +       +                     [121]
+    ;;   /       /     \ /*\*/    %\*/*\   \   \       \                    [11211]
+    ;;  +       +       + - +   .  %+ - +   +   +       +                   [121]
+    ;;   \       \                  %\*/   /   /    D  /                    [111]
+    ;;    +       + - + - + -(+)- +  %+   +   + - + - +                     [1]
+    ;;     \     /         \*/*\*/*\     /         \*/
+    ;;      + - +           + - + - + - +           +
+    ;;                               \*/
+    ;;        .                       +   +
+    ;;                                   /
+    ;;          + - + - + - +   + - + - +
+    ;;           \           \       \*/*\
+    ;;            +           +       + - + - +
+    ;;             \         /       /*\*/*\*/
+    ;;              + - + - +   .   + - + - +
 ='lines
 
 'lines @collmap_parse ='collmap
@@ -40,12 +40,17 @@ data:
 # MISC
 def str_tochar of(s -> i): 0 str_getcode
 def S        of(-> i): "S"  @str_tochar
+def D        of(-> i): "D"  @str_tochar
+def W        of(-> i): "w"  @str_tochar
+def X        of(-> i): "x"  @str_tochar
+def ZERO     of(-> i): "0"  @str_tochar
 def DOT      of(-> i): "."  @str_tochar
 def SPACE    of(-> i): " "  @str_tochar
 def PLUS     of(-> i): "+"  @str_tochar
 def MINUS    of(-> i): "-"  @str_tochar
 def TIMES    of(-> i): "*"  @str_tochar
 def QMARK    of(-> i): "?"  @str_tochar
+def PERCENT  of(-> i): "%"  @str_tochar
 def SLASH    of(-> i): "/"  @str_tochar
 def BSLASH   of(-> i): "\\" @str_tochar
 def LPAREN   of(-> i): "("  @str_tochar
@@ -223,7 +228,7 @@ def collmap_parse_find_origin of(lines -> ox oy ok):
                 'y ='oy
                 2 ='skip_x
                 loop
-            " x.+/-\\*S%?" 'c @strchr is_null not if:
+            " x.+/-\\*SD%?" 'c @strchr is_null not if:
                 # these are all fine
                 loop
             'c @LBRACKET == if:
@@ -255,10 +260,11 @@ of(lines ox oy -> map_t map_b map_l map_r ok):
         'line str_len int_for: ='x
             'skip_x 0 > if: ''skip_x 1 - ='skip_x loop
             'line 'x str_getcode ='c
-            ".+/-\\*S?" 'c @strchr is_null not if:
+            ".+/-\\*SD?" 'c @strchr is_null not if:
 
-                # savepoint is just a face
+                # savepoints, doors are just faces
                 'c @S == if: @TIMES ='c
+                'c @D == if: @TIMES ='c
 
                 # dots & part references are just verts
                 'c @DOT == or('c @QMARK ==) if: @PLUS ='c
@@ -281,7 +287,7 @@ of(lines ox oy -> map_t map_b map_l map_r ok):
                 'map_l 'mx @min ='map_l
                 'map_r 'mx @max ='map_r
                 loop
-            " x.+/-\\*S%?()" 'c @strchr is_null not if:
+            " x.+/-\\*SD%?()" 'c @strchr is_null not if:
                 # these are all fine
                 loop
             'c @LBRACKET == if:
@@ -295,12 +301,97 @@ of(lines ox oy -> map_t map_b map_l map_r ok):
 def collmap_parse_tiles of(collmap lines -> collmap ok):
     ='lines ='collmap
     T ='ok
-    # TODO...
+
+    ''collmap 'lines F @_collmap_parse_tiles ='ok ='collmap
+    'ok if:
+        ''collmap 'lines T @_collmap_parse_tiles ='ok ='collmap
+    ''collmap 'ok
+
+def _collmap_parse_tiles
+of(collmap lines parsing_part_references -> collmap ok):
+    ='parsing_part_references ='lines ='collmap
+    T ='ok
+    @ZERO ='default_vert_c
+    @ZERO ='default_edge_c
+    @ZERO ='default_face_c
+    'lines len int_for: ='y
+        'lines 'y .$ ='line
+
+        null ='tilebucket
+        F ='tilebucket_active
+            # A "tile bucket" is a group of characters at the end
+            # of the line, surrounded by square brackets, e.g. [1aq].
+            # While parsing a line, the '%' character indicates that we
+            # should find the next tile bucket; then, as we encounter
+            # '-' '/' '\' '+' '*' characters, we will use the characters
+            # in the bucket one at a time as the tile_c character,
+            # instead of the default tile_c.
+            # While parsing a line, '?' works similarly to '%' except
+            # that instead of modifying tile_c, it loads other collmaps
+            # over this one.
+            # TODO: Clarify this comment...
+
+        0 ='skip_x
+        'line str_len int_for: ='x
+            'skip_x 0 > if: ''skip_x 1 - ='skip_x loop
+            'line 'x str_getcode ='c
+            "x+/-\\*SDw" 'c @strchr is_null not if:
+
+                # !!!
+
+                'c @S == ='is_savepoint
+                'c @D == ='is_door
+                'c @W == ='is_water
+                'is_savepoint or: 'is_door or: 'is_water
+                if: @TIMES ='c
+
+                'c @X == ='is_hard_transparent
+                'is_hard_transparent if:
+                    ('x 'ox -) ('y 'oy -) @get_map_elem_type ='c
+
+                'is_savepoint ifelse(@S):
+                    'is_door ifelse(@D):
+                        'is_water ifelse(@W):
+                            'is_hard_transparent ifelse(@X):
+                                'c @represents_vert
+                                ifelse('default_vert_c):
+                                    'c @represents_edge
+                                    ifelse('default_edge_c):
+                                        'c @represents_face
+                                        ifelse('default_face_c):
+                                            @SPACE
+                ='tile_c
+
+                0 ='draw_z
+
+                'tilebucket_active if:
+                    # Get next non-' ' character in current tile bucket.
+                    # TODO...
+
+                'parsing_part_references not if:
+                    # TODO...
+
+                loop
+            'c @PERCENT == or('c @QMARK ==) if:
+                # Find next tile bucket.
+                # TODO...
+                loop
+            'c @LBRACKET == if:
+                # We hit a tilebucket, so no more regular tile data on
+                # this line. Next plz!
+                break
+        'ok not if: break
+
+    # Return:
     ''collmap 'ok
 
 
 ###############################################################################
 # COLLMAP UTILS
+
+def represents_vert of(c -> bool): @PLUS ==
+def represents_edge of(c -> bool): "-/\\" swap @strchr is_null not
+def represents_face of(c -> bool): @TIMES ==
 
 def get_map_elem_type of(x y -> c):
     # A poorly-named function which figures out whether a vert, edge, or
