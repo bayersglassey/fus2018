@@ -90,3 +90,126 @@ It makes it difficult to refactor ('n int_for: ='i ...) into
 loop", e.g. (''i 1 - ='i).
 
 
+Jan 11, 2019:
+-------------
+
+Runner state as fus value:
+
+    obj # state
+        arr # callstack
+            obj # callframe
+                fun() =.fun
+                arr =.stack
+                obj =.vars
+                arr # blockstack
+                    obj # block
+                        `do =.type
+                        arr =.code
+                        0 =.code_i
+                    ,
+                =.blockstack
+            ,
+        =.callstack
+    ='state
+
+A block's type is used to determine the behaviour of break and loop.
+
+    def f():
+        ='x ='y
+        ('x 'y +) ='z
+
+    # Right after entering ('x 'y +), the blockstack looks like:
+
+    arr
+        obj
+            `def =.type
+            :
+                ='x ='y
+                ('x 'y +) ='z
+            =.code
+            4 =.code_i
+        ,
+        obj
+            `paren =.type
+            ('x 'y +) =.code
+            0 =.code_i
+        ,
+
+    
+
+How are def and module handled?
+Or @ and &, for that matter?
+
+    def add: +
+
+    module Vec:
+        def new: ...
+        def add: ...
+
+    1 2 @add
+
+
+    # renaming local name
+    use: add =int_add
+
+    @@Vec new @@Vec new @@Vec add
+
+    use Vec: new add
+    @new @new @add
+
+
+Modules:
+They live in a big array, and at runtime are referred to by index.
+Each fun has an obj mapping names to module indices.
+
+    arr # modules
+        obj
+            0 =.i
+            `add =.name
+            fun(...) =.fun
+            obj # defs
+                1 =.Vec
+            =.defs
+            obj # refs
+            
+            =.refs
+        ,
+        obj
+            0 =.i
+            `add =.name
+            fun(...) =.fun
+            obj # refs
+            
+            =.refs
+        ,
+    ='modules
+
+MODULES AND DEFS ARE TOTALLY DIFFERENT THINGS.
+modules hold defs, defs hold code.
+defs are... just funs?
+
+    obj # root
+        obj # defs
+            fun() =.
+        =.defs
+        obj # modules
+        =.modules
+    ='root
+
+
+Jan 14, 2019:
+-------------
+
+    # ADD "TO_VARS"
+
+    # Equivalent lines:
+    to_vars: a b c
+    ='c ='b ='a
+
+    # Can't do from_vars because don't know whether to use 'x or ''x.
+    # But that's fine, since when pushing to stack from vars, the vars
+    # are listed in "correct order":
+    #     'a 'b 'c
+    #     ''a ''b ''c
+    # ...etc.
+
