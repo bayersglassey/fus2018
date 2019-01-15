@@ -3,7 +3,7 @@
     FUS_KEYWORD(NAME, TOKEN, ARGS_INLINE, ARGS_IN, ARGS_OUT, PARSE_ARGS_SUFFIX)
 */
 
-FUS_KEYWORD(sym, "`", "y", "", "", )
+FUS_KEYWORD(sym, "`", "y", "", "y", )
 FUS_KEYWORD(typeof, NULL, "", "*", "y", )
 FUS_KEYWORD(null, NULL, "", "", "n", )
 FUS_KEYWORD(T, NULL, "", "", "b", )
