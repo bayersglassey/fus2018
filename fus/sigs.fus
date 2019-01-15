@@ -1,0 +1,292 @@
+
+def test of(->):
+    @KEYWORDS ='keywords
+    @TEST_PROGRAMS ='datas
+
+    'datas keys arr_for: ='key
+        'datas 'key get ='data
+
+        "PROGRAM: " str_p 'key sym_tostr str_p "\n" str_p
+
+        'keywords 'data @calc_sig ='ok ='err ='out ='in
+        'ok not ifelse:
+            "  Couldn't calc sig!\n" str_p
+            "    ERR: " str_p 'err p
+        :
+            "  SIG: " str_p
+            'in 'out @sig_p
+            "\n" str_p
+
+
+
+
+def type_match of (l r -> bool):
+    # If we try to consume l as if it were r, do we have any chance of
+    # succeeding?
+    ='r ='l
+    'r `any sym_eq if:
+        # everything matches `any
+        T break
+    'l `any sym_eq if:
+        # `any might be anything, so might match anything
+        T break
+    'l 'r sym_eq
+
+def stack_p of(stack ->):
+    T ='first
+    arr_for: ='x
+        'first ifelse(F ='first)(" " str_p)
+        'x is_str if: 'x str_p break
+        'x is_int if: 'x int_tostr str_p break
+        'x is_sym if: 'x sym_tostr str_p break
+        'x is_arr if: 'x @stack_p break
+        obj
+            "Bad type (data can only contain int, str, sym, arr)" =.msg
+            'x =.x
+        error
+
+def sig_p of(in out ->):
+    ='out ='in
+    'in len 0 > if: 'in @stack_p " " str_p
+    "->" str_p
+    'out len 0 > if: " " str_p 'out @stack_p
+
+def stack_pop_n of(stack n -> substack):
+    # Pop n elements off right side of a "stack".
+    # Example: data(int str any) 2 @stack_pop_n -> data(int)
+    ='n ='stack
+    'stack len ='len
+    ''stack 0 ('len 'n -) slice
+
+def stack_match of(lhs rhs -> lhs rhs ok):
+    # Matches elements (syms representing types) of "stacks" lhs and rhs.
+    # The elements are popped & compared one at a time.
+    # Returns (lhs rhs ok), where lhs and rhs are the stacks (modified by
+    # popping), and ok indicates success or failure (type mismatch).
+    # Examples:
+    #     data(int str) data(arr any str) @stack_match -> data() data(arr) T
+    #     data(int str) data(any arr) @stack_match -> data(int) data(any) F
+    ='rhs ='lhs
+    T ='ok
+    0 ='n
+    do:
+        'rhs len 0 > and('lhs len 0 >) while
+        ''rhs pop ='r ='rhs
+        ''lhs pop ='l ='lhs
+        'l 'r @type_match not if: F ='ok break
+        loop
+
+    'lhs 'rhs 'ok
+
+def sig_join of(in_l out_l in_r out_r -> in out ok):
+    # Joins two signatures, returning a signature.
+    # The 'ok param indicates type match or mismatch.
+    # If 'ok is false, 'in and 'out are invalid and should not be used.
+    #
+    # A signature is a pair of arrs representing "stack effects".
+    # The first ("in") arr represents popping a series of elements from the
+    # stack, the second ("out") arr represents pushing a series of elements
+    # onto the stack.
+
+    ='out_r ='in_r ='out_l ='in_l
+
+    # Right-hand signature "consumes" from left-hand one
+    ''out_l ''in_r @stack_match ='ok ='in_r ='out_l
+
+    'ok not if:
+        # type mismatch -> no valid way to determine in, out
+        null null F break
+
+    # NOTE: If there was no type mismatch, then one or both of
+    # in_r, out_l are empty arrs.
+    # So one or both of the following are a no-op.
+    ''in_l  ''in_r  join ='in
+    ''out_l ''out_r join ='out
+
+    'in 'out T
+
+def calc_sig of(keywords data -> in out err ok):
+    ='data ='keywords
+    'data len ='data_len
+    arr ='in arr ='out T ='ok null ='err
+    0 ='i do:
+        'i 'data_len < while
+        'data 'i .$ ='word
+
+        arr ='word_in
+        arr ='word_out
+        do:
+            'word is_int if: arr `int, ='word_out break
+            'word is_str if: arr `str, ='word_out break
+            'word is_arr if:
+                'keywords 'word @calc_sig ='ok ='err ='word_out ='word_in
+                break
+            'word is_sym if:
+                'keywords 'word has not if:
+                    obj
+                        "Keyword not found" =.msg
+                        'word =.word
+                        'i =.i
+                    ='err
+                    F ='ok break
+                'keywords 'word get ='keyword
+
+                'keyword .in ='word_in
+                'keyword .out ='word_out
+                'keyword .args ='word_args
+
+                'i 1 + ='new_i
+                'word_args arr_for: ='arg
+                    'new_i 'data_len >= if:
+                        obj
+                            "Hit end of data, expected argument" =.msg
+                            'word =.word
+                            'i =.i
+                            'data 'i ('data_len 'i -) slice =.data_slice
+                        ='err
+                        F ='ok break
+                    ''new_i 1 + ='new_i loop
+                ''new_i 1 - ='i
+
+                break
+
+            obj
+                "Word has invalid type "
+                "(data can only contain int, str, arr, sym)"
+                str_join =.msg
+                'word =.word
+                'i =.i
+            ='err
+            F ='ok break
+
+        'ok not if: break
+
+        'in 'out 'word_in 'word_out @sig_join ='ok ='new_out ='new_in
+        'ok not if:
+            obj
+                "Type mismatch" =.msg
+                'word =.word
+                'i =.i
+                'in =.in 'out =.out
+                'word_in =.word_in 'word_out =.word_out
+            ='err
+            F ='ok break
+        ''new_in ='in
+        ''new_out ='out
+
+        ''i 1 + ='i loop
+
+    'in 'out 'err 'ok
+
+
+def keyword of(keywords op in out args -> keywords):
+    obj
+        swap =.args
+        swap =.out
+        swap =.in
+        swap dup ='op =.op
+    'op set
+
+def KEYWORDS of(-> keywords):
+    obj
+        `   ' data() data(any) data(sym) @keyword
+        `  '' data() data(any) data(sym) @keyword
+        `  =' data(any) data() data(sym) @keyword
+        `   . data(obj) data(any) data(sym) @keyword
+        `  .. data(obj) data(obj any) data(sym) @keyword
+        `  =. data(obj any) data(obj) data(sym) @keyword
+        `  .$ data(arr int) data(any) data() @keyword
+        ` ..$ data(arr int) data(arr any) data() @keyword
+        ` =.$ data(arr any int) data(arr) data() @keyword
+        `   + data(int int) data(int) data() @keyword
+        `   - data(int int) data(int) data() @keyword
+        `   * data(int int) data(int) data() @keyword
+        `   / data(int int) data(int) data() @keyword
+        `  == data(int int) data(bool) data() @keyword
+        `  != data(int int) data(bool) data() @keyword
+        `   > data(int int) data(bool) data() @keyword
+        `   < data(int int) data(bool) data() @keyword
+        `  >= data(int int) data(bool) data() @keyword
+        `  <= data(int int) data(bool) data() @keyword
+        `   , data(arr any) data(arr) data() @keyword
+
+        # TODO: these should transform stack effects the same way they
+        # transform the actual stack
+        `swap data(any any) data(any any) data() @keyword
+        `drop data(any) data() data() @keyword
+        `dup data(any) data(any any) data() @keyword
+        `nip data(any any) data(any) data() @keyword
+        `over data(any any) data(any any any) data() @keyword
+
+        `null data() data(null) data() @keyword
+        `arr data() data(arr) data() @keyword
+        `obj data() data(obj) data() @keyword
+        `int_tostr data(int) data(str) data() @keyword
+        `sym_tostr data(sym) data(str) data() @keyword
+        `str_getcode data(str int) data(int) data() @keyword
+        `str_setcode data(str int int) data(str) data() @keyword
+        `str_join data(str str) data(str) data() @keyword
+        `str_len data(str) data(int) data() @keyword
+        `join data(arr arr) data(arr) data() @keyword
+        `len data(arr) data(int) data() @keyword
+
+def TEST_PROGRAMS of(-> datas): obj
+
+    # From fib.fus.
+    # def next of(gen -> gen):
+    data:
+        ='gen
+
+        # Get variables from object members:
+        'gen .a ='a
+        'gen .b ='b
+
+        # Calculate next number in the sequence:
+        ''a 'b + ='c
+
+        # Return modified generator:
+        ''gen:
+
+            # Increment the index:
+            ..i 1 + =.i
+
+            # Push newest value onto the "cache" array:
+            ..cache 'c, =.cache
+
+            ''b =.a
+            ''c =.b
+    =.FIB_GEN_NEXT
+
+    # From map_parser.fus.
+    # def char_tostr of(i -> s):
+    data: " " swap 0 str_setcode
+    =.CHAR_TOSTR
+
+    # From map_parser.fus.
+    # def strchr of(s c -> i):
+    data:
+        ='c ='s
+        null ='found_i
+        's str_len int_for: ='i
+            ('s 'i str_getcode) 'c == if:
+                'i ='found_i break
+        ''found_i
+    =.STRCHR
+
+    # From map_parser.fus.
+    # def format of(arr -> str):
+    data:
+        "" swap arr_for: ='x
+            'x is_int if: ''x int_tostr ='x
+            ''x str_join
+    =.FORMAT
+
+    # From map_parser.fus.
+    # def repeat of(elem n -> elems):
+    data: swap ='elem arr swap int_for: drop 'elem,
+    =.REPEAT
+
+    # From map_parser.fus.
+    # def max of(x y -> z):
+    data: over over > ifelse(drop)(nip)
+    =.MAX
