@@ -18,7 +18,8 @@ def test of(->):
             "\n" str_p
 
 
-
+###############################################################################
+# TYPE
 
 def type_match of (l r -> bool):
     # If we try to consume l as if it were r, do we have any chance of
@@ -32,6 +33,10 @@ def type_match of (l r -> bool):
         T break
     'l 'r sym_eq
 
+
+###############################################################################
+# STACK
+
 def stack_p of(stack ->):
     T ='first
     arr_for: ='x
@@ -44,12 +49,6 @@ def stack_p of(stack ->):
             "Bad type (data can only contain int, str, sym, arr)" =.msg
             'x =.x
         error
-
-def sig_p of(in out ->):
-    ='out ='in
-    'in len 0 > if: 'in @stack_p " " str_p
-    "->" str_p
-    'out len 0 > if: " " str_p 'out @stack_p
 
 def stack_pop_n of(stack n -> substack):
     # Pop n elements off right side of a "stack".
@@ -77,6 +76,16 @@ def stack_match of(lhs rhs -> lhs rhs ok):
         loop
 
     'lhs 'rhs 'ok
+
+
+###############################################################################
+# SIG
+
+def sig_p of(in out ->):
+    ='out ='in
+    'in len 0 > if: 'in @stack_p " " str_p
+    "->" str_p
+    'out len 0 > if: " " str_p 'out @stack_p
 
 def sig_join of(in_l out_l in_r out_r -> in out ok):
     # Joins two signatures, returning a signature.
@@ -179,6 +188,10 @@ def calc_sig of(keywords data -> in out err ok):
     'in 'out 'err 'ok
 
 
+
+###############################################################################
+# KEYWORDS
+
 def keyword of(keywords op in out args -> keywords):
     obj
         swap =.args
@@ -229,6 +242,10 @@ def KEYWORDS of(-> keywords):
         `str_len data(str) data(int) data() @keyword
         `join data(arr arr) data(arr) data() @keyword
         `len data(arr) data(int) data() @keyword
+
+
+###############################################################################
+# TEST PROGRAMS
 
 def TEST_PROGRAMS of(-> datas): obj
 
