@@ -10,11 +10,11 @@ color white "\<[[:alpha:]_][[:alnum:]_]*\>"
 color brightblue "(`|,|\+\+|--|\+|-|\*|/|%|<|<=|>|>=|==|!=|\?\??|&|=|\^)"
 
 # Vars
-#color brightblue "(=|'|)'[[:alpha:]_][[:alnum:]_]*\>"
-color brightblue "(=|'|)'"
+color brightmagenta "(=|'|)'[[:alpha:]_][[:alnum:]_]*\>"
+#color brightblue "(=|'|)'"
 
 # Obj Get/Rip/Set/Has
-color blue "((=|\?|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
+color magenta "((=|\?|\.|)\.)[[:alpha:]_][[:alnum:]_]*\>"
 color brightblue "((=|\?|\.|)\.)[0-9]+\>"
 #color brightblue "(=|\.|)\."
 
@@ -22,10 +22,12 @@ color brightblue "((=|\?|\.|)\.)[0-9]+\>"
 color brightblue "(=|\?|\.|)\.\$"
 
 # Arrays
-color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*\("
-color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*:"
-color brightmagenta "\(|\)"
-color brightmagenta ":"
+#color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*\("
+#color brightmagenta "\<[[:alpha:]_][[:alnum:]_]*:"
+#color brightmagenta "\(|\)"
+#color brightmagenta ":"
+color brightblue "\(|\)"
+color brightblue ":"
 
 # Labels
 color magenta "~[[:alpha:]_][[:alnum:]_]*\>"
