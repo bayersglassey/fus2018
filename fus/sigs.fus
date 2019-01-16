@@ -330,7 +330,9 @@ def KEYWORDS of(-> keywords):
         `nip data(any any) data(any) data() @keyword
         `over data(any any) data(any any any) data() @keyword
 
-        `null data() data(null) data() @keyword
+        # NOTE: "null" keyword pushes "any" type, since the sole purpose of
+        # a null value is to be a placeholder for something else...
+        `null data() data(any) data() @keyword
         `arr data() data(arr) data() @keyword
         `obj data() data(obj) data() @keyword
         `int_tostr data(int) data(str) data() @keyword

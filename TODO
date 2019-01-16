@@ -348,6 +348,14 @@ Jan 15, 2019:
 
         int ='x  # sugar for "0 ='x" ?..
 
+        any ='x 
+        # sugar for "null ='x", but without compiler restricting x
+        # to null type?
+        # ...actually, we can just have compiler interpret "null" keyword as
+        # pushing an "any" type.
+        # If you're setting something to null, you probably plan on changing
+        # it later.
+
 
 Declaring types in signatures:
 
