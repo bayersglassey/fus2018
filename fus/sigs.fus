@@ -407,6 +407,9 @@ def TEST_PROGRAMS of(-> datas): obj
     data: over over > ifelse(drop)(nip)
     =.MAX
 
+    data: +
+    =.ADD
+
     data: 1 ='x 'x
     =.VARTEST
 

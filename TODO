@@ -213,3 +213,143 @@ Jan 14, 2019:
     #     ''a ''b ''c
     # ...etc.
 
+
+Jan 15, 2019:
+-------------
+
+    sigs.fus - we've (mostly) implemented vars, but "ripping" seems...
+    ill defined?.. or just difficult.
+    Or it just forces us to abandon our nice simple static type detector.
+
+    Actually, so do undefined variables in general:
+
+        do:
+            'x p   # ???
+            1 ='x  # now it's an int
+            loop   # now previously undefined reference is defined?..
+
+    A TYPE FRIENDLY RIP:
+    We can say that every type has a "zero value", and ripping sets it
+    to that:
+
+        10 ='x
+        ''x drop
+        'x p  # 0
+
+        obj
+            10 =.x
+            ..x drop
+            .x p  # 0
+
+    We can even add a keyword for this:
+
+        null clear -> null
+        T clear -> F
+        F clear -> F
+        10 clear -> 0
+        "ASD" clear -> ""
+        arr 1, 2, 3, clear -> arr
+        obj 1 =.x 2 =.y clear -> obj
+
+        # ALTERNATE APPROACH FOR DEEP OBJECTS
+        arr 1, 2, 3, clear -> arr 0, 0, 0,
+        obj 1 =.x 2 =.y clear -> obj 0 =.x 0 =.y
+        # ...the latter makes more sense for objs-not-dicts, but goes
+        # against the whole purpose of ripping (avoiding copy-on-write)
+
+        `asd clear -> ???
+        # Do we allow empty symbol?.. what is the syntax?.. maybe: (`) or `()
+        # Maybe: "" str_tosym  ....gross, but accurate
+        # We could leave the sum unchanged.
+        # Idunno though: symbols don't currently get refcounted, but the
+        # language doesn't say they can't be.
+        # So having a definitive "clear" sym is the most reasonable solution.
+        #
+        # HOW ABOUT:
+        `asd clear -> `_
+        # ...kinda ganky, but a clearly unique choice.
+        # nnnyyyyeaaaahhh, but then why not:
+        `asd clear -> ` `
+        # I hate to say it, but I'm leaning towards one of these:
+        `asd clear -> "" str_tosym
+        `asd clear -> (`)
+        # But then you run into oddness like:
+        obj 10 (`) set
+        # I suppose that's not hugely more strange than "obj 10 ` + set",
+        # but at least you can say "obj 10 . +"...
+        # Do we allow "obj 10 . ()" ?????? heresy
+        #
+        # WHAT IF NULL IS THE EMPTY SYM???????
+        # No, too weird. Then "obj null get", but not "obj .null", you know?
+        #
+        # The shitty thing about the empty sym is, now you can't trivially
+        # turn an arr of sym into valid fus code.
+        # You have to check that all the sym are non-empty.
+        # I *hate* that.
+        # Besides, str_tosym already has lots of weird failing cases
+        # (e.g. " "), so it makes sense for it to reject "" too.
+        #
+        # SO: I think `_ is the winner.
+        # HOWEVER: If we decide to have an empty sym, using "sym" as the
+        # keyword to generate it makes sense.
+        bool -> F
+        int -> 0
+        arr -> arr
+        sym -> sym  # equivalent to: "" str_tosym
+        # ...see?
+
+        fun(...) clear -> ???
+
+    How do we handle funs???
+    "clear" is no-op in this case?
+    Or clears to the indentity function "fun()"?
+    Or: to a function which throws an error?
+    I like that last one.
+
+        fun(...) clear -> fun(`cleared error)
+
+    Idunno, fun type throws wrenches in all kinds of stuff.
+    We could just have "fun(...) clear" be an error.
+
+    The purpose of ripping is to get around the copy-on-write semantics.
+    So (fun(...) ='f ''f) should NOT throw an error.
+    I think identity function makes the most sense: something which
+    is the "simplest fun possible", and would act like identity under
+    fun_join.
+
+
+    ...ANYWAY, these type-safe rips would get us close to being able to
+    keep the nice simple static type detector.
+    I think the other necessary thing is to have variable "declaration"
+    (assignment) only last for the duration of current (...).
+    Examples:
+
+        1 ='x
+        "ASD" ='x
+        # Error: x changed from int to str
+
+        : 1 ='x
+        : "ASD" ='x
+        # OK!
+
+        'cond if:
+            3 ='x
+        'x p
+        # Error: x not defined
+
+        0 ='x
+        'cond if:
+            3 ='x
+        'x p
+        # OK
+
+
+    TYPE DECLARATIONS:
+
+        int ='x  # sugar for "0 ='x" ?..
+
+
+Declaring types in signatures:
+
+    def f of(x|int y|int -> z|int): +
+
