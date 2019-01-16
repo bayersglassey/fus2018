@@ -8,7 +8,8 @@ def test of(->):
 
         "PROGRAM: " str_p 'key sym_tostr str_p "\n" str_p
 
-        'keywords 'data @calc_sig ='ok ='err ='out ='in
+        obj ='vars
+        'keywords ''vars 'data @calc_sig ='ok ='err ='out ='in ='vars
         'ok not ifelse:
             "  Couldn't calc sig!\n" str_p
             "    ERR: " str_p 'err p
@@ -17,9 +18,24 @@ def test of(->):
             'in 'out @sig_p
             "\n" str_p
 
+            "  VARS: " str_p
+            'vars @vars_p
+            "\n" str_p
+
 
 ###############################################################################
 # TYPE
+
+def type_p of(x ->):
+    ='x
+    'x is_str if: 'x str_p break
+    'x is_int if: 'x int_tostr str_p break
+    'x is_sym if: 'x sym_tostr str_p break
+    'x is_arr if: 'x @stack_p break
+    obj
+        "Bad type (data can only contain int, str, sym, arr)" =.msg
+        'x =.x
+    error
 
 def type_match of (l r -> bool):
     # If we try to consume l as if it were r, do we have any chance of
@@ -35,20 +51,25 @@ def type_match of (l r -> bool):
 
 
 ###############################################################################
+# VARS
+
+def vars_p of(vars ->):
+    ='vars
+    T ='first
+    'vars keys arr_for: ='key
+        'vars 'key get ='val
+        'first ifelse(F ='first)(" " str_p)
+        'key @type_p " " str_p 'val @type_p
+
+
+###############################################################################
 # STACK
 
 def stack_p of(stack ->):
     T ='first
     arr_for: ='x
         'first ifelse(F ='first)(" " str_p)
-        'x is_str if: 'x str_p break
-        'x is_int if: 'x int_tostr str_p break
-        'x is_sym if: 'x sym_tostr str_p break
-        'x is_arr if: 'x @stack_p break
-        obj
-            "Bad type (data can only contain int, str, sym, arr)" =.msg
-            'x =.x
-        error
+        'x @type_p
 
 def stack_pop_n of(stack n -> substack):
     # Pop n elements off right side of a "stack".
@@ -114,8 +135,8 @@ def sig_join of(in_l out_l in_r out_r -> in out ok):
 
     'in 'out T
 
-def calc_sig of(keywords data -> in out err ok):
-    ='data ='keywords
+def calc_sig of(keywords vars data -> vars in out err ok):
+    ='data ='vars ='keywords
     'data len ='data_len
     arr ='in arr ='out T ='ok null ='err
     0 ='i do:
@@ -128,7 +149,8 @@ def calc_sig of(keywords data -> in out err ok):
             'word is_int if: arr `int, ='word_out break
             'word is_str if: arr `str, ='word_out break
             'word is_arr if:
-                'keywords 'word @calc_sig ='ok ='err ='word_out ='word_in
+                'keywords ''vars 'word @calc_sig
+                ='ok ='err ='word_out ='word_in ='vars
                 break
             'word is_sym if:
                 'keywords 'word has not if:
@@ -185,8 +207,7 @@ def calc_sig of(keywords data -> in out err ok):
 
         ''i 1 + ='i loop
 
-    'in 'out 'err 'ok
-
+    'vars 'in 'out 'err 'ok
 
 
 ###############################################################################
