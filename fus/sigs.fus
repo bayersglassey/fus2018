@@ -59,7 +59,11 @@ def vars_p of(vars ->):
     'vars keys arr_for: ='key
         'vars 'key get ='val
         'first ifelse(F ='first)(" " str_p)
-        'key @type_p " " str_p 'val @type_p
+        "(" str_p
+        'key @type_p
+        " " str_p
+        'val @type_p
+        ")" str_p
 
 
 ###############################################################################
@@ -166,8 +170,9 @@ def calc_sig of(keywords vars data -> vars in out err ok):
                 'keyword .out ='word_out
                 'keyword .args ='word_args
 
+                arr ='args
                 'i 1 + ='new_i
-                'word_args arr_for: ='arg
+                'word_args arr_for: ='word_arg
                     'new_i 'data_len >= if:
                         obj
                             "Hit end of data, expected argument" =.msg
@@ -176,8 +181,81 @@ def calc_sig of(keywords vars data -> vars in out err ok):
                             'data 'i ('data_len 'i -) slice =.data_slice
                         ='err
                         F ='ok break
+
+                    'data 'new_i .$ ='arg
+                    'arg typeof 'word_arg @type_match not if:
+                        obj
+                            "Unexpected argument type" =.msg
+                            'word =.word
+                            'i =.i
+                            ('new_i 'i -) =.arg_offset
+                            'word_arg =.word_arg
+                            'arg =.arg
+                        ='err
+                        F ='ok break
+
+                    ''args 'arg, ='args
                     ''new_i 1 + ='new_i loop
-                ''new_i 1 - ='i
+                'new_i 1 - ='i
+
+                do:
+                    'word ` =' sym_eq if:
+                        # VAR SET
+                        'args 0 .$ ='var_name
+
+                        :
+                            'out len 0 == ifelse: `any
+                            : 'out (dup len 1 -) .$
+                        ='var_type
+
+                        'vars 'var_name has if:
+                            'vars 'var_name get ='var_oldtype
+                            'var_type 'var_oldtype @type_match not if:
+                                obj
+                                    "Unexpected var type" =.msg
+                                    'word =.word
+                                    'i =.i
+                                    ('new_i 'i -) =.arg_offset
+                                    'word_arg =.word_arg
+                                    'arg =.arg
+                                    'var_name =.var_name
+                                    'var_oldtype =.var_oldtype
+                                    'var_type =.var_type
+                                ='err
+                                F ='ok break
+
+                        ''word_in pop drop 'var_type, ='word_in
+                        ''vars 'var_type 'var_name set ='vars
+                        break
+
+                    'word ` ' sym_eq if:
+                        # VAR GET
+                        'args 0 .$ ='var_name
+
+                        'vars 'var_name has not if:
+                            obj
+                                "Ref to missing var" =.msg
+                                'word =.word
+                                'i =.i
+                                ('new_i 'i -) =.arg_offset
+                                'word_arg =.word_arg
+                                'arg =.arg
+                                'var_name =.var_name
+                            ='err
+                            F ='ok break
+
+                        'vars 'var_name get ='var_type
+                        ''word_out pop drop 'var_type, ='word_out
+                            # data(any) -> data()
+                        break
+
+                    'word ` '' sym_eq if:
+                        # VAR RIP
+                        'args 0 .$ ='var_name
+
+                        # ?????
+
+                        break
 
                 break
 
@@ -328,3 +406,9 @@ def TEST_PROGRAMS of(-> datas): obj
     # def max of(x y -> z):
     data: over over > ifelse(drop)(nip)
     =.MAX
+
+    data: 1 ='x 'x
+    =.VARTEST
+
+    data: 1 dup
+    =.DUPTEST
