@@ -68,6 +68,13 @@ def vars_p of(vars ->):
         'val @type_p
         ")" str_p
 
+def vars_update of(vars new_vars -> vars):
+    ='new_vars ='vars
+    'vars keys arr_for: ='key
+        'new_vars 'key get ='new_type
+        ''vars 'new_type 'key set ='vars
+    'vars
+
 
 ###############################################################################
 # STACK
@@ -168,22 +175,18 @@ def parser_parse of(parser -> parser):
     'parser
 
 def parser_step of(parser -> parser ok):
-    dup .keywords ='keywords
-    dup .data ='data
-    dup .debug ='debug
-    dup .depth ='depth
-    ..vars ='vars
-    ..i ='i
-    ..in ='in
-    ..out ='out
-    null ='err
+    ='parser
+    'parser .data ='data
+    'parser .i ='i
     'data len ='data_len
+    null ='err
     T ='ok
     do:
         'i 'data_len >= if: F ='ok break
         'data 'i .$ ='word
 
-        'debug if:
+        'parser .debug if:
+            'parser .depth ='depth
             'depth @tabs "PARSER STEP\n" str_p
             'depth @tabs "  i: " str_p 'i p
             'depth @tabs "  word: " str_p
@@ -197,26 +200,27 @@ def parser_step of(parser -> parser ok):
             'word is_str if: arr `str, ='word_out break
             'word is_arr if:
                 'word @parser_new
-                    'debug =.debug
-                    'depth 1 + =.depth
-                    ''vars =.vars
+                    'parser .debug =.debug
+                    'parser .depth 1 + =.depth
+                    'parser .vars =.vars
                 @parser_parse
                     dup .in ='word_in
                     dup .out ='word_out
-                    dup .vars ='vars
+                    dup .vars ='new_vars
                     dup .err ='err
                 drop
                 'err is_null not if: F ='ok break
+                ''parser ..vars 'new_vars @vars_update =.vars ='parser
                 break
             'word is_sym if:
-                'keywords 'word has not if:
+                'parser .keywords 'word has not if:
                     obj
                         "Keyword not found" =.msg
                         'word =.word
                         'i =.i
                     ='err
                     F ='ok break
-                'keywords 'word get ='keyword
+                'parser .keywords 'word get ='keyword
 
                 'keyword .in ='word_in
                 'keyword .out ='word_out
@@ -256,10 +260,11 @@ def parser_step of(parser -> parser ok):
                         'args 0 .$ ='var_name
 
                         :
-                            'out len 0 == ifelse: `any
-                            : 'out (dup len 1 -) .$
+                            'parser .out len 0 == ifelse: `any
+                            : 'parser .out (dup len 1 -) .$
                         ='var_type
 
+                        'parser .vars ='vars
                         'vars 'var_name has if:
                             'vars 'var_name get ='var_oldtype
                             'var_type 'var_oldtype @type_match not if:
@@ -278,12 +283,14 @@ def parser_step of(parser -> parser ok):
 
                         ''word_in pop drop 'var_type, ='word_in
                         ''vars 'var_type 'var_name set ='vars
+                        ''parser 'vars =.vars ='parser
                         break
 
                     'word ` ' sym_eq if:
                         # VAR GET
                         'args 0 .$ ='var_name
 
+                        'parser .vars ='vars
                         'vars 'var_name has not if:
                             obj
                                 "Ref to missing var" =.msg
@@ -299,6 +306,7 @@ def parser_step of(parser -> parser ok):
                         'vars 'var_name get ='var_type
                         ''word_out pop drop 'var_type, ='word_out
                             # data(any) -> data()
+                        ''parser 'vars =.vars ='parser
                         break
 
                     'word ` '' sym_eq if:
@@ -322,6 +330,8 @@ def parser_step of(parser -> parser ok):
 
         'ok not if: break
 
+        'parser .in ='in
+        'parser .out ='out
         'in 'out 'word_in 'word_out @sig_join ='ok ='new_out ='new_in
         'ok not if:
             obj
@@ -332,15 +342,12 @@ def parser_step of(parser -> parser ok):
                 'word_in =.word_in 'word_out =.word_out
             ='err
             F ='ok break
-        ''new_in ='in
-        ''new_out ='out
+        ''parser 'new_in =.in 'new_out =.out ='parser
 
     # Return:
-    'vars =.vars
-    'i 1 + =.i
-    'in =.in
-    'out =.out
-    'err =.err
+    ''parser
+        'i 1 + =.i
+        'err =.err
     'ok
 
 
