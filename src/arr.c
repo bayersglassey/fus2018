@@ -32,6 +32,12 @@ fus_value_t fus_arr_get(fus_vm_t *vm, fus_arr_t *a, int i){
     return value;
 }
 
+fus_value_t fus_arr_get_last(fus_vm_t *vm, fus_arr_t *a){
+    int i = a->values.len - 1;
+    fus_value_t value = FUS_ARR_VALUES(*a)[i];
+    return value;
+}
+
 int fus_arr_set(fus_vm_t *vm, fus_arr_t *a, int i, fus_value_t value){
     /* Bounds check */
     if(i < 0 || i >= a->values.len)return -1;
