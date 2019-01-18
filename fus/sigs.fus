@@ -142,6 +142,11 @@ def stack_match of(lhs rhs -> lhs rhs ok):
 
     'lhs 'rhs 'ok
 
+def typestack_pop of(stack -> stack type):
+    ='stack
+    'stack len 0 == if: 'stack `any break
+    ''stack pop
+
 
 ###############################################################################
 # SIG
@@ -354,14 +359,12 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
         'new_i 1 - ='i
 
         do:
-            'word ` =' sym_eq if:
-                # VAR SET
-                'args 0 .$ ='var_name
 
-                :
-                    'parser .out len 0 == ifelse: `any
-                    : 'parser .out (dup len 1 -) .$
-                ='var_type
+            ###################################################################
+            # PARSER_PARSE_SYM: VAR SET
+            'word ` =' sym_eq if:
+                'args 0 .$ ='var_name
+                'parser .out @typestack_pop ='var_type drop
 
                 'parser .vars ='vars
                 'vars 'var_name has if:
@@ -380,13 +383,16 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
                         ='err
                         F ='ok break
 
-                ''word_in pop drop 'var_type, ='word_in
+                arr 'var_type, ='word_in
                 ''vars 'var_type 'var_name set ='vars
                 ''parser 'vars =.vars ='parser
                 break
 
-            'word ` ' sym_eq if:
-                # VAR GET
+            ###################################################################
+            # PARSER_PARSE_SYM: VAR GET/RIP
+            'word ` ' sym_eq
+            or: 'word ` '' sym_eq
+            if:
                 'args 0 .$ ='var_name
 
                 'parser .vars ='vars
@@ -403,13 +409,13 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
                     F ='ok break
 
                 'vars 'var_name get ='var_type
-                ''word_out pop drop 'var_type, ='word_out
-                    # data(any) -> data()
+                arr 'var_type, ='word_out
                 ''parser 'vars =.vars ='parser
                 break
 
+            ###################################################################
+            # PARSER_PARSE_SYM: TYPEHINT
             'word ` | sym_eq if:
-                # TYPE HINT
                 'args 0 .$ ='type
 
                 F ='ok
@@ -429,17 +435,46 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
                 # type, then put it back.
                 # (Really we just want to make sure something of the given
                 # type is on the stack.)
-                ''word_out pop drop 'type, ='word_out
-                ''word_in pop drop 'type, ='word_in
+                arr 'type, ='word_out
+                arr 'type, ='word_in
                 break
 
-            'word ` '' sym_eq if:
-                # VAR RIP
-                'args 0 .$ ='var_name
+            ###################################################################
+            # PARSER_PARSE_SYM: DUP
+            'word `dup sym_eq if:
+                'parser .out @typestack_pop ='type_x drop
+                arr 'type_x, ='word_in
+                arr 'type_x, 'type_x, ='word_out
 
-                # ?????
+            ###################################################################
+            # PARSER_PARSE_SYM: SWAP
+            'word `swap sym_eq if:
+                'parser .out
+                    @typestack_pop ='type_y
+                    @typestack_pop ='type_x
+                drop
+                arr 'type_x, 'type_y, ='word_in
+                arr 'type_y, 'type_x, ='word_out
 
-                break
+            ###################################################################
+            # PARSER_PARSE_SYM: NIP
+            'word `nip sym_eq if:
+                'parser .out
+                    @typestack_pop ='type_y
+                    @typestack_pop ='type_x
+                drop
+                arr 'type_x, 'type_y, ='word_in
+                arr 'type_y, ='word_out
+
+            ###################################################################
+            # PARSER_PARSE_SYM: OVER
+            'word `over sym_eq if:
+                'parser .out
+                    @typestack_pop ='type_y
+                    @typestack_pop ='type_x
+                drop
+                arr 'type_x, 'type_y, ='word_in
+                arr 'type_x, 'type_y, 'type_x, ='word_out
 
         break
 
@@ -597,7 +632,18 @@ def TEST_PROGRAMS of(-> programs): arr
     data: |int ='x 'x 1 +
     @test_program,
 
+    "drop test"
+    data: any ->
+    data(drop) @test_program,
     "dup test"
     data: -> int int
-    data: 1 dup
-    @test_program,
+    data(1 dup) @test_program,
+    "swap test"
+    data: -> int str
+    data("ASD" 123 swap) @test_program,
+    "nip test"
+    data: -> int
+    data("ASD" 123 nip) @test_program,
+    "over test"
+    data: -> str int str
+    data("ASD" 123 over) @test_program,
