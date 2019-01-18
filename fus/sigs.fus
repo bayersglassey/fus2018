@@ -278,7 +278,9 @@ def parser_step of(parser -> parser ok):
                     ='err
                     F ='ok break
 
-                ''parser 'word @parser_parse_sym
+                'parser .keywords 'word get ='keyword
+
+                ''parser 'word 'keyword @parser_parse_sym
                 ='ok ='err ='word_out ='word_in ='i ='parser
                 break
 
@@ -313,17 +315,16 @@ def parser_step of(parser -> parser ok):
         'err =.err
     'ok
 
-def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
-    # Assumes 'word is in 'parser .keywords (caller should check)
+def parser_parse_sym
+of(parser word keyword -> parser i word_in word_out err ok):
 
-    ='word ='parser
+    ='keyword ='word ='parser
     'parser .data ='data
     'parser .i ='i
     'data len ='data_len
     null ='err
     T ='ok
 
-    'parser .keywords 'word get ='keyword
     'keyword .in ='word_in
     'keyword .out ='word_out
     'keyword .args ='word_args
@@ -429,6 +430,7 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
                         'word =.word
                         'i =.i
                         'type =.type
+                    ='err
                     break
 
                 # We pretend we're going to consume a value of the given
@@ -517,8 +519,6 @@ def KEYWORDS of(-> keywords):
         `   , data(arr any) data(arr) data() @keyword
         `   | data(any) data(any) data(sym) @keyword
 
-        # TODO: these should transform stack effects the same way they
-        # transform the actual stack
         `swap data(any any) data(any any) data() @keyword
         `drop data(any) data() data() @keyword
         `dup data(any) data(any any) data() @keyword
