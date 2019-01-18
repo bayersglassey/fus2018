@@ -556,7 +556,7 @@ def TEST_PROGRAMS of(-> programs): arr
     "fib.fus: next of(gen -> gen)"
     data: obj -> obj
     data:
-        ='gen
+        |obj ='gen
 
         # Get variables from object members:
         'gen .a ='a
@@ -579,8 +579,14 @@ def TEST_PROGRAMS of(-> programs): arr
     @test_program,
 
     "map_parser.fus: char_tostr of(i -> s)"
-    data: int -> str
+    #data: int -> str  # Intuitive, but wrong...
+    data: any -> str
     data: " " swap 0 str_setcode
+    @test_program,
+
+    "map_parser.fus: char_tostr of(i -> s) -- with typehint"
+    data: int -> str
+    data: |int " " swap 0 str_setcode
     @test_program,
 
     "map_parser.fus: strchr of(s c -> i)"
@@ -623,11 +629,12 @@ def TEST_PROGRAMS of(-> programs): arr
     @test_program,
 
     "var test - setting var has effect: (any ->)"
-    data: int -> int
+    #data: int -> int  # Intuitive, but wrong...
+    data: any -> int
     data: ='x 'x 1 +
     @test_program,
 
-    "var test - type hint"
+    "var test - typehint"
     data: int -> int
     data: |int ='x 'x 1 +
     @test_program,
