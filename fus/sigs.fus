@@ -408,6 +408,31 @@ def parser_parse_sym of(parser word -> parser i word_in word_out err ok):
                 ''parser 'vars =.vars ='parser
                 break
 
+            'word ` | sym_eq if:
+                # TYPE HINT
+                'args 0 .$ ='type
+
+                F ='ok
+                data: null bool int sym arr obj str fun
+                arr_for: 'type sym_eq if: T ='ok break
+                'ok not if:
+                    obj
+                        "Invalid type (must be one of: "
+                        "null bool int sym arr obj str fun)"
+                        str_join =.msg
+                        'word =.word
+                        'i =.i
+                        'type =.type
+                    break
+
+                # We pretend we're going to consume a value of the given
+                # type, then put it back.
+                # (Really we just want to make sure something of the given
+                # type is on the stack.)
+                ''word_out pop drop 'type, ='word_out
+                ''word_in pop drop 'type, ='word_in
+                break
+
             'word ` '' sym_eq if:
                 # VAR RIP
                 'args 0 .$ ='var_name
@@ -455,6 +480,7 @@ def KEYWORDS of(-> keywords):
         `  >= data(int int) data(bool) data() @keyword
         `  <= data(int int) data(bool) data() @keyword
         `   , data(arr any) data(arr) data() @keyword
+        `   | data(any) data(any) data(sym) @keyword
 
         # TODO: these should transform stack effects the same way they
         # transform the actual stack
@@ -559,6 +585,16 @@ def TEST_PROGRAMS of(-> programs): arr
     "var test"
     data: -> int
     data: 1 ='x 'x
+    @test_program,
+
+    "var test - setting var has effect: (any ->)"
+    data: int -> int
+    data: ='x 'x 1 +
+    @test_program,
+
+    "var test - type hint"
+    data: int -> int
+    data: |int ='x 'x 1 +
     @test_program,
 
     "dup test"
