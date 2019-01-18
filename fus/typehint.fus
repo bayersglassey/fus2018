@@ -1,0 +1,11 @@
+
+def test of(->):
+    null   |null drop
+    1      |int  drop
+    `hello |sym  drop
+    "ASD"  |str  drop
+    arr    |arr  drop
+    obj    |obj  drop
+
+    # The following, for instance, should fail:
+    #1 |str drop

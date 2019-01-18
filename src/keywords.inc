@@ -4,6 +4,7 @@
 */
 
 FUS_KEYWORD(sym, "`", "y", "", "y", )
+FUS_KEYWORD(typehint, "|", "y", "*", "*", )
 FUS_KEYWORD(typeof, NULL, "", "*", "y", )
 FUS_KEYWORD(null, NULL, "", "", "n", )
 FUS_KEYWORD(T, NULL, "", "", "b", )

@@ -128,6 +128,20 @@ int fus_runner_step(fus_runner_t *runner){
                 fprintf(stderr, "%s: Builtin not implemented: %s\n",
                     __func__, token);
                 goto err;
+            break;} case FUS_KEYWORD_typehint: {
+                fus_value_t value_type = values_inline[0];
+                int type_sym_i = fus_value_sym_decode(vm, value_type);
+                fus_value_t value = fus_arr_get_last(vm, stack);
+                int sym_i = fus_value_type_sym_i(vm, value);
+                if(type_sym_i != sym_i){
+                    const char *type_token = fus_symtable_get_token_safe(
+                        vm->symtable, type_sym_i);
+                    const char *token = fus_symtable_get_token_safe(
+                        vm->symtable, sym_i);
+                    fprintf(stderr, "%s: Failed type hint: %s is not %s\n",
+                        __func__, token, type_token);
+                    goto err;
+                }
             break;} case FUS_KEYWORD_sym: {
                 fus_value_t value = values_inline[0];
                 FUS_STATE_STACK_PUSH(value)
