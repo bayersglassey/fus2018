@@ -1,27 +1,49 @@
 
 def test of(->):
-    @TEST_PROGRAMS ='datas
+    0 ='n
+    0 ='n_ok
+    @TEST_PROGRAMS arr_for: ='program
+        'n 0 > if: "\n" str_p
+        ''n 1 + ='n
 
-    'datas keys arr_for: ='key
-        'datas 'key get ='data
+        "PROGRAM: " str_p 'program .title str_p "\n" str_p
 
-        "PROGRAM: " str_p 'key sym_tostr str_p "\n" str_p
-
-        'data @parser_new
+        'program .data @parser_new
             #T =.debug
             1 =.depth
         @parser_parse ='parser
+
         'parser .err is_null not ifelse:
-            "  Couldn't calc sig!\n" str_p
-            "    ERR: " str_p 'parser .err p
+            "  *** PARSE ERROR:\n" str_p
+            'parser .err p
+
         :
+            'program .expected_in ='ex_in
+            'program .expected_out ='ex_out
+            'parser .in ='in
+            'parser .out ='out
+
             "  SIG: " str_p
-            'parser .in 'parser .out @sig_p
+            'in 'out @sig_p
             "\n" str_p
 
             "  VARS: " str_p
             'parser .vars @vars_p
             "\n" str_p
+
+            'in 'out 'ex_in 'ex_out @sig_eq not ifelse:
+                "  *** SIG MISMATCH! EXPECTED:\n" str_p
+                "  SIG: " str_p
+                'ex_in 'ex_out @sig_p
+                "\n" str_p
+
+            : ''n_ok 1 + ='n_ok
+
+    "\n" str_p
+    'n_ok int_tostr str_p
+    "/" str_p
+    'n int_tostr str_p
+    " OK\n" str_p
 
 def tabs of(depth ->):
     int_for: drop "  " str_p
@@ -92,6 +114,14 @@ def stack_pop_n of(stack n -> substack):
     'stack len ='len
     ''stack 0 ('len 'n -) slice
 
+def stack_eq of(lhs rhs -> eq):
+    ='rhs ='lhs
+    'lhs len 'rhs len != if: F break
+    T ='eq
+    'lhs len int_for: ='i
+        ('lhs 'i .$) ('rhs 'i .$) sym_eq not if: F ='eq break
+    'eq
+
 def stack_match of(lhs rhs -> lhs rhs ok):
     # Matches elements (syms representing types) of "stacks" lhs and rhs.
     # The elements are popped & compared one at a time.
@@ -121,6 +151,28 @@ def sig_p of(in out ->):
     'in len 0 > if: 'in @stack_p " " str_p
     "->" str_p
     'out len 0 > if: " " str_p 'out @stack_p
+
+def parse_sig of(data -> in out):
+    ='data
+    arr ='in arr ='out
+
+    -1 ='arrow_index
+    'data len int_for: ='i
+        'data 'i .$ ` -> sym_eq if: 'i ='arrow_index break
+
+    'arrow_index 0 < if:
+        obj
+            "Can't parse data as sig: missing \"->\"" =.msg
+            'data =.data
+        error
+
+    'data 0 'arrow_index slice
+    'data ('arrow_index 1 +) (dup 'data len swap -) slice
+
+def sig_eq of(in_l out_l in_r out_r -> bool):
+    ='out_r ='in_r ='out_l ='in_l
+    'in_l 'in_r @stack_eq
+    and: 'out_l 'out_r @stack_eq
 
 def sig_join of(in_l out_l in_r out_r -> in out ok):
     # Joins two signatures, returning a signature.
@@ -430,10 +482,18 @@ def KEYWORDS of(-> keywords):
 ###############################################################################
 # TEST PROGRAMS
 
-def TEST_PROGRAMS of(-> datas): obj
+def test_program of(title expected_sig data -> program):
+    obj
+        swap =.data
+        swap @parse_sig ='out ='in
+        'in =.expected_in
+        'out =.expected_out
+        swap =.title
 
-    # From fib.fus.
-    # def next of(gen -> gen):
+def TEST_PROGRAMS of(-> programs): arr
+
+    "fib.fus: next of(gen -> gen)"
+    data: obj -> obj
     data:
         ='gen
 
@@ -455,15 +515,15 @@ def TEST_PROGRAMS of(-> datas): obj
 
             ''b =.a
             ''c =.b
-    =.FIB_GEN_NEXT
+    @test_program,
 
-    # From map_parser.fus.
-    # def char_tostr of(i -> s):
+    "map_parser.fus: char_tostr of(i -> s)"
+    data: int -> str
     data: " " swap 0 str_setcode
-    =.CHAR_TOSTR
+    @test_program,
 
-    # From map_parser.fus.
-    # def strchr of(s c -> i):
+    "map_parser.fus: strchr of(s c -> i)"
+    data: str int -> int
     data:
         ='c ='s
         null ='found_i
@@ -471,31 +531,37 @@ def TEST_PROGRAMS of(-> datas): obj
             ('s 'i str_getcode) 'c == if:
                 'i ='found_i break
         ''found_i
-    =.STRCHR
+    @test_program,
 
-    # From map_parser.fus.
-    # def format of(arr -> str):
+    "map_parser.fus: format of (arr -> str)"
+    data: arr -> str
     data:
         "" swap arr_for: ='x
             'x is_int if: ''x int_tostr ='x
             ''x str_join
-    =.FORMAT
+    @test_program,
 
-    # From map_parser.fus.
-    # def repeat of(elem n -> elems):
+    "map_parser.fus: repeat of(elem n -> elems)"
+    data: any int -> arr
     data: swap ='elem arr swap int_for: drop 'elem,
-    =.REPEAT
+    @test_program,
 
-    # From map_parser.fus.
-    # def max of(x y -> z):
+    "map_parser.fus: max of(x y -> z)"
+    data: int int -> int
     data: over over > ifelse(drop)(nip)
-    =.MAX
+    @test_program,
 
+    "add"
+    data: int int -> int
     data: +
-    =.ADD
+    @test_program,
 
+    "var test"
+    data: -> int
     data: 1 ='x 'x
-    =.VARTEST
+    @test_program,
 
+    "dup test"
+    data: -> int int
     data: 1 dup
-    =.DUPTEST
+    @test_program,
