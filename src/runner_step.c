@@ -135,10 +135,8 @@ int fus_runner_step(fus_runner_t *runner){
             break;} case FUS_KEYWORD_typeof: {
                 fus_value_t value;
                 FUS_STATE_STACK_POP(&value)
-                const char *type_name = fus_value_type_msg(value);
+                int sym_i = fus_value_type_sym_i(vm, value);
                 fus_value_detach(vm, value);
-                int sym_i = fus_symtable_get_or_add_from_string(
-                    vm->symtable, type_name);
                 fus_value_t value_sym = fus_value_sym(vm, sym_i);
                 FUS_STATE_STACK_PUSH(value_sym)
             break;} case FUS_KEYWORD_null: {

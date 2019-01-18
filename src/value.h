@@ -66,6 +66,7 @@ typedef enum {
 } fus_err_code_t;
 
 const char *fus_value_type_msg(fus_value_t value);
+int fus_value_type_sym_i(fus_vm_t *vm, fus_value_t value);
 const char *fus_err_code_msg(fus_err_code_t code);
 
 

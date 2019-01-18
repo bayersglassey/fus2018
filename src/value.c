@@ -15,6 +15,13 @@ const char *fus_value_type_msg(fus_value_t value){
     else return "unknown";
 }
 
+int fus_value_type_sym_i(fus_vm_t *vm, fus_value_t value){
+    const char *type_name = fus_value_type_msg(value);
+    int sym_i = fus_symtable_get_or_add_from_string(
+        vm->symtable, type_name);
+    return sym_i;
+}
+
 const char *fus_err_code_msg(fus_err_code_t code){
     static const char *codes[FUS_ERRS] = {
         "Wrong type",
