@@ -92,6 +92,13 @@ def vars_p of(vars ->):
 
 def vars_update of(vars new_vars -> vars):
     ='new_vars ='vars
+    'new_vars keys arr_for: ='key
+        'new_vars 'key get ='new_type
+        ''vars 'new_type 'key set ='vars
+    'vars
+
+def vars_update_existing of(vars new_vars -> vars):
+    ='new_vars ='vars
     'vars keys arr_for: ='key
         'new_vars 'key get ='new_type
         ''vars 'new_type 'key set ='vars
@@ -236,6 +243,7 @@ def parser_step of(parser -> parser ok):
     'parser .data ='data
     'parser .i ='i
     'data len ='data_len
+
     null ='err
     T ='ok
     do:
@@ -267,21 +275,21 @@ def parser_step of(parser -> parser ok):
                     dup .err ='err
                 drop
                 'err is_null not if: F ='ok break
-                ''parser ..vars 'new_vars @vars_update =.vars ='parser
+                ''parser
+                    ..vars 'new_vars @vars_update_existing =.vars
+                ='parser
                 break
+
             'word is_sym if:
-                'parser .keywords 'word has not if:
-                    obj
-                        "Keyword not found" =.msg
-                        'word =.word
-                        'i =.i
-                    ='err
-                    F ='ok break
+                'parser 'word @parser_parse_sym
+                ='ok ='err ='updated_vars ='word_out ='word_in ='new_i
+                'ok not if: break
 
-                'parser .keywords 'word get ='keyword
-
-                ''parser 'word 'keyword @parser_parse_sym
-                ='ok ='err ='word_out ='word_in ='i ='parser
+                'new_i ='i
+                'updated_vars is_null not if:
+                    ''parser
+                        ..vars 'updated_vars @vars_update =.vars
+                    ='parser
                 break
 
             obj
@@ -316,172 +324,202 @@ def parser_step of(parser -> parser ok):
     'ok
 
 def parser_parse_sym
-of(parser word keyword -> parser i word_in word_out err ok):
+of(parser word -> i word_in word_out updated_vars err ok):
+    ='word ='parser
+    'parser .i ='i
 
+    T ='ok
+    null ='err
+    null ='word_in null ='word_out null ='updated_vars
+
+    'parser .keywords 'word has not if:
+        obj
+            "Keyword not found" =.msg
+            'word =.word
+            'i =.i
+        ='err
+        F ='ok
+
+    'ok if:
+        'parser .keywords 'word get ='keyword
+
+        'parser 'word 'keyword @parser_parse_sym_args
+        ='ok ='err ='args
+
+        'ok if:
+            'parser 'word 'keyword 'args @parser_parse_sym_special
+            ='ok ='err ='updated_vars ='word_out ='word_in
+
+        ''i ('keyword .args len) + ='i
+
+    # Return:
+    'i 'word_in 'word_out 'updated_vars 'err 'ok
+
+
+def parser_parse_sym_args of(parser word keyword -> args err ok):
     ='keyword ='word ='parser
     'parser .data ='data
     'parser .i ='i
     'data len ='data_len
-    null ='err
-    T ='ok
 
+    T ='ok
+    null ='err
+    arr ='args
+    'i 1 + ='new_i
+    'keyword .args arr_for: ='keyword_arg
+        'new_i 'data_len >= if:
+            obj
+                "Hit end of data, expected argument" =.msg
+                'word =.word
+                'i =.i
+                'data 'i ('data_len 'i -) slice =.data_slice
+            ='err
+            F ='ok break
+
+        'data 'new_i .$ ='arg
+        'arg typeof 'keyword_arg @type_match not if:
+            obj
+                "Unexpected argument type" =.msg
+                'word =.word
+                'i =.i
+                ('new_i 'i -) =.arg_offset
+                'keyword_arg =.keyword_arg
+                'arg =.arg
+            ='err
+            F ='ok break
+
+        ''args 'arg, ='args
+        ''new_i 1 + ='new_i loop
+
+    # Return
+    'args 'err 'ok
+
+def parser_parse_sym_special
+of(parser word keyword args -> word_in word_out updated_vars err ok):
+    ='args ='keyword ='word ='parser
+    'parser .data ='data
+    'parser .i ='i
+    'data len ='data_len
     'keyword .in ='word_in
     'keyword .out ='word_out
-    'keyword .args ='word_args
 
+    T ='ok
+    null ='err
+    null ='updated_vars
     do:
-        arr ='args
-        'i 1 + ='new_i
-        'word_args arr_for: ='word_arg
-            'new_i 'data_len >= if:
-                obj
-                    "Hit end of data, expected argument" =.msg
-                    'word =.word
-                    'i =.i
-                    'data 'i ('data_len 'i -) slice =.data_slice
-                ='err
-                F ='ok break
 
-            'data 'new_i .$ ='arg
-            'arg typeof 'word_arg @type_match not if:
-                obj
-                    "Unexpected argument type" =.msg
-                    'word =.word
-                    'i =.i
-                    ('new_i 'i -) =.arg_offset
-                    'word_arg =.word_arg
-                    'arg =.arg
-                ='err
-                F ='ok break
+        ###################################################################
+        # PARSER_PARSE_SYM: VAR SET
+        'word ` =' sym_eq if:
+            'args 0 .$ ='var_name
+            'parser .out @typestack_pop ='var_type drop
 
-            ''args 'arg, ='args
-            ''new_i 1 + ='new_i loop
-        'ok not if: break
-        'new_i 1 - ='i
-
-        do:
-
-            ###################################################################
-            # PARSER_PARSE_SYM: VAR SET
-            'word ` =' sym_eq if:
-                'args 0 .$ ='var_name
-                'parser .out @typestack_pop ='var_type drop
-
-                'parser .vars ='vars
-                'vars 'var_name has if:
-                    'vars 'var_name get ='var_oldtype
-                    'var_type 'var_oldtype @type_match not if:
-                        obj
-                            "Unexpected var type" =.msg
-                            'word =.word
-                            'i =.i
-                            ('new_i 'i -) =.arg_offset
-                            'word_arg =.word_arg
-                            'arg =.arg
-                            'var_name =.var_name
-                            'var_oldtype =.var_oldtype
-                            'var_type =.var_type
-                        ='err
-                        F ='ok break
-
-                arr 'var_type, ='word_in
-                ''vars 'var_type 'var_name set ='vars
-                ''parser 'vars =.vars ='parser
-                break
-
-            ###################################################################
-            # PARSER_PARSE_SYM: VAR GET/RIP
-            'word ` ' sym_eq
-            or: 'word ` '' sym_eq
-            if:
-                'args 0 .$ ='var_name
-
-                'parser .vars ='vars
-                'vars 'var_name has not if:
+            'parser .vars ='vars
+            'vars 'var_name has if:
+                'vars 'var_name get ='var_oldtype
+                'var_type 'var_oldtype @type_match not if:
                     obj
-                        "Ref to missing var" =.msg
+                        "Unexpected var type" =.msg
                         'word =.word
                         'i =.i
-                        ('new_i 'i -) =.arg_offset
-                        'word_arg =.word_arg
-                        'arg =.arg
                         'var_name =.var_name
+                        'var_oldtype =.var_oldtype
+                        'var_type =.var_type
                     ='err
                     F ='ok break
 
-                'vars 'var_name get ='var_type
-                arr 'var_type, ='word_out
-                ''parser 'vars =.vars ='parser
+            arr 'var_type, ='word_in
+            obj 'var_type 'var_name set ='updated_vars
+            break
+
+        ###################################################################
+        # PARSER_PARSE_SYM: VAR GET/RIP
+        'word ` ' sym_eq
+        or: 'word ` '' sym_eq
+        if:
+            'args 0 .$ ='var_name
+
+            'parser .vars ='vars
+            'vars 'var_name has not if:
+                obj
+                    "Ref to missing var" =.msg
+                    'word =.word
+                    'i =.i
+                    'var_name =.var_name
+                ='err
+                F ='ok break
+
+            'vars 'var_name get ='var_type
+            arr 'var_type, ='word_out
+            break
+
+        ###################################################################
+        # PARSER_PARSE_SYM: TYPEHINT
+        'word ` | sym_eq if:
+            'args 0 .$ ='type
+
+            F ='ok
+            data(null bool int sym arr obj str fun) ='valid_types
+            'valid_types arr_for: 'type sym_eq if: T ='ok break
+            'ok not if:
+                obj
+                    "Invalid type (must be one of:"
+                    'valid_types arr_for: ='valid_type
+                        " " str_join 'valid_type sym_tostr str_join
+                    ")" str_join =.msg
+                    'word =.word
+                    'i =.i
+                    'type =.type
+                ='err
                 break
 
-            ###################################################################
-            # PARSER_PARSE_SYM: TYPEHINT
-            'word ` | sym_eq if:
-                'args 0 .$ ='type
+            # We pretend we're going to consume a value of the given
+            # type, then put it back.
+            # (Really we just want to make sure something of the given
+            # type is on the stack.)
+            arr 'type, ='word_out
+            arr 'type, ='word_in
+            break
 
-                F ='ok
-                data: null bool int sym arr obj str fun
-                arr_for: 'type sym_eq if: T ='ok break
-                'ok not if:
-                    obj
-                        "Invalid type (must be one of: "
-                        "null bool int sym arr obj str fun)"
-                        str_join =.msg
-                        'word =.word
-                        'i =.i
-                        'type =.type
-                    ='err
-                    break
+        ###################################################################
+        # PARSER_PARSE_SYM: DUP
+        'word `dup sym_eq if:
+            'parser .out @typestack_pop ='type_x drop
+            arr 'type_x, ='word_in
+            arr 'type_x, 'type_x, ='word_out
 
-                # We pretend we're going to consume a value of the given
-                # type, then put it back.
-                # (Really we just want to make sure something of the given
-                # type is on the stack.)
-                arr 'type, ='word_out
-                arr 'type, ='word_in
-                break
+        ###################################################################
+        # PARSER_PARSE_SYM: SWAP
+        'word `swap sym_eq if:
+            'parser .out
+                @typestack_pop ='type_y
+                @typestack_pop ='type_x
+            drop
+            arr 'type_x, 'type_y, ='word_in
+            arr 'type_y, 'type_x, ='word_out
 
-            ###################################################################
-            # PARSER_PARSE_SYM: DUP
-            'word `dup sym_eq if:
-                'parser .out @typestack_pop ='type_x drop
-                arr 'type_x, ='word_in
-                arr 'type_x, 'type_x, ='word_out
+        ###################################################################
+        # PARSER_PARSE_SYM: NIP
+        'word `nip sym_eq if:
+            'parser .out
+                @typestack_pop ='type_y
+                @typestack_pop ='type_x
+            drop
+            arr 'type_x, 'type_y, ='word_in
+            arr 'type_y, ='word_out
 
-            ###################################################################
-            # PARSER_PARSE_SYM: SWAP
-            'word `swap sym_eq if:
-                'parser .out
-                    @typestack_pop ='type_y
-                    @typestack_pop ='type_x
-                drop
-                arr 'type_x, 'type_y, ='word_in
-                arr 'type_y, 'type_x, ='word_out
-
-            ###################################################################
-            # PARSER_PARSE_SYM: NIP
-            'word `nip sym_eq if:
-                'parser .out
-                    @typestack_pop ='type_y
-                    @typestack_pop ='type_x
-                drop
-                arr 'type_x, 'type_y, ='word_in
-                arr 'type_y, ='word_out
-
-            ###################################################################
-            # PARSER_PARSE_SYM: OVER
-            'word `over sym_eq if:
-                'parser .out
-                    @typestack_pop ='type_y
-                    @typestack_pop ='type_x
-                drop
-                arr 'type_x, 'type_y, ='word_in
-                arr 'type_x, 'type_y, 'type_x, ='word_out
-
-        break
+        ###################################################################
+        # PARSER_PARSE_SYM: OVER
+        'word `over sym_eq if:
+            'parser .out
+                @typestack_pop ='type_y
+                @typestack_pop ='type_x
+            drop
+            arr 'type_x, 'type_y, ='word_in
+            arr 'type_x, 'type_y, 'type_x, ='word_out
 
     # Return:
-    'parser 'i 'word_in 'word_out 'err 'ok
+    'word_in 'word_out 'updated_vars 'err 'ok
 
 
 ###############################################################################
