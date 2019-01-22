@@ -692,3 +692,73 @@ def TEST_PROGRAMS of(-> programs): arr
     "over test"
     data: -> str int str
     data("ASD" 123 over) @test_program,
+
+    "if test"
+    data: -> int
+    data(1 T if(drop 2)) @test_program,
+    # The rule for "if" seems to be: after consuming bool,
+    # size of remaining stack cannot be changed.
+
+    "ifelse test"
+    data: -> int
+    data(1 2 T ifelse(drop)(+)) @test_program,
+    # The rule for "ifelse" seems to be: after consuming bool,
+    # stack effects for lhs and rhs need to be... the same?
+    # Or just "compatible"?
+    # E.g. in this case,
+    #   drop has effect: (any ->)
+    #   + has effect:    (int int -> int)
+    # ...so what is the combined effect?
+    #   (int any -> int) ?
+    #   (int int -> int) ?
+    # What do we *want* the combined effect to be?
+    # The purpose of our typesystem seems to be: figure out the most
+    # specific effect which we can guarantee.
+    # So we could use it to remove runtime typechecks.
+    # (NOTE: ACTUALLY THE PRIMARY PURPOSE IS TO FIGURE OUT THE *NUMBER*
+    # OF STACK ELEMENTS CONSUMED & ADDED... KNOWING THEIR TYPES IS JUST
+    # A BONUS)
+    # So, what use of "ifelse" should be a compile-time error?
+    #   "a" "b" 'cond ifelse(drop)(+)
+    # ...so it looks like the effect of 'cond ifelse(drop)(+) is
+    # the more *specific* of "drop" and "+":
+    #   (int int -> int)
+    # So we need a function which takes 2 sigs and combines them
+    # element-by-element, using the more specific element at each step?
+    #   drop:   (any ->)
+    #   drop:   (any any -> any)
+    #   +:      (int int -> int)
+    #   result: (int int -> int)
+    # ...but using the more specific element prevents us from doing a
+    # runtime typecheck like this:
+    #   'x 1 over is_int ifelse(+)(drop)
+    #
+    # Forgetting all that for a moment -- what about vars?
+    # Do we need to "split the universe" between the two branches?
+    # As in, use same copy of vars at start of each branch, then compare
+    # resulting "update_vars" objs?
+    #
+    # THIS IS THE CRUX OF IT:
+    #   "abc" dup is_int if(1 +)
+    # DOES THIS TYPECHECK SUCCESSFULLY?
+    #   is_int: any -> bool
+    #   if(1 +): any bool -> any
+    #   if(1 +): int bool -> int
+    # ...I think it actually doesn't typecheck.
+    # Specifically because we used a str literal, "abc".
+    # If we had used something with type "any", it would work:
+    #   def maybe_inc: dup is_int if: 1 +
+    #   # any -> any
+    # That's kind of surprising, but I think it's logical and even usable.
+    # Let's look through sigs.fus and verify whether it would typecheck
+    # according to this rule...
+
+    # LOOPS:
+    #   0 ='x do('x 3 < while ''x 1 + ='x loop)
+    # ...easiest thing is to require that do(...) has effect (->).
+    # And then while & break are required to occur at places where there
+    # is no stack effect "so far".
+    # But we want to allow this:
+    #   "" 3 int_for: drop "." str_join
+    # ...in other words, do(...) with effect (str -> str).
+

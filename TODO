@@ -361,3 +361,27 @@ Declaring types in signatures:
 
     def f of(x|int y|int -> z|int): +
 
+
+Jan 20, 2019:
+-------------
+
+Errors: before we look at these, let's make sure sigs.fus can handle loops.
+Because with loops, it's already the case that the stack effect of a block
+should include the fact that it "doesn't return".
+E.g. (1 2 + loop)
+
+Errors should probably work something like this:
+
+    @TEST_PROGRAMS arr_for: ='program
+
+        'program .data @parser_new
+        try of(parser -> parser): @parser_parse
+        catch: ='err
+            "  *** PARSE ERROR:\n" str_p
+            'err p
+            loop
+        ='parser
+
+...so try of(...)(A) catch(B)
+where A doesn't share variables with surrounding scope (???) and
+B has stack effect (err -> ...)   ....??????
