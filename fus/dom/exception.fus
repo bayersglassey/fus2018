@@ -1,0 +1,15 @@
+
+module DOMException:
+
+    def ExceptionCode of(-> o):
+        obj
+             1 =.INDEX_SIZE_ERR
+             2 =.DOMSTRING_SIZE_ERR
+             3 =.HIERARCHY_REQUEST_ERR
+             4 =.WRONG_DOCUMENT_ERR
+             5 =.INVALID_CHARACTER_ERR
+             6 =.NO_DATA_ALLOWED_ERR
+             7 =.NO_MODIFICATION_ALLOWED_ERR
+             8 =.NOT_FOUND_ERR
+             9 =.NOT_SUPPORTED_ERR
+            10 =.INUSE_ATTRIBUTE_ERR

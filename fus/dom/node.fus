@@ -1,0 +1,97 @@
+
+from core:
+    def getNode of(dom node_i -> dom node)
+    def setNode of(dom node node_i -> dom)
+
+from collections:
+    module NodeList:
+        def new of(dom node_i key -> dom nodelist)
+        def getNode of(dom nodelist -> dom node)
+        def unpack of(dom nodelist -> dom node_ii)
+        def length of(dom nodelist -> dom int)
+        def item of(dom nodelist index -> dom node_i)
+    module NamedNodeMap:
+        def new of(dom node_i key -> dom nodemap)
+        def getNode of(dom nodemap -> dom node)
+        def setNode of(dom nodemap node -> dom)
+        def unpack of(dom nodemap -> dom entries)
+        def pack of(dom nodemap entries -> dom)
+        def length of(dom nodemap -> dom int)
+        def item of(dom nodemap index -> dom node_i)
+        def getNamedItem of(dom nodemap name -> dom node_i)
+        def setNamedItem of(dom nodemap node_i name -> dom nodemap)
+        def removeNamedItem of(dom nodemap name -> dom nodemap)
+
+
+module Node:
+
+    def NodeType of(-> o):
+        obj
+             1 =.ELEMENT_NODE
+             2 =.ATTRIBUTE_NODE
+             3 =.TEXT_NODE
+             4 =.CDATA_SECTION_NODE
+             5 =.ENTITY_REFERENCE_NODE
+             6 =.ENTITY_NODE
+             7 =.PROCESSING_INSTRUCTION_NODE
+             8 =.COMMENT_NODE
+             9 =.DOCUMENT_NODE
+            10 =.DOCUMENT_TYPE_NODE
+            11 =.DOCUMENT_FRAGMENT_NODE
+            12 =.NOTATION_NODE
+
+    def nodeName of(dom node_i -> dom str):
+        @getNode .name
+
+    def nodeValue of(dom node_i -> dom str):
+        @getNode .value
+
+    def setNodeValue of(dom node_i str -> dom node):
+        ='value ='i
+        'i @getNode 'value =.value 'i @setNode
+
+    def nodeType of(dom node_i -> dom str):
+        @getNode .type
+
+    def parentNode of(dom node_i -> dom node_i):
+        @getNode .parent_i
+
+    def childNodes of(dom node_i -> dom nodelist):
+        `children @(nodeList new)
+
+    def firstChild of(dom node_i -> dom node_i):
+        @getNode .children 0 .$
+
+    def lastChild of(dom node_i -> dom node_i):
+        @getNode .children (dup len 1 -) .$
+
+    def getSiblings of(dom node_i -> dom node_ii):
+        @getNode .parent_i @getNode .children
+
+    def previousSibling of(dom node_i -> node_i):
+        ='i
+        null ='prev
+        null ='prevSibling
+        'i @getSiblings arr_for: ='j
+            'j 'i == if: 'prev ='prevSibling break
+            'j =.prev
+        'prevSibling
+
+    def nextSibling of(dom node_i -> node_i):
+        ='i
+        null ='nextSibling
+        F ='found
+        'i @getSiblings arr_for: ='j
+            'found ifelse: 'j ='nextSibling break
+            : 'j 'i == if: T ='found loop
+        'nextSibling
+
+    def attributes of(dom node_i -> dom nodemap):
+
+
+
+module DocumentFragment:
+
+module Document:
+
+

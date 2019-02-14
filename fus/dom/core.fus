@@ -1,0 +1,14 @@
+
+module core:
+
+    def new of(-> dom):
+        obj
+            arr =.nodes
+
+    def getNode of(dom node_i -> dom node):
+        ='i
+        dup .nodes 'i .$
+
+    def setNode of(dom node node_i -> dom):
+        ='i 'node
+        ..nodes 'node 'i =.$ =.nodes

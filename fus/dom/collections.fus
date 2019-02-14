@@ -1,0 +1,123 @@
+
+declare:
+    module NodeList:
+        def new of(dom node_i key -> dom nodelist)
+        def getNode of(dom nodelist -> dom node)
+        def unpack of(dom nodelist -> dom node_ii)
+        def length of(dom nodelist -> dom int)
+        def item of(dom nodelist index -> dom node_i)
+    module NamedNodeMap:
+        def new of(dom node_i key -> dom nodemap)
+        def getNode of(dom nodemap -> dom node)
+        def setNode of(dom nodemap node -> dom)
+        def unpack of(dom nodemap -> dom entries)
+        def pack of(dom nodemap entries -> dom)
+        def length of(dom nodemap -> dom int)
+        def item of(dom nodemap index -> dom node_i)
+        def getNamedItem of(dom nodemap name -> dom node_i)
+        def setNamedItem of(dom nodemap node_i name -> dom nodemap)
+        def removeNamedItem of(dom nodemap name -> dom nodemap)
+
+from (DOM core):
+    def getNode of(dom node_i -> dom node)
+    def setNode of(dom node node_i -> dom)
+
+module NodeList:
+
+    def new of(dom node_i key -> dom nodelist):
+        obj
+            swap =.key
+            swap =.node_i
+
+    def getNode of(dom nodelist -> dom node):
+        .node_i @(DOM getNode)
+
+    def unpack of(dom nodelist -> dom node_ii):
+        ='nodelist
+        'nodelist @getNode 'nodelist .key get
+
+    def length of(dom nodelist -> dom int):
+        @unpack len
+
+    def item of(dom nodelist index -> dom node_i):
+        ='i
+        @unpack 'i .$
+
+module NamedNodeMap:
+
+    def new of(dom node_i key -> dom nodemap):
+        obj
+            swap =.key
+            swap =.node_i
+
+    def getNode of(dom nodemap -> dom node):
+        .node_i @(DOM getNode)
+
+    def setNode of(dom nodemap node -> dom):
+        swap .node_i @(DOM setNode)
+
+    def unpack of(dom nodemap -> dom entries):
+        ='nodemap
+        'nodemap @getNode 'nodemap .key get
+
+    def pack of(dom nodemap entries -> dom):
+        ='entries ='nodemap
+        'nodemap @getNode
+            'entries 'nodemap .key set
+        'nodemap swap @setNode
+
+    def length of(dom nodemap -> dom int):
+        @unpack len
+
+    def item of(dom nodemap index -> dom node_i):
+        ='i
+        @unpack 'i .$ .node_i
+
+    def getNamedItem of(dom nodemap name -> dom node_i):
+        ='name
+        null ='node_i
+        @unpack arr_for: ='entry
+            'entry .name 'name str_eq if:
+                'entry .node_i ='node_i break
+        'node_i
+
+    def setNamedItem of(dom nodemap node_i name -> dom nodemap):
+        ='name ='node_i ='nodemap
+
+        'nodemap @unpack ='entries
+
+        F ='found
+        'entries len int_for: ='entry_i
+            'entries 'entry_i .$ ='entry
+            'entry .name 'name str_eq if:
+                ''entries
+                    ''entry 'node_i =.node_i
+                'entry_i =.$ ='entries
+                T ='found break
+
+        'found not if:
+            ''entries
+                obj 'name =.name 'node_i =.node_i,
+            ='entries
+
+        'nodemap 'entries @pack
+
+    def removeNamedItem of(dom nodemap name -> dom nodemap):
+        ='name ='nodemap
+
+        'nodemap @unpack ='entries
+
+        null ='node_i
+        F ='found
+        'entries len int_for: ='entry_i
+            'entries 'entry_i .$ ='entry
+            'entry .name 'name str_eq if:
+                ''entries 'entry_i split lpop drop join ='entries
+                'entry .node_i ='node_i
+                T ='found break
+
+        'found not if:
+            # TODO: raise NOT_FOUND_ERR
+
+        'nodemap 'entries @pack
+

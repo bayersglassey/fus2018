@@ -1,0 +1,11 @@
+
+module DOMImplementation:
+
+    def hasFeature of(implementation feature version -> bool):
+        ='ver ='fea ='impl
+        obj
+            "Not implemented yet..." =.msg
+            'ver =.ver
+            'fea =.fea
+            'impl =.impl
+        error
