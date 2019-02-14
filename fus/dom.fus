@@ -1,0 +1,149 @@
+
+
+def NODETYPES of(-> o):
+    obj
+         1 =.ELEMENT_NODE
+         2 =.ATTRIBUTE_NODE
+         3 =.TEXT_NODE
+         4 =.CDATA_SECTION_NODE
+         5 =.ENTITY_REFERENCE_NODE
+         6 =.ENTITY_NODE
+         7 =.PROCESSING_INSTRUCTION_NODE
+         8 =.COMMENT_NODE
+         9 =.DOCUMENT_NODE
+        10 =.DOCUMENT_TYPE_NODE
+        11 =.DOCUMENT_FRAGMENT_NODE
+        12 =.NOTATION_NODE
+
+def DOMEXCEPTION_CODES of(-> o):
+    obj
+         1 =.INDEX_SIZE_ERR
+         2 =.DOMSTRING_SIZE_ERR
+         3 =.HIERARCHY_REQUEST_ERR
+         4 =.WRONG_DOCUMENT_ERR
+         5 =.INVALID_CHARACTER_ERR
+         6 =.NO_DATA_ALLOWED_ERR
+         7 =.NO_MODIFICATION_ALLOWED_ERR
+         8 =.NOT_FOUND_ERR
+         9 =.NOT_SUPPORTED_ERR
+        10 =.INUSE_ATTRIBUTE_ERR
+
+
+def newDOM of(-> DOM):
+    obj
+        null =.err
+        arr =.nodes
+        arr
+            obj "HTML" =.feature "1.0" =.version,
+            obj "XML" =.feature "1.0" =.version,
+        =.features
+
+def hasFeature of(DOM feature version -> bool):
+    ='version ='feature
+    F ='found
+    .features arr_for: ='f
+        'f .feature 'feature str_eq not if: loop
+        'version is_null or('f .version 'version str_eq) if:
+            T ='found break
+    'found
+
+def baseNode of(-> o):
+    obj
+        null =.name
+        null =.parent_id
+        null =.type
+        null =.attrs
+        arr =.children
+
+def newNode of(DOM name value type parent_id -> DOM id):
+    @baseNode
+        swap =.parent_id
+        swap dup ='type =.type
+        swap =.value
+        swap =.name
+        'type @NODETYPES .ELEMENT_NODE == if:
+            @(NamedNodeMap new) =.attrs
+    ='node
+
+    ..nodes (dup len ='id) 'node, =.nodes
+    'id
+
+def newDocument of(DOM -> DOM doc_id):
+    "#document" null @NODETYPES .DOCUMENT_NODE null @newNode
+
+def createElement of(DOM doc_id tag -> DOM id):
+    @toupper ='tag ='doc_id
+    'tag null @NODETYPES .ELEMENT_NODE 'doc_id @newNode
+
+module NamedNodeMap:
+
+    def new of(-> attrs):
+        arr
+
+    def item of(attrs i -> value):
+        ='i ='attrs
+        'i 0 < or('i 'attrs len >=) if: null break
+        'attrs 'i .$
+
+    def length of(attrs -> i): len
+
+    def findNamedItem of(attrs name -> i):
+        ='name
+        null ='found_i
+        len int_for: ='i
+            dup 'i .$ .name 'name str_eq if: 'i ='found_i break
+        drop 'found_i
+
+    def getNamedItem of(attrs name -> value):
+        ='name
+        dup 'name @findNamedItem ='i
+        'i is_null ifelse: drop null
+        : 'i .$ .value
+
+    def removeNamedItem of(attrs name -> attrs err):
+        ='name
+        dup 'name @findNamedItem ='i
+        'i is_null ifelse:
+            # Don't change attrs, return error on top
+            @DOMEXCEPTION_CODES .NOT_FOUND_ERR
+        :
+            # Remove the entry
+            'i @split lpop drop @join
+
+            # No error
+            null
+
+    def setNamedItem of(attrs name value -> attrs err):
+        ='value ='name
+        dup 'name @findNamedItem ='i
+        'i is_null ifelse:
+            # Add entry
+            obj 'name =.name 'value =.value,
+        :
+            # Update entry
+            'i ..$ 'value =.value 'i =.$
+
+        # No error
+        null
+
+def getAttribute of(DOM id name -> DOM value):
+    ='name ='id
+    dup .nodes 'id .$ .attrs 'name
+        @(NamedNodeMap getNamedItem)
+
+def setAttribute of(DOM id name value -> DOM):
+    ='value ='name ='id
+    ..nodes 'id ..$
+        ..attrs 'name 'value
+            @(NamedNodeMap setNamedItem) ='err =.attrs
+    'id =.$ =.nodes
+    'err is_null not if:
+        'err =.err
+
+def test of(->):
+    @newDOM
+        @newDocument ='doc
+        'doc "h1" @createElement ='h1
+        'doc "p" @createElement ='p
+        'p "Hello World!" "textContent" @setAttribute
+
